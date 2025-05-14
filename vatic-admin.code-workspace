@@ -5,8 +5,12 @@
       "path": "apps/backend-mock",
     },
     {
-      "name": "@vatic/playground",
+      "name": "@vatic/kab-web",
       "path": "apps/kab-web",
+    },
+    {
+      "name": "@vatic/smart",
+      "path": "apps/smart",
     },
     {
       "name": "@vatic/commitlint-config",

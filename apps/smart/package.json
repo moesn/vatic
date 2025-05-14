@@ -1,29 +1,22 @@
 {
-  "name": "@vatic/kab-web",
-  "version": "5.5.6",
+  "name": "@vatic/smart",
+  "version": "1.0.0",
   "homepage": "https://vatic.pro",
-  "bugs": "https://github.com/vaticjs/vue-vatic-admin/issues",
+  "bugs": "https://github.com/moesn/vatic/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vaticjs/vue-vatic-admin.git",
-    "directory": "playground"
+    "url": "git+https://github.com/moesn/vatic.git",
+    "directory": "smart"
   },
   "license": "MIT",
   "author": {
-    "name": "vatic",
-    "email": "ann.vatic@gmail.com",
-    "url": "https://github.com/anncwb"
+    "name": "moesn",
+    "email": "475484467@qq.com",
+    "url": "https://github.com/moesn"
   },
   "type": "module",
   "scripts": {
-    "build": "pnpm vite build --mode production",
-    "build:analyze": "pnpm vite build --mode analyze",
-    "dev": "pnpm vite --mode development",
-    "preview": "vite preview",
-    "typecheck": "vue-tsc --noEmit --skipLibCheck",
-    "test:e2e": "playwright test",
-    "test:e2e-ui": "playwright test --ui",
-    "test:e2e-codegen": "playwright codegen"
+    "dev": "pnpm vite --mode development"
   },
   "imports": {
     "#/*": "./src/*"
@@ -45,7 +38,6 @@
     "@vatic/styles": "workspace:*",
     "@vatic/types": "workspace:*",
     "@vatic/utils": "workspace:*",
-    "@vatic/smart": "workspace:*",
     "@vueuse/core": "catalog:",
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",

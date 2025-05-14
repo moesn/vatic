@@ -1,6 +1,6 @@
-import type { RouteRecordRaw } from 'vue-router';
+import type {RouteRecordRaw} from 'vue-router';
 
-import { $t } from '#/locales';
+import {$t} from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -19,7 +19,7 @@ const routes: RouteRecordRaw[] = [
           icon: 'mdi:account-group',
           title: $t('system.role.title'),
         },
-        component: () => import('#/views/_base/role/list.vue'),
+        component: () => import('#/views/_system/role/list.vue'),
       },
       {
         path: '/system/menu',
@@ -28,7 +28,7 @@ const routes: RouteRecordRaw[] = [
           icon: 'mdi:menu',
           title: $t('system.menu.title'),
         },
-        component: () => import('#/views/_base/menu/list.vue'),
+        component: () => import('#/views/_system/menu/list.vue'),
       },
       {
         path: '/system/dept',
@@ -37,7 +37,17 @@ const routes: RouteRecordRaw[] = [
           icon: 'charm:organisation',
           title: $t('system.dept.title'),
         },
-        component: () => import('#/views/_base/dept/list.vue'),
+        component: () => import('#/views/_system/dept/list.vue'),
+      },
+      {
+        path: '/system/user',
+        name: 'SystemUser',
+        meta: {
+          icon: 'mdi:account',
+          title: '用户管理',
+          keepAlive: true,
+        },
+        component: () => import('#/views/_system/user/list.vue'),
       },
     ],
   },
