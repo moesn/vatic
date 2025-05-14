@@ -5,20 +5,8 @@
       "path": "apps/backend-mock",
     },
     {
-      "name": "@vatic/web-antd",
-      "path": "apps/web-antd",
-    },
-    {
-      "name": "@vatic/web-ele",
-      "path": "apps/web-ele",
-    },
-    {
-      "name": "@vatic/web-naive",
-      "path": "apps/web-naive",
-    },
-    {
-      "name": "@vatic/docs",
-      "path": "docs",
+      "name": "@vatic/playground",
+      "path": "apps/kab-web",
     },
     {
       "name": "@vatic/commitlint-config",
@@ -155,10 +143,6 @@
     {
       "name": "@vatic/utils",
       "path": "packages/utils",
-    },
-    {
-      "name": "@vatic/playground",
-      "path": "playground",
     },
     {
       "name": "@vatic/turbo-run",
