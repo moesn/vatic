@@ -1,15 +1,15 @@
 import type { Router, RouteRecordNormalized } from 'vue-router';
 
-import type { TabDefinition } from '@vben-core/typings';
+import type { TabDefinition } from '@vatic-core/typings';
 
 import { toRaw } from 'vue';
 
-import { preferences } from '@vben-core/preferences';
+import { preferences } from '@vatic-core/preferences';
 import {
   openRouteInNewWindow,
   startProgress,
   stopProgress,
-} from '@vben-core/shared/utils';
+} from '@vatic-core/shared/utils';
 
 import { acceptHMRUpdate, defineStore } from 'pinia';
 

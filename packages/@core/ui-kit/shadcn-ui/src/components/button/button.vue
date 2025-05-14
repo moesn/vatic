@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import type { VbenButtonProps } from './button';
+import type { VaticButtonProps } from './button';
 
 import { computed } from 'vue';
 
-import { LoaderCircle } from '@vben-core/icons';
-import { cn } from '@vben-core/shared/utils';
+import { LoaderCircle } from '@vatic-core/icons';
+import { cn } from '@vatic-core/shared/utils';
 
 import { Primitive } from 'radix-vue';
 
 import { buttonVariants } from '../../ui';
 
-interface Props extends VbenButtonProps {}
+interface Props extends VaticButtonProps {}
 
 const props = withDefaults(defineProps<Props>(), {
   as: 'button',

@@ -1,4 +1,4 @@
-import { getScrollbarWidth, needsScrollbar } from '@vben-core/shared/utils';
+import { getScrollbarWidth, needsScrollbar } from '@vatic-core/shared/utils';
 
 import {
   useScrollLock as _useScrollLock,

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { Maximize, Minimize } from '@vben-core/icons';
+import { Maximize, Minimize } from '@vatic-core/icons';
 
 import { useFullscreen } from '@vueuse/core';
 
-import { VbenIconButton } from '../button';
+import { VaticIconButton } from '../button';
 
 defineOptions({ name: 'FullScreen' });
 
@@ -21,8 +21,8 @@ isFullscreen.value = !!(
 );
 </script>
 <template>
-  <VbenIconButton @click="toggle">
+  <VaticIconButton @click="toggle">
     <Minimize v-if="isFullscreen" class="text-foreground size-4" />
     <Maximize v-else class="text-foreground size-4" />
-  </VbenIconButton>
+  </VaticIconButton>
 </template>

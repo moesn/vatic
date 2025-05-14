@@ -1,20 +1,20 @@
 <script lang="ts" setup>
 import type { Arrayable } from '@vueuse/core';
 
-import type { ValueType, VbenButtonGroupProps } from './button';
+import type { ValueType, VaticButtonGroupProps } from './button';
 
 import { computed, ref, watch } from 'vue';
 
-import { Circle, CircleCheckBig, LoaderCircle } from '@vben-core/icons';
-import { cn, isFunction } from '@vben-core/shared/utils';
+import { Circle, CircleCheckBig, LoaderCircle } from '@vatic-core/icons';
+import { cn, isFunction } from '@vatic-core/shared/utils';
 
 import { objectOmit } from '@vueuse/core';
 
-import { VbenRenderContent } from '../render-content';
-import VbenButtonGroup from './button-group.vue';
+import { VaticRenderContent } from '../render-content';
+import VaticButtonGroup from './button-group.vue';
 import Button from './button.vue';
 
-const props = withDefaults(defineProps<VbenButtonGroupProps>(), {
+const props = withDefaults(defineProps<VaticButtonGroupProps>(), {
   gap: 0,
   multiple: false,
   showIcon: true,
@@ -93,10 +93,10 @@ async function onBtnClick(value: ValueType) {
 }
 </script>
 <template>
-  <VbenButtonGroup
+  <VaticButtonGroup
     :size="props.size"
     :gap="props.gap"
-    class="vben-check-button-group"
+    class="vatic-check-button-group"
   >
     <Button
       v-for="(btn, index) in props.options"
@@ -120,13 +120,13 @@ async function onBtnClick(value: ValueType) {
         <Circle v-else />
       </div>
       <slot name="option" :label="btn.label" :value="btn.value">
-        <VbenRenderContent :content="btn.label" />
+        <VaticRenderContent :content="btn.label" />
       </slot>
     </Button>
-  </VbenButtonGroup>
+  </VaticButtonGroup>
 </template>
 <style lang="scss" scoped>
-.vben-check-button-group {
+.vatic-check-button-group {
   &:deep(.size-large) button {
     .icon-wrapper {
       margin-right: 0.3rem;

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { cn } from '@vben-core/shared/utils';
+import { cn } from '@vatic-core/shared/utils';
 
 import { useFormField } from './useFormField';
 

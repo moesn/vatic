@@ -1,6 +1,6 @@
-import type { IconifyIconStructure } from '@vben-core/icons';
+import type { IconifyIconStructure } from '@vatic-core/icons';
 
-import { addIcon } from '@vben-core/icons';
+import { addIcon } from '@vatic-core/icons';
 
 let loaded = false;
 if (!loaded) {

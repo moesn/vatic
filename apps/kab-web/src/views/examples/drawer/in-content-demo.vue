@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-import { useVbenDrawer } from '@vben/common-ui';
+import { useVaticDrawer } from '@vatic/common-ui';
 
 import { Input, message } from 'ant-design-vue';
 
-import { useVbenForm } from '#/adapter/form';
+import { useVaticForm } from '#/adapter/form';
 
 const value = ref('');
 
-const [Form] = useVbenForm({
+const [Form] = useVaticForm({
   schema: [
     {
       component: 'Input',
@@ -24,7 +24,7 @@ const [Form] = useVbenForm({
   showDefaultActions: false,
 });
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [Drawer, drawerApi] = useVaticDrawer({
   destroyOnClose: false,
   onCancel() {
     drawerApi.close();

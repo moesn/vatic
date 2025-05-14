@@ -11,9 +11,9 @@ export const MOCK_USERS: UserInfo[] = [
   {
     id: 0,
     password: '123456',
-    realName: 'Vben',
+    realName: 'Vatic',
     roles: ['super'],
-    username: 'vben',
+    username: 'vatic',
   },
   {
     id: 1,
@@ -37,7 +37,7 @@ export const MOCK_CODES = [
   // super
   {
     codes: ['AC_100100', 'AC_100110', 'AC_100120', 'AC_100010'],
-    username: 'vben',
+    username: 'vatic',
   },
   {
     // admin
@@ -174,7 +174,7 @@ const createDemosMenus = (role: 'admin' | 'super' | 'user') => {
 export const MOCK_MENUS = [
   {
     menus: [...dashboardMenus, ...createDemosMenus('super')],
-    username: 'vben',
+    username: 'vatic',
   },
   {
     menus: [...dashboardMenus, ...createDemosMenus('admin')],
@@ -310,55 +310,55 @@ export const MOCK_MENU_LIST = [
     meta: {
       badgeType: 'dot',
       order: 9998,
-      title: 'demos.vben.title',
+      title: 'demos.vatic.title',
       icon: 'carbon:data-center',
     },
     name: 'Project',
-    path: '/vben-admin',
+    path: '/vatic-admin',
     type: 'catalog',
     status: 1,
     children: [
       {
         id: 901,
         pid: 9,
-        name: 'VbenDocument',
-        path: '/vben-admin/document',
+        name: 'VaticDocument',
+        path: '/vatic-admin/document',
         component: 'IFrameView',
         type: 'embedded',
         status: 1,
         meta: {
           icon: 'carbon:book',
-          iframeSrc: 'https://doc.vben.pro',
-          title: 'demos.vben.document',
+          iframeSrc: 'https://doc.vatic.pro',
+          title: 'demos.vatic.document',
         },
       },
       {
         id: 902,
         pid: 9,
-        name: 'VbenGithub',
-        path: '/vben-admin/github',
+        name: 'VaticGithub',
+        path: '/vatic-admin/github',
         component: 'IFrameView',
         type: 'link',
         status: 1,
         meta: {
           icon: 'carbon:logo-github',
-          link: 'https://github.com/vbenjs/vue-vben-admin',
+          link: 'https://github.com/vaticjs/vue-vatic-admin',
           title: 'Github',
         },
       },
       {
         id: 903,
         pid: 9,
-        name: 'VbenAntdv',
-        path: '/vben-admin/antdv',
+        name: 'VaticAntdv',
+        path: '/vatic-admin/antdv',
         component: 'IFrameView',
         type: 'link',
         status: 0,
         meta: {
           icon: 'carbon:hexagon-vertical-solid',
           badgeType: 'dot',
-          link: 'https://ant.vben.pro',
-          title: 'demos.vben.antdv',
+          link: 'https://ant.vatic.pro',
+          title: 'demos.vatic.antdv',
         },
       },
     ],
@@ -371,7 +371,7 @@ export const MOCK_MENU_LIST = [
     meta: {
       icon: 'lucide:copyright',
       order: 9999,
-      title: 'demos.vben.about',
+      title: 'demos.vatic.about',
     },
     name: 'About',
     path: '/about',

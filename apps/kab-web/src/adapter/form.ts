@@ -1,14 +1,14 @@
 import type {
-  VbenFormSchema as FormSchema,
-  VbenFormProps,
-} from '@vben/common-ui';
+  VaticFormSchema as FormSchema,
+  VaticFormProps,
+} from '@vatic/common-ui';
 
 import type { ComponentType } from './component';
 
-import { setupVbenForm, useVbenForm as useForm, z } from '@vben/common-ui';
-import { $t } from '@vben/locales';
+import { setupVaticForm, useVaticForm as useForm, z } from '@vatic/common-ui';
+import { $t } from '@vatic/locales';
 
-setupVbenForm<ComponentType>({
+setupVaticForm<ComponentType>({
   config: {
     // ant design vue组件库默认都是 v-model:value
     baseModelPropName: 'value',
@@ -38,8 +38,8 @@ setupVbenForm<ComponentType>({
   },
 });
 
-const useVbenForm = useForm<ComponentType>;
+const useVaticForm = useForm<ComponentType>;
 
-export { useVbenForm, z };
-export type VbenFormSchema = FormSchema<ComponentType>;
-export type { VbenFormProps };
+export { useVaticForm, z };
+export type VaticFormSchema = FormSchema<ComponentType>;
+export type { VaticFormProps };

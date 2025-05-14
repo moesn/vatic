@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type {
   DropdownMenuProps,
-  VbenDropdownMenuItem as IDropdownMenuItem,
+  VaticDropdownMenuItem as IDropdownMenuItem,
 } from './interface';
 
 import {

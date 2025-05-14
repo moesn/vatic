@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { BuiltinThemeType } from '@vben/types';
+import type { BuiltinThemeType } from '@vatic/types';
 
-import { Palette } from '@vben/icons';
+import { Palette } from '@vatic/icons';
 import {
   COLOR_PRESETS,
   preferences,
   updatePreferences,
-} from '@vben/preferences';
+} from '@vatic/preferences';
 
-import { VbenIconButton } from '@vben-core/shadcn-ui';
+import { VaticIconButton } from '@vatic-core/shadcn-ui';
 
 defineOptions({
   name: 'AuthenticationColorToggle',
@@ -30,7 +30,7 @@ function handleUpdate(colorPrimary: string, type: BuiltinThemeType) {
       class="flex w-0 overflow-hidden transition-all duration-500 ease-out group-hover:w-60"
     >
       <template v-for="preset in COLOR_PRESETS" :key="preset.color">
-        <VbenIconButton
+        <VaticIconButton
           class="flex-center flex-shrink-0"
           @click="handleUpdate(preset.color, preset.type)"
         >
@@ -53,12 +53,12 @@ function handleUpdate(colorPrimary: string, type: BuiltinThemeType) {
               />
             </svg>
           </div>
-        </VbenIconButton>
+        </VaticIconButton>
       </template>
     </div>
 
-    <VbenIconButton>
+    <VaticIconButton>
       <Palette class="text-primary size-4" />
-    </VbenIconButton>
+    </VaticIconButton>
   </div>
 </template>

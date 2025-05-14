@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { BuiltinThemePreset } from '@vben/preferences';
-import type { BuiltinThemeType } from '@vben/types';
+import type { BuiltinThemePreset } from '@vatic/preferences';
+import type { BuiltinThemeType } from '@vatic/types';
 
 import { computed, ref, watch } from 'vue';
 
-import { UserRoundPen } from '@vben/icons';
-import { $t } from '@vben/locales';
-import { BUILT_IN_THEME_PRESETS } from '@vben/preferences';
-import { convertToHsl, TinyColor } from '@vben/utils';
+import { UserRoundPen } from '@vatic/icons';
+import { $t } from '@vatic/locales';
+import { BUILT_IN_THEME_PRESETS } from '@vatic/preferences';
+import { convertToHsl, TinyColor } from '@vatic/utils';
 
 import { useThrottleFn } from '@vueuse/core';
 

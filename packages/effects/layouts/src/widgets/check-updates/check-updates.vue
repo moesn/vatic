@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 
-import { $t } from '@vben/locales';
+import { $t } from '@vatic/locales';
 
-import { useVbenModal } from '@vben-core/popup-ui';
+import { useVaticModal } from '@vatic-core/popup-ui';
 
 interface Props {
   // 轮训时间，分钟
@@ -24,7 +24,7 @@ const currentVersionTag = ref('');
 const lastVersionTag = ref('');
 const timer = ref<ReturnType<typeof setInterval>>();
 
-const [UpdateNoticeModal, modalApi] = useVbenModal({
+const [UpdateNoticeModal, modalApi] = useVaticModal({
   closable: false,
   closeOnPressEscape: false,
   closeOnClickModal: false,

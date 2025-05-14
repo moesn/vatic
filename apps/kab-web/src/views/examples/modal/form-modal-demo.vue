@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { useVbenModal } from '@vben/common-ui';
+import { useVaticModal } from '@vatic/common-ui';
 
 import { message } from 'ant-design-vue';
 
-import { useVbenForm } from '#/adapter/form';
+import { useVaticForm } from '#/adapter/form';
 
 defineOptions({
   name: 'FormModelDemo',
 });
 
-const [Form, formApi] = useVbenForm({
+const [Form, formApi] = useVaticForm({
   handleSubmit: onSubmit,
   schema: [
     {
@@ -47,7 +47,7 @@ const [Form, formApi] = useVbenForm({
   showDefaultActions: false,
 });
 
-const [Modal, modalApi] = useVbenModal({
+const [Modal, modalApi] = useVaticModal({
   fullscreenButton: false,
   onCancel() {
     modalApi.close();

@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-import { useVbenModal } from '@vben/common-ui';
+import { useVaticModal } from '@vatic/common-ui';
 
 import { message } from 'ant-design-vue';
 
 const data = ref();
 
-const [Modal, modalApi] = useVbenModal({
+const [Modal, modalApi] = useVaticModal({
   onCancel() {
     modalApi.close();
   },

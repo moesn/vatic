@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { VbenLoading } from '@vben-core/shadcn-ui';
-import { cn } from '@vben-core/shared/utils';
+import { VaticLoading } from '@vatic-core/shadcn-ui';
+import { cn } from '@vatic-core/shared/utils';
 
 interface LoadingProps {
   class?: string;
@@ -26,7 +26,7 @@ const props = defineProps<LoadingProps>();
 <template>
   <div :class="cn('relative min-h-20', props.class)">
     <slot></slot>
-    <VbenLoading
+    <VaticLoading
       :min-loading-time="props.minLoadingTime"
       :spinning="props.spinning"
       :text="props.text"
@@ -34,6 +34,6 @@ const props = defineProps<LoadingProps>();
       <template v-if="$slots.icon" #icon>
         <slot name="icon"></slot>
       </template>
-    </VbenLoading>
+    </VaticLoading>
   </div>
 </template>

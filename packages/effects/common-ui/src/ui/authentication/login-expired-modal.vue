@@ -3,8 +3,8 @@ import type { AuthenticationProps } from './types';
 
 import { computed, watch } from 'vue';
 
-import { useVbenModal } from '@vben-core/popup-ui';
-import { Slot, VbenAvatar } from '@vben-core/shadcn-ui';
+import { useVaticModal } from '@vatic-core/popup-ui';
+import { Slot, VaticAvatar } from '@vatic-core/shadcn-ui';
 
 interface Props extends AuthenticationProps {
   avatar?: string;
@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const open = defineModel<boolean>('open');
 
-const [Modal, modalApi] = useVbenModal();
+const [Modal, modalApi] = useVaticModal();
 
 watch(
   () => open.value,
@@ -78,7 +78,7 @@ function calcZIndex() {
       :z-index="getZIndex"
       class="border-none px-10 py-6 text-center shadow-xl sm:w-[600px] sm:rounded-2xl md:h-[unset]"
     >
-      <VbenAvatar :src="avatar" class="mx-auto mb-6 size-20" />
+      <VaticAvatar :src="avatar" class="mx-auto mb-6 size-20" />
       <Slot
         :show-forget-password="false"
         :show-register="false"

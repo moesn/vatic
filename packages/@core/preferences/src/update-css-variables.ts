@@ -1,7 +1,7 @@
 import type { Preferences } from './types';
 
-import { generatorColorVariables } from '@vben-core/shared/color';
-import { updateCSSVariables as executeUpdateCSSVariables } from '@vben-core/shared/utils';
+import { generatorColorVariables } from '@vatic-core/shared/color';
+import { updateCSSVariables as executeUpdateCSSVariables } from '@vatic-core/shared/utils';
 
 import { BUILT_IN_THEME_PRESETS } from './constants';
 

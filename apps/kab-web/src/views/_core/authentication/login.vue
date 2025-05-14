@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { VbenFormSchema } from '@vben/common-ui';
-import type { BasicOption, Recordable } from '@vben/types';
+import type { VaticFormSchema } from '@vatic/common-ui';
+import type { BasicOption, Recordable } from '@vatic/types';
 
 import { computed, markRaw, useTemplateRef } from 'vue';
 
-import { AuthenticationLogin, SliderCaptcha, z } from '@vben/common-ui';
-import { $t } from '@vben/locales';
+import { AuthenticationLogin, SliderCaptcha, z } from '@vatic/common-ui';
+import { $t } from '@vatic/locales';
 
 import { useAuthStore } from '#/store';
 
@@ -16,7 +16,7 @@ const authStore = useAuthStore();
 const MOCK_USER_OPTIONS: BasicOption[] = [
   {
     label: 'Super',
-    value: 'vben',
+    value: 'vatic',
   },
   {
     label: 'Admin',
@@ -28,10 +28,10 @@ const MOCK_USER_OPTIONS: BasicOption[] = [
   },
 ];
 
-const formSchema = computed((): VbenFormSchema[] => {
+const formSchema = computed((): VaticFormSchema[] => {
   return [
     {
-      component: 'VbenSelect',
+      component: 'VaticSelect',
       // componentProps(_values, form) {
       //   return {
       //     'onUpdate:modelValue': (value: string) => {
@@ -59,10 +59,10 @@ const formSchema = computed((): VbenFormSchema[] => {
         .string()
         .min(1, { message: $t('authentication.selectAccount') })
         .optional()
-        .default('vben'),
+        .default('vatic'),
     },
     {
-      component: 'VbenInput',
+      component: 'VaticInput',
       componentProps: {
         placeholder: $t('authentication.usernameTip'),
       },
@@ -87,7 +87,7 @@ const formSchema = computed((): VbenFormSchema[] => {
       rules: z.string().min(1, { message: $t('authentication.usernameTip') }),
     },
     {
-      component: 'VbenInputPassword',
+      component: 'VaticInputPassword',
       componentProps: {
         placeholder: $t('authentication.password'),
       },

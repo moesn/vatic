@@ -3,7 +3,7 @@ import type { CSSProperties } from 'vue';
 
 import { computed, ref, watchEffect } from 'vue';
 
-import { VbenTooltip } from '@vben-core/shadcn-ui';
+import { VaticTooltip } from '@vatic-core/shadcn-ui';
 
 import { useElementSize } from '@vueuse/core';
 
@@ -102,7 +102,7 @@ function handleExpand() {
 </script>
 <template>
   <div>
-    <VbenTooltip
+    <VaticTooltip
       :content-style="{
         ...tooltipOverlayStyle,
         maxWidth: `${defaultTooltipMaxWidth}px`,
@@ -136,7 +136,7 @@ function handleExpand() {
           <slot></slot>
         </div>
       </template>
-    </VbenTooltip>
+    </VaticTooltip>
   </div>
 </template>
 

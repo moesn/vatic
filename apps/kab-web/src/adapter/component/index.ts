@@ -1,12 +1,12 @@
 /**
  * 通用组件共同的使用的基础组件，原先放在 adapter/form 内部，限制了使用范围，这里提取出来，方便其他地方使用
- * 可用于 vben-form、vben-modal、vben-drawer 等组件使用,
+ * 可用于 vatic-form、vatic-modal、vatic-drawer 等组件使用,
  */
 
 import type { Component } from 'vue';
 
-import type { BaseFormComponentType } from '@vben/common-ui';
-import type { Recordable } from '@vben/types';
+import type { BaseFormComponentType } from '@vatic/common-ui';
+import type { Recordable } from '@vatic/types';
 
 import {
   defineAsyncComponent,
@@ -16,8 +16,8 @@ import {
   ref,
 } from 'vue';
 
-import { ApiComponent, globalShareState, IconPicker } from '@vben/common-ui';
-import { $t } from '@vben/locales';
+import { ApiComponent, globalShareState, IconPicker } from '@vatic/common-ui';
+import { $t } from '@vatic/locales';
 
 import { notification } from 'ant-design-vue';
 

@@ -4,7 +4,7 @@ import type { Component } from 'vue';
 
 import type { ButtonVariants, ButtonVariantSize } from '../../ui';
 
-export interface VbenButtonProps {
+export interface VaticButtonProps {
   /**
    * The element or component this component should render as. Can be overwrite by `asChild`
    * @defaultValue "div"
@@ -27,8 +27,8 @@ export type CustomRenderType = (() => Component | string) | string;
 
 export type ValueType = boolean | number | string;
 
-export interface VbenButtonGroupProps
-  extends Pick<VbenButtonProps, 'disabled'> {
+export interface VaticButtonGroupProps
+  extends Pick<VaticButtonProps, 'disabled'> {
   beforeChange?: (
     value: ValueType,
     isChecked: boolean,

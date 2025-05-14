@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { Settings } from '@vben/icons';
+import { Settings } from '@vatic/icons';
 
-import { VbenIconButton } from '@vben-core/shadcn-ui';
+import { VaticIconButton } from '@vatic-core/shadcn-ui';
 
 import Preferences from './preferences.vue';
 
@@ -13,8 +13,8 @@ function clearPreferencesAndLogout() {
 </script>
 <template>
   <Preferences @clear-preferences-and-logout="clearPreferencesAndLogout">
-    <VbenIconButton>
+    <VaticIconButton>
       <Settings class="text-foreground size-4" />
-    </VbenIconButton>
+    </VaticIconButton>
   </Preferences>
 </template>

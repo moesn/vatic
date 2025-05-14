@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { VxeGridProps } from '#/adapter/vxe-table';
 
-import { Page } from '@vben/common-ui';
+import { Page } from '@vatic/common-ui';
 
 import { Button } from 'ant-design-vue';
 
-import { useVbenVxeGrid } from '#/adapter/vxe-table';
+import { useVaticVxeGrid } from '#/adapter/vxe-table';
 
 import { MOCK_TREE_TABLE_DATA } from './table-data';
 
@@ -37,7 +37,7 @@ const gridOptions: VxeGridProps<RowType> = {
   },
 };
 
-const [Grid, gridApi] = useVbenVxeGrid({ gridOptions });
+const [Grid, gridApi] = useVaticVxeGrid({ gridOptions });
 
 const expandAll = () => {
   gridApi.grid?.setAllTreeExpand(true);

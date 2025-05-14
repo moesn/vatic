@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-import { $t } from '@vben/locales';
+import { $t } from '@vatic/locales';
 
 import InputItem from '../input-item.vue';
 import SwitchItem from '../switch-item.vue';

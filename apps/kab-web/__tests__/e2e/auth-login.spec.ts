@@ -8,9 +8,9 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Auth Login Page Tests', () => {
   test('check title and page elements', async ({ page }) => {
-    // 获取页面标题并断言标题包含 'Vben Admin'
+    // 获取页面标题并断言标题包含 'Vatic Admin'
     const title = await page.title();
-    expect(title).toContain('Vben Admin');
+    expect(title).toContain('Vatic Admin');
   });
 
   // 测试用例: 成功登录

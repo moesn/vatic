@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { Recordable } from '@vben/types';
+import type { Recordable } from '@vatic/types';
 
 import { useRouter } from 'vue-router';
 
-import { useAccess } from '@vben/access';
-import { Page } from '@vben/common-ui';
-import { resetAllStores, useUserStore } from '@vben/stores';
+import { useAccess } from '@vatic/access';
+import { Page } from '@vatic/common-ui';
+import { resetAllStores, useUserStore } from '@vatic/stores';
 
 import { Button, Card } from 'ant-design-vue';
 
@@ -18,7 +18,7 @@ const accounts: Record<string, Recordable<any>> = {
   },
   super: {
     password: '123456',
-    username: 'vben',
+    username: 'vatic',
   },
   user: {
     password: '123456',

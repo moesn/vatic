@@ -1,12 +1,12 @@
-export { setupVbenForm } from './config';
+export { setupVaticForm } from './config';
 
 export type {
   BaseFormComponentType,
   ExtendedFormApi,
-  VbenFormProps,
-  FormSchema as VbenFormSchema,
+  VaticFormProps,
+  FormSchema as VaticFormSchema,
 } from './types';
 
-export * from './use-vben-form';
-// export { default as VbenForm } from './vben-form.vue';
+export * from './use-vatic-form';
+// export { default as VaticForm } from './vatic-form.vue';
 export * as z from 'zod';

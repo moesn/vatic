@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { Page } from '@vben/common-ui';
-import { useWatermark } from '@vben/hooks';
+import { Page } from '@vatic/common-ui';
+import { useWatermark } from '@vatic/hooks';
 
 import { Button, Card } from 'ant-design-vue';
 

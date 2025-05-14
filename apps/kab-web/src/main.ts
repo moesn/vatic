@@ -1,5 +1,5 @@
-import { initPreferences } from '@vben/preferences';
-import { unmountGlobalLoading } from '@vben/utils';
+import { initPreferences } from '@vatic/preferences';
+import { unmountGlobalLoading } from '@vatic/utils';
 
 import { overridesPreferences } from './preferences';
 

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { VxeGridListeners, VxeGridProps } from '#/adapter/vxe-table';
 
-import { Page } from '@vben/common-ui';
+import { Page } from '@vatic/common-ui';
 
 import { Button, message } from 'ant-design-vue';
 
-import { useVbenVxeGrid } from '#/adapter/vxe-table';
+import { useVaticVxeGrid } from '#/adapter/vxe-table';
 
 import DocButton from '../doc-button.vue';
 import { MOCK_TABLE_DATA } from './table-data';
@@ -43,7 +43,7 @@ const gridEvents: VxeGridListeners<RowType> = {
   },
 };
 
-const [Grid, gridApi] = useVbenVxeGrid({ gridEvents, gridOptions });
+const [Grid, gridApi] = useVaticVxeGrid({ gridEvents, gridOptions });
 
 const showBorder = gridApi.useStore((state) => state.gridOptions?.border);
 const showStripe = gridApi.useStore((state) => state.gridOptions?.stripe);
@@ -74,7 +74,7 @@ function changeLoading() {
     title="表格基础示例"
   >
     <template #extra>
-      <DocButton path="/components/common-ui/vben-vxe-table" />
+      <DocButton path="/components/common-ui/vatic-vxe-table" />
     </template>
     <Grid table-title="基础列表" table-title-help="提示">
       <!-- <template #toolbar-actions>

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { VbenFormSchema } from '@vben/common-ui';
-import type { Recordable } from '@vben/types';
+import type { VaticFormSchema } from '@vatic/common-ui';
+import type { Recordable } from '@vatic/types';
 
 import { computed, ref, useTemplateRef } from 'vue';
 
-import { AuthenticationCodeLogin, z } from '@vben/common-ui';
-import { $t } from '@vben/locales';
+import { AuthenticationCodeLogin, z } from '@vatic/common-ui';
+import { $t } from '@vatic/locales';
 
 import { message } from 'ant-design-vue';
 
@@ -32,10 +32,10 @@ function sendCodeApi(phoneNumber: string) {
     }, 3000);
   });
 }
-const formSchema = computed((): VbenFormSchema[] => {
+const formSchema = computed((): VaticFormSchema[] => {
   return [
     {
-      component: 'VbenInput',
+      component: 'VaticInput',
       componentProps: {
         placeholder: $t('authentication.mobile'),
       },
@@ -49,7 +49,7 @@ const formSchema = computed((): VbenFormSchema[] => {
         }),
     },
     {
-      component: 'VbenPinInput',
+      component: 'VaticPinInput',
       componentProps: {
         codeLength: CODE_LENGTH,
         createText: (countdown: number) => {

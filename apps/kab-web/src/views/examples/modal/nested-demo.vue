@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { useVbenModal } from '@vben/common-ui';
+import { useVaticModal } from '@vatic/common-ui';
 
 import { Button } from 'ant-design-vue';
 
 import DragDemo from './drag-demo.vue';
 
-const [Modal] = useVbenModal({
+const [Modal] = useVaticModal({
   destroyOnClose: true,
 });
-const [BaseModal, baseModalApi] = useVbenModal({
+const [BaseModal, baseModalApi] = useVaticModal({
   connectedComponent: DragDemo,
 });
 

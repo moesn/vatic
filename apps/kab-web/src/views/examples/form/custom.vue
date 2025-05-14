@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 import { h, markRaw } from 'vue';
 
-import { Page } from '@vben/common-ui';
+import { Page } from '@vatic/common-ui';
 
 import { Card, Input, message } from 'ant-design-vue';
 
-import { useVbenForm, z } from '#/adapter/form';
+import { useVaticForm, z } from '#/adapter/form';
 
 import TwoFields from './modules/two-fields.vue';
 
-const [Form] = useVbenForm({
+const [Form] = useVaticForm({
   // 所有表单项共用，可单独在表单内覆盖
   commonConfig: {
     // 所有表单项

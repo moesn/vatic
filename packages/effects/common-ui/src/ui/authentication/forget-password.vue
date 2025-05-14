@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { VbenFormSchema } from '@vben-core/form-ui';
+import type { VaticFormSchema } from '@vatic-core/form-ui';
 
 import { computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { $t } from '@vben/locales';
+import { $t } from '@vatic/locales';
 
-import { useVbenForm } from '@vben-core/form-ui';
-import { VbenButton } from '@vben-core/shadcn-ui';
+import { useVaticForm } from '@vatic-core/form-ui';
+import { VaticButton } from '@vatic-core/shadcn-ui';
 
 import Title from './auth-title.vue';
 
 interface Props {
-  formSchema: VbenFormSchema[];
+  formSchema: VaticFormSchema[];
   /**
    * @zh_CN 是否处于加载处理状态
    */
@@ -51,7 +51,7 @@ const emit = defineEmits<{
   submit: [Record<string, any>];
 }>();
 
-const [Form, formApi] = useVbenForm(
+const [Form, formApi] = useVaticForm(
   reactive({
     commonConfig: {
       hideLabel: true,
@@ -96,7 +96,7 @@ defineExpose({
     <Form />
 
     <div>
-      <VbenButton
+      <VaticButton
         :class="{
           'cursor-wait': loading,
         }"
@@ -107,10 +107,10 @@ defineExpose({
         <slot name="submitButtonText">
           {{ submitButtonText || $t('authentication.sendResetLink') }}
         </slot>
-      </VbenButton>
-      <VbenButton class="mt-4 w-full" variant="outline" @click="goToLogin()">
+      </VaticButton>
+      <VaticButton class="mt-4 w-full" variant="outline" @click="goToLogin()">
         {{ $t('common.back') }}
-      </VbenButton>
+      </VaticButton>
     </div>
   </div>
 </template>

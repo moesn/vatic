@@ -1,19 +1,19 @@
 <script lang="ts" setup>
-import type { VbenFormSchema } from '@vben/common-ui';
+import type { VaticFormSchema } from '@vatic/common-ui';
 
 import { computed, ref } from 'vue';
 
-import { AuthenticationForgetPassword, z } from '@vben/common-ui';
-import { $t } from '@vben/locales';
+import { AuthenticationForgetPassword, z } from '@vatic/common-ui';
+import { $t } from '@vatic/locales';
 
 defineOptions({ name: 'ForgetPassword' });
 
 const loading = ref(false);
 
-const formSchema = computed((): VbenFormSchema[] => {
+const formSchema = computed((): VaticFormSchema[] => {
   return [
     {
-      component: 'VbenInput',
+      component: 'VaticInput',
       componentProps: {
         placeholder: 'example@example.com',
       },

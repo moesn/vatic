@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import { Page } from '@vben/common-ui';
+import { Page } from '@vatic/common-ui';
 import {
   downloadFileFromBase64,
   downloadFileFromBlobPart,
   downloadFileFromImageUrl,
   downloadFileFromUrl,
-} from '@vben/utils';
+} from '@vatic/utils';
 
 import { Button, Card } from 'ant-design-vue';
 
@@ -38,7 +38,7 @@ function getResponse() {
         @click="
           downloadFileFromUrl({
             source:
-              'https://codeload.github.com/vbenjs/vue-vben-admin-doc/zip/main',
+              'https://codeload.github.com/vaticjs/vue-vatic-admin-doc/zip/main',
             target: '_self',
           })
         "
@@ -53,8 +53,8 @@ function getResponse() {
         @click="
           downloadFileFromImageUrl({
             source:
-              'https://unpkg.com/@vbenjs/static-source@0.1.7/source/logo-v1.webp',
-            fileName: 'vben-logo.png',
+              'https://unpkg.com/@vaticjs/static-source@0.1.7/source/logo-v1.webp',
+            fileName: 'vatic-logo.png',
           })
         "
       >

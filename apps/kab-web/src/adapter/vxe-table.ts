@@ -1,20 +1,20 @@
-import type { Recordable } from '@vben/types';
+import type { Recordable } from '@vatic/types';
 
 import { h } from 'vue';
 
-import { IconifyIcon } from '@vben/icons';
-import { $te } from '@vben/locales';
-import { setupVbenVxeTable, useVbenVxeGrid } from '@vben/plugins/vxe-table';
-import { get, isFunction, isString } from '@vben/utils';
+import { IconifyIcon } from '@vatic/icons';
+import { $te } from '@vatic/locales';
+import { setupVaticVxeTable, useVaticVxeGrid } from '@vatic/plugins/vxe-table';
+import { get, isFunction, isString } from '@vatic/utils';
 
 import { objectOmit } from '@vueuse/core';
 import { Button, Image, Popconfirm, Switch, Tag } from 'ant-design-vue';
 
 import { $t } from '#/locales';
 
-import { useVbenForm } from './form';
+import { useVaticForm } from './form';
 
-setupVbenVxeTable({
+setupVaticVxeTable({
   configVxeTable: (vxeUI) => {
     vxeUI.setConfig({
       grid: {
@@ -274,10 +274,10 @@ setupVbenVxeTable({
     // 这里可以自行扩展 vxe-table 的全局配置，比如自定义格式化
     // vxeUI.formats.add
   },
-  useVbenForm,
+  useVaticForm,
 });
 
-export { useVbenVxeGrid };
+export { useVaticVxeGrid };
 export type OnActionClickParams<T = Recordable<any>> = {
   code: string;
   row: T;
@@ -285,4 +285,4 @@ export type OnActionClickParams<T = Recordable<any>> = {
 export type OnActionClickFn<T = Recordable<any>> = (
   params: OnActionClickParams<T>,
 ) => void;
-export type * from '@vben/plugins/vxe-table';
+export type * from '@vatic/plugins/vxe-table';

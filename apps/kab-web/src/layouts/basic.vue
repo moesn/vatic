@@ -1,21 +1,21 @@
 <script lang="ts" setup>
-import type { NotificationItem } from '@vben/layouts';
+import type { NotificationItem } from '@vatic/layouts';
 
 import { computed, onBeforeMount, ref, watch } from 'vue';
 
-import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
-import { VBEN_DOC_URL, VBEN_GITHUB_URL } from '@vben/constants';
-import { useWatermark } from '@vben/hooks';
-import { BookOpenText, CircleHelp, MdiGithub } from '@vben/icons';
+import { AuthenticationLoginExpiredModal } from '@vatic/common-ui';
+import { VATIC_DOC_URL, VATIC_GITHUB_URL } from '@vatic/constants';
+import { useWatermark } from '@vatic/hooks';
+import { BookOpenText, CircleHelp, MdiGithub } from '@vatic/icons';
 import {
   BasicLayout,
   LockScreen,
   Notification,
   UserDropdown,
-} from '@vben/layouts';
-import { preferences } from '@vben/preferences';
-import { useAccessStore, useTabbarStore, useUserStore } from '@vben/stores';
-import { openWindow } from '@vben/utils';
+} from '@vatic/layouts';
+import { preferences } from '@vatic/preferences';
+import { useAccessStore, useTabbarStore, useUserStore } from '@vatic/stores';
+import { openWindow } from '@vatic/utils';
 
 import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
@@ -76,7 +76,7 @@ const showDot = computed(() =>
 const menus = computed(() => [
   {
     handler: () => {
-      openWindow(VBEN_DOC_URL, {
+      openWindow(VATIC_DOC_URL, {
         target: '_blank',
       });
     },
@@ -85,7 +85,7 @@ const menus = computed(() => [
   },
   {
     handler: () => {
-      openWindow(VBEN_GITHUB_URL, {
+      openWindow(VATIC_GITHUB_URL, {
         target: '_blank',
       });
     },
@@ -94,7 +94,7 @@ const menus = computed(() => [
   },
   {
     handler: () => {
-      openWindow(`${VBEN_GITHUB_URL}/issues`, {
+      openWindow(`${VATIC_GITHUB_URL}/issues`, {
         target: '_blank',
       });
     },
@@ -154,7 +154,7 @@ onBeforeMount(() => {
         :avatar
         :menus
         :text="userStore.userInfo?.realName"
-        description="ann.vben@gmail.com"
+        description="ann.vatic@gmail.com"
         tag-text="Pro"
         trigger="both"
         @logout="handleLogout"

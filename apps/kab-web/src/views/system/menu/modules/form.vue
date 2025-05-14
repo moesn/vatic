@@ -1,20 +1,20 @@
 <script lang="ts" setup>
 import type { ChangeEvent } from 'ant-design-vue/es/_util/EventInterface';
 
-import type { Recordable } from '@vben/types';
+import type { Recordable } from '@vatic/types';
 
-import type { VbenFormSchema } from '#/adapter/form';
+import type { VaticFormSchema } from '#/adapter/form';
 
 import { computed, h, ref } from 'vue';
 
-import { useVbenDrawer } from '@vben/common-ui';
-import { IconifyIcon } from '@vben/icons';
-import { $te } from '@vben/locales';
-import { getPopupContainer } from '@vben/utils';
+import { useVaticDrawer } from '@vatic/common-ui';
+import { IconifyIcon } from '@vatic/icons';
+import { $te } from '@vatic/locales';
+import { getPopupContainer } from '@vatic/utils';
 
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
 
-import { useVbenForm, z } from '#/adapter/form';
+import { useVaticForm, z } from '#/adapter/form';
 import {
   createMenu,
   getMenuList,
@@ -33,7 +33,7 @@ const emit = defineEmits<{
 }>();
 const formData = ref<SystemMenuApi.SystemMenu>();
 const titleSuffix = ref<string>();
-const schema: VbenFormSchema[] = [
+const schema: VaticFormSchema[] = [
   {
     component: 'RadioGroup',
     componentProps: {
@@ -433,7 +433,7 @@ const schema: VbenFormSchema[] = [
 const breakpoints = useBreakpoints(breakpointsTailwind);
 const isHorizontal = computed(() => breakpoints.greaterOrEqual('md').value);
 
-const [Form, formApi] = useVbenForm({
+const [Form, formApi] = useVaticForm({
   commonConfig: {
     colon: true,
     formItemClass: 'col-span-2 md:col-span-1',
@@ -443,7 +443,7 @@ const [Form, formApi] = useVbenForm({
   wrapperClass: 'grid-cols-2 gap-x-4',
 });
 
-const [Drawer, drawerApi] = useVbenDrawer({
+const [Drawer, drawerApi] = useVaticDrawer({
   onConfirm: onSubmit,
   onOpenChange(isOpen) {
     if (isOpen) {

@@ -10,7 +10,7 @@ const defaultPreferences: Preferences = {
     compact: false,
     contentCompact: 'wide',
     defaultAvatar:
-      'https://unpkg.com/@vbenjs/static-source@0.1.7/source/avatar-v1.webp',
+      'https://unpkg.com/@vaticjs/static-source@0.1.7/source/avatar-v1.webp',
     defaultHomePath: '/demos',
     dynamicTitle: true,
     enableCheckUpdates: true,
@@ -20,7 +20,7 @@ const defaultPreferences: Preferences = {
     layout: 'sidebar-nav',
     locale: 'zh-CN',
     loginExpiredMode: 'page',
-    name: 'Vben Admin',
+    name: 'Vatic Admin',
     preferencesButtonPosition: 'auto',
     watermark: false,
   },
@@ -32,8 +32,8 @@ const defaultPreferences: Preferences = {
     styleType: 'normal',
   },
   copyright: {
-    companyName: 'Vben',
-    companySiteLink: 'https://www.vben.pro',
+    companyName: 'Vatic',
+    companySiteLink: 'https://www.vatic.pro',
     date: '2024',
     enable: true,
     icp: '',
@@ -52,7 +52,7 @@ const defaultPreferences: Preferences = {
   },
   logo: {
     enable: true,
-    source: 'https://unpkg.com/@vbenjs/static-source@0.1.7/source/logo-v1.webp',
+    source: 'https://unpkg.com/@vaticjs/static-source@0.1.7/source/logo-v1.webp',
   },
   navigation: {
     accordion: true,

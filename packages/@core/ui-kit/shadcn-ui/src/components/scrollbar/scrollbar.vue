@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { ClassType } from '@vben-core/typings';
+import type { ClassType } from '@vatic-core/typings';
 
 import { computed, ref } from 'vue';
 
-import { cn } from '@vben-core/shared/utils';
+import { cn } from '@vatic-core/shared/utils';
 
 import { ScrollArea, ScrollBar } from '../../ui';
 
@@ -94,7 +94,7 @@ function handleScroll(event: Event) {
   <ScrollArea
     :class="[cn(props.class), computedShadowClasses]"
     :on-scroll="handleScroll"
-    class="vben-scrollbar relative"
+    class="vatic-scrollbar relative"
   >
     <div
       v-if="showShadowTop"
@@ -122,7 +122,7 @@ function handleScroll(event: Event) {
 </template>
 
 <style scoped>
-.vben-scrollbar {
+.vatic-scrollbar {
   &:not(.both-shadow).left-shadow {
     mask-image: linear-gradient(90deg, transparent, #000 16px);
   }

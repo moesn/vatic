@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { useVbenModal } from '@vben/common-ui';
+import { useVaticModal } from '@vatic/common-ui';
 
 import { Button, message } from 'ant-design-vue';
 
-const [Modal, modalApi] = useVbenModal({
+const [Modal, modalApi] = useVaticModal({
   draggable: true,
   onCancel() {
     modalApi.close();

@@ -1,10 +1,10 @@
-import type { VbenFormSchema } from '#/adapter/form';
+import type { VaticFormSchema } from '#/adapter/form';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { SystemRoleApi } from '#/api';
 
 import { $t } from '#/locales';
 
-export function useFormSchema(): VbenFormSchema[] {
+export function useFormSchema(): VaticFormSchema[] {
   return [
     {
       component: 'Input',
@@ -41,7 +41,7 @@ export function useFormSchema(): VbenFormSchema[] {
   ];
 }
 
-export function useGridFormSchema(): VbenFormSchema[] {
+export function useGridFormSchema(): VaticFormSchema[] {
   return [
     {
       component: 'Input',

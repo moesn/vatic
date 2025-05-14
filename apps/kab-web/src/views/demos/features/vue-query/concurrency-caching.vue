@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import type { Recordable } from '@vben/types';
+import type { Recordable } from '@vatic/types';
 
 import { useQuery } from '@tanstack/vue-query';
 
-import { useVbenForm } from '#/adapter/form';
+import { useVaticForm } from '#/adapter/form';
 import { getMenuList } from '#/api';
 
 const queryKey = ['demo', 'api', 'options'];
@@ -45,7 +45,7 @@ for (let i = 0; i < count; i++) {
   });
 }
 
-const [Form] = useVbenForm({
+const [Form] = useVaticForm({
   schema,
   showDefaultActions: false,
 });

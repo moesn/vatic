@@ -21,8 +21,8 @@ import {
   watchEffect,
 } from 'vue';
 
-import { useNamespace } from '@vben-core/composables';
-import { Ellipsis } from '@vben-core/icons';
+import { useNamespace } from '@vatic-core/composables';
+import { Ellipsis } from '@vatic-core/icons';
 
 import { useResizeObserver } from '@vueuse/core';
 
@@ -370,7 +370,7 @@ function getActivePaths() {
 </template>
 
 <style lang="scss">
-$namespace: vben;
+$namespace: vatic;
 
 @mixin menu-item-active {
   color: var(--menu-item-active-color);
@@ -509,7 +509,7 @@ $namespace: vben;
     --menu-item-padding-x: 12px;
   }
 
-  // .vben-menu__popup,
+  // .vatic-menu__popup,
   &.is-horizontal {
     --menu-item-padding-y: 0px;
     --menu-item-padding-x: 10px;
