@@ -1,48 +1,29 @@
 {
   "name": "@vatic/smart",
   "version": "1.0.0",
-  "homepage": "https://vatic.pro",
+  "homepage": "https://github.com/moesn/vatic",
   "bugs": "https://github.com/moesn/vatic/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/moesn/vatic.git",
-    "directory": "smart"
+    "directory": "apps/smart"
   },
   "license": "MIT",
-  "author": {
-    "name": "moesn",
-    "email": "475484467@qq.com",
-    "url": "https://github.com/moesn"
-  },
   "type": "module",
-  "scripts": {
-    "dev": "pnpm vite --mode development"
-  },
-  "imports": {
-    "#/*": "./src/*"
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
   },
   "dependencies": {
-    "@tanstack/vue-query": "catalog:",
-    "@vatic-core/menu-ui": "workspace:*",
-    "@vatic/access": "workspace:*",
-    "@vatic/common-ui": "workspace:*",
-    "@vatic/constants": "workspace:*",
-    "@vatic/hooks": "workspace:*",
-    "@vatic/icons": "workspace:*",
-    "@vatic/layouts": "workspace:*",
-    "@vatic/locales": "workspace:*",
-    "@vatic/plugins": "workspace:*",
-    "@vatic/preferences": "workspace:*",
-    "@vatic/request": "workspace:*",
-    "@vatic/stores": "workspace:*",
-    "@vatic/styles": "workspace:*",
-    "@vatic/types": "workspace:*",
-    "@vatic/utils": "workspace:*",
-    "@vueuse/core": "catalog:",
-    "ant-design-vue": "catalog:",
-    "dayjs": "catalog:",
-    "pinia": "catalog:",
+    "axios": "catalog:",
     "vue": "catalog:",
-    "vue-router": "catalog:"
+    "vue-router": "catalog:",
+    "vxe-table": "catalog:",
+    "vxe-pc-ui": "catalog:"
   }
 }

@@ -1,0 +1,38 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/system/role/list",
+    "title": "角色列表",
+    "titleHelp": "角色管理",
+    "keyField": "id",
+    "nameField": "name",
+    "columns": [
+      {
+        "type": "seq",
+        "width": 70
+      },
+      {
+        "title": "角色名称",
+        "field": "name"
+      },
+      {
+        "title": "备注",
+        "field": "remark"
+      },
+      {
+        "title": "状态",
+        "field": "status"
+      },
+      {
+        "title": "创建时间",
+        "field": "createTime"
+      }
+    ],
+    "edit": {
+      "api": ""
+    },
+    "remove": {
+      "api": ""
+    }
+  }
+}

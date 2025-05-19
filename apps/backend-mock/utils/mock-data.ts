@@ -55,27 +55,29 @@ const dashboardMenus = [
   {
     meta: {
       order: -1,
-      title: 'page.dashboard.title',
+      title: '系统管理',
     },
-    name: 'Dashboard',
-    path: '/dashboard',
-    redirect: '/analytics',
+    name: 'System',
+    path: '/system',
     children: [
       {
-        name: 'Analytics',
-        path: '/analytics',
-        component: '/dashboard/analytics/index',
+        name: 'Role',
+        path: '/system/role',
+        component: '/smart/index',
         meta: {
           affixTab: true,
-          title: 'page.dashboard.analytics',
+          keepAlive: true,
+          title: '角色管理',
         },
       },
       {
-        name: 'Workspace',
-        path: '/workspace',
-        component: '/dashboard/workspace/index',
+        name: 'Role2',
+        path: '/system/role2',
+        component: '/_system/role/list',
         meta: {
-          title: 'page.dashboard.workspace',
+          affixTab: true,
+          keepAlive: true,
+          title: '角色管理2',
         },
       },
     ],
