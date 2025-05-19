@@ -4,7 +4,6 @@
     "api": "/system/role/list",
     "title": "角色列表",
     "titleHelp": "角色管理",
-    "keyField": "id",
     "nameField": "name",
     "columns": [
       {
@@ -20,19 +19,39 @@
         "field": "remark"
       },
       {
-        "title": "状态",
-        "field": "status"
-      },
-      {
         "title": "创建时间",
         "field": "createTime"
       }
     ],
+    "search": [
+      {
+        "title": "角色名称",
+        "field": "name"
+      }
+    ],
+    "create": {
+      "url": ""
+    },
     "edit": {
-      "api": ""
+      "url": ""
+    },
+    "state": {
+      "url": "/system/role/$id"
     },
     "remove": {
-      "api": ""
+      "url": "/system/role/$id"
     }
+  },
+  "form": {
+    "items": [
+      {
+        "title": "角色名称",
+        "field": "name"
+      },
+      {
+        "title": "备注",
+        "field": "remark"
+      }
+    ]
   }
 }

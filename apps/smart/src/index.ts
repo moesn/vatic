@@ -1,4 +1,4 @@
-export const getPageOptions = async () => {
+export const getPageSchema = async () => {
   try {
     const schema = location.pathname.split('/').reverse()[0];
     const response = await fetch(`/schemas/${schema}.json`);
