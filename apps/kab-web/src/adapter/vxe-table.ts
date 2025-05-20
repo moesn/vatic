@@ -107,6 +107,7 @@ setupVaticVxeTable({
           loading: row[loadingKey] ?? false,
           'onUpdate:checked': onChange,
         };
+
         async function onChange(newVal: any) {
           row[loadingKey] = true;
           try {
@@ -118,6 +119,7 @@ setupVaticVxeTable({
             row[loadingKey] = false;
           }
         }
+
         return h(Switch, finallyProps);
       },
     });
@@ -187,7 +189,7 @@ setupVaticVxeTable({
               onClick: listen
                 ? () =>
                     attrs?.onClick?.({
-                      code: opt.code,
+                      ...opt,
                       row,
                     })
                 : undefined,
@@ -280,6 +282,7 @@ setupVaticVxeTable({
 export { useVaticVxeGrid };
 export type OnActionClickParams<T = Recordable<any>> = {
   code: string;
+  form: T;
   row: T;
 };
 export type OnActionClickFn<T = Recordable<any>> = (

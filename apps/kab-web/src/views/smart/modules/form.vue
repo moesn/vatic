@@ -5,7 +5,7 @@ import type { Recordable } from '@vatic/types';
 
 import type { SystemRoleApi } from '#/api/system/role';
 
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 
 import { useVaticDrawer, VaticTree } from '@vatic/common-ui';
 import { IconifyIcon } from '@vatic/icons';
@@ -19,50 +19,17 @@ import { $t } from '#/locales';
 
 const emits = defineEmits(['success']);
 
-const formData = ref<SystemRoleApi.SystemRole>();
-
-const [Form, formApi] = useVaticForm({
-  schema: [
-    {
-      component: 'Input',
-      fieldName: 'name',
-      label: $t('system.role.roleName'),
-      rules: 'required',
-    },
-    {
-      component: 'RadioGroup',
-      componentProps: {
-        buttonStyle: 'solid',
-        options: [
-          { label: $t('common.enabled'), value: 1 },
-          { label: $t('common.disabled'), value: 0 },
-        ],
-        optionType: 'button',
-      },
-      defaultValue: 1,
-      fieldName: 'status',
-      label: $t('system.role.status'),
-    },
-    {
-      component: 'Textarea',
-      fieldName: 'remark',
-      label: $t('system.role.remark'),
-    },
-    {
-      component: 'Input',
-      fieldName: 'permissions',
-      formItemClass: 'items-start',
-      label: $t('system.role.setPermissions'),
-      modelPropName: 'modelValue',
-    },
-  ],
-  showDefaultActions: false,
-});
-
 const permissions = ref<DataNode[]>([]);
 const loadingPermissions = ref(false);
 
 const id = ref();
+const drawerInit = ref(false);
+const drawerTitle = ref('');
+
+const formData = ref<SystemRoleApi.SystemRole>();
+
+let Form: any, formApi: any;
+
 const [Drawer, drawerApi] = useVaticDrawer({
   async onConfirm() {
     const { valid } = await formApi.validate();
@@ -80,6 +47,20 @@ const [Drawer, drawerApi] = useVaticDrawer({
   },
   onOpenChange(isOpen) {
     if (isOpen) {
+      const { items, title } = drawerApi.getSchema();
+      drawerTitle.value = title;
+
+      [Form, formApi] = useVaticForm({
+        schema: items.map((item: any) => {
+          return {
+            component: item.type,
+            fieldName: item.field,
+            label: item.title,
+          };
+        }),
+        showDefaultActions: false,
+      });
+
       const data = drawerApi.getData<SystemRoleApi.SystemRole>();
       formApi.resetForm();
       if (data) {
@@ -93,6 +74,8 @@ const [Drawer, drawerApi] = useVaticDrawer({
       if (permissions.value.length === 0) {
         loadPermissions();
       }
+
+      drawerInit.value = true;
     }
   },
 });
@@ -107,12 +90,6 @@ async function loadPermissions() {
   }
 }
 
-const getDrawerTitle = computed(() => {
-  return formData.value?.id
-    ? $t('common.edit', $t('system.role.name'))
-    : $t('common.create', $t('system.role.name'));
-});
-
 function getNodeClass(node: Recordable<any>) {
   const classes: string[] = [];
   if (node.value?.type === 'button') {
@@ -126,8 +103,8 @@ function getNodeClass(node: Recordable<any>) {
 }
 </script>
 <template>
-  <Drawer :title="getDrawerTitle">
-    <Form>
+  <Drawer :title="drawerTitle">
+    <Form v-if="drawerInit">
       <template #permissions="slotProps">
         <Spin :spinning="loadingPermissions" wrapper-class-name="w-full">
           <VaticTree

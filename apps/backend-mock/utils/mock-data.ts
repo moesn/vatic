@@ -17,11 +17,11 @@ export const MOCK_USERS: UserInfo[] = [
   },
   {
     id: 1,
-    password: '123456',
+    password: 'Ad.123~',
     realName: 'Admin',
     roles: ['admin'],
     username: 'admin',
-    homePath: '/workspace',
+    homePath: '/dashboard',
   },
   {
     id: 2,
@@ -53,137 +53,178 @@ export const MOCK_CODES = [
 
 const dashboardMenus = [
   {
+    name: 'Dashboard',
+    path: '/dashboard',
+    component: '/smart/index',
     meta: {
-      order: -1,
-      title: '系统管理',
+      affixTab: true,
+      keepAlive: true,
+      title: '首页',
+      icon: 'mdi:monitor-dashboard',
     },
+  },
+  {
+    name: 'RealTimeRiskEvent',
+    path: '/realtime',
+    component: '/smart/index',
+    meta: {
+      keepAlive: true,
+      title: '实时风险事件',
+      icon: 'mdi:progress-warning',
+    },
+  },
+  {
+    name: 'HistoryRiskEvent',
+    path: '/history',
+    component: '/smart/index',
+    meta: {
+      keepAlive: true,
+      title: '历史风险事件',
+      icon: 'mdi:clipboard-text-history-outline',
+    },
+  },
+  {
+    name: 'Task',
+    path: '/task',
+    meta: {
+      title: '任务管理',
+      icon: 'mdi:calendar-task-outline',
+    },
+    children: [
+      {
+        name: 'TaskDispose',
+        path: '/task/dispose',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '任务处理',
+        },
+      },
+      {
+        name: 'TaskReview',
+        path: '/task/review',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '任务复核',
+        },
+      },
+    ],
+  },
+  {
+    name: 'Maintain',
+    path: '/maintain',
+    meta: {
+      title: '养护管理',
+      icon: 'mdi:car-repair',
+    },
+    children: [
+      {
+        name: 'MaintainRecord',
+        path: '/maintain/record',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '养护记录管理',
+        },
+      },
+      {
+        name: 'MaintainTrack',
+        path: '/maintain/track',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '养护轨迹查看',
+        },
+      },
+    ],
+  },
+  {
+    name: 'Resource',
+    path: '/resource',
+    meta: {
+      title: '信息录入',
+      icon: 'mdi:car-info',
+    },
+    children: [
+      {
+        name: 'ResourceCompany',
+        path: '/resource/company',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '养护企业管理',
+        },
+      },
+      {
+        name: 'ResourceCar',
+        path: '/resource/car',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '养护车辆管理',
+        },
+      },
+      {
+        name: 'ResourceStaff',
+        path: '/resource/staff',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '养护人员管理',
+        },
+      },
+      {
+        name: 'ResourceDevice',
+        path: '/resource/device',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '监控设备管理',
+        },
+      },
+    ],
+  },
+  {
     name: 'System',
     path: '/system',
+    meta: {
+      title: '权限管理',
+      icon: 'mdi:user-multiple-outline',
+    },
     children: [
+      {
+        name: 'User',
+        path: '/system/user',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '用户管理',
+        },
+      },
       {
         name: 'Role',
         path: '/system/role',
         component: '/smart/index',
         meta: {
-          affixTab: true,
           keepAlive: true,
           title: '角色管理',
-        },
-      },
-      {
-        name: 'Role2',
-        path: '/system/role2',
-        component: '/_system/role/list',
-        meta: {
-          affixTab: true,
-          keepAlive: true,
-          title: '角色管理2',
         },
       },
     ],
   },
 ];
-
-const createDemosMenus = (role: 'admin' | 'super' | 'user') => {
-  const roleWithMenus = {
-    admin: {
-      component: '/demos/access/admin-visible',
-      meta: {
-        icon: 'mdi:button-cursor',
-        title: 'demos.access.adminVisible',
-      },
-      name: 'AccessAdminVisibleDemo',
-      path: '/demos/access/admin-visible',
-    },
-    super: {
-      component: '/demos/access/super-visible',
-      meta: {
-        icon: 'mdi:button-cursor',
-        title: 'demos.access.superVisible',
-      },
-      name: 'AccessSuperVisibleDemo',
-      path: '/demos/access/super-visible',
-    },
-    user: {
-      component: '/demos/access/user-visible',
-      meta: {
-        icon: 'mdi:button-cursor',
-        title: 'demos.access.userVisible',
-      },
-      name: 'AccessUserVisibleDemo',
-      path: '/demos/access/user-visible',
-    },
-  };
-
-  return [
-    {
-      meta: {
-        icon: 'ic:baseline-view-in-ar',
-        keepAlive: true,
-        order: 1000,
-        title: 'demos.title',
-      },
-      name: 'Demos',
-      path: '/demos',
-      redirect: '/demos/access',
-      children: [
-        {
-          name: 'AccessDemos',
-          path: '/demosaccess',
-          meta: {
-            icon: 'mdi:cloud-key-outline',
-            title: 'demos.access.backendPermissions',
-          },
-          redirect: '/demos/access/page-control',
-          children: [
-            {
-              name: 'AccessPageControlDemo',
-              path: '/demos/access/page-control',
-              component: '/demos/access/index',
-              meta: {
-                icon: 'mdi:page-previous-outline',
-                title: 'demos.access.pageAccess',
-              },
-            },
-            {
-              name: 'AccessButtonControlDemo',
-              path: '/demos/access/button-control',
-              component: '/demos/access/button-control',
-              meta: {
-                icon: 'mdi:button-cursor',
-                title: 'demos.access.buttonControl',
-              },
-            },
-            {
-              name: 'AccessMenuVisible403Demo',
-              path: '/demos/access/menu-visible-403',
-              component: '/demos/access/menu-visible-403',
-              meta: {
-                authority: ['no-body'],
-                icon: 'mdi:button-cursor',
-                menuVisibleWithForbidden: true,
-                title: 'demos.access.menuVisible403',
-              },
-            },
-            roleWithMenus[role],
-          ],
-        },
-      ],
-    },
-  ];
-};
-
 export const MOCK_MENUS = [
   {
-    menus: [...dashboardMenus, ...createDemosMenus('super')],
+    menus: [...dashboardMenus],
     username: 'vatic',
   },
   {
-    menus: [...dashboardMenus, ...createDemosMenus('admin')],
+    menus: [...dashboardMenus],
     username: 'admin',
   },
   {
-    menus: [...dashboardMenus, ...createDemosMenus('user')],
+    menus: [...dashboardMenus],
     username: 'jack',
   },
 ];

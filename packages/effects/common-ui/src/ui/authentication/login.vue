@@ -6,15 +6,13 @@ import type { VaticFormSchema } from '@vatic-core/form-ui';
 import type { AuthenticationProps } from './types';
 
 import { computed, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
 
 import { $t } from '@vatic/locales';
 
 import { useVaticForm } from '@vatic-core/form-ui';
-import { VaticButton, VaticCheckbox } from '@vatic-core/shadcn-ui';
+import { VaticButton } from '@vatic-core/shadcn-ui';
 
 import Title from './auth-title.vue';
-import ThirdPartyLogin from './third-party-login.vue';
 
 interface Props extends AuthenticationProps {
   formSchema?: VaticFormSchema[];
@@ -56,7 +54,6 @@ const [Form, formApi] = useVaticForm(
     showDefaultActions: false,
   }),
 );
-const router = useRouter();
 
 const REMEMBER_ME_KEY = `REMEMBER_ME_USERNAME_${location.hostname}`;
 
@@ -74,10 +71,6 @@ async function handleSubmit() {
     );
     emit('submit', values);
   }
-}
-
-function handleGo(path: string) {
-  router.push(path);
 }
 
 onMounted(() => {
@@ -98,40 +91,9 @@ defineExpose({
         <slot name="title">
           {{ title || `${$t('authentication.welcomeBack')} 👋🏻` }}
         </slot>
-        <template #desc>
-          <span class="text-muted-foreground">
-            <slot name="subTitle">
-              {{ subTitle || $t('authentication.loginSubtitle') }}
-            </slot>
-          </span>
-        </template>
       </Title>
     </slot>
-
     <Form />
-
-    <div
-      v-if="showRememberMe || showForgetPassword"
-      class="mb-6 flex justify-between"
-    >
-      <div class="flex-center">
-        <VaticCheckbox
-          v-if="showRememberMe"
-          v-model:checked="rememberMe"
-          name="rememberMe"
-        >
-          {{ $t('authentication.rememberMe') }}
-        </VaticCheckbox>
-      </div>
-
-      <span
-        v-if="showForgetPassword"
-        class="vatic-link text-sm font-normal"
-        @click="handleGo(forgetPasswordPath)"
-      >
-        {{ $t('authentication.forgetPassword') }}
-      </span>
-    </div>
     <VaticButton
       :class="{
         'cursor-wait': loading,
@@ -143,44 +105,5 @@ defineExpose({
     >
       {{ submitButtonText || $t('common.login') }}
     </VaticButton>
-
-    <div
-      v-if="showCodeLogin || showQrcodeLogin"
-      class="mb-2 mt-4 flex items-center justify-between"
-    >
-      <VaticButton
-        v-if="showCodeLogin"
-        class="w-1/2"
-        variant="outline"
-        @click="handleGo(codeLoginPath)"
-      >
-        {{ $t('authentication.mobileLogin') }}
-      </VaticButton>
-      <VaticButton
-        v-if="showQrcodeLogin"
-        class="ml-4 w-1/2"
-        variant="outline"
-        @click="handleGo(qrCodeLoginPath)"
-      >
-        {{ $t('authentication.qrcodeLogin') }}
-      </VaticButton>
-    </div>
-
-    <!-- 第三方登录 -->
-    <slot name="third-party-login">
-      <ThirdPartyLogin v-if="showThirdPartyLogin" />
-    </slot>
-
-    <slot name="to-register">
-      <div v-if="showRegister" class="mt-3 text-center text-sm">
-        {{ $t('authentication.accountTip') }}
-        <span
-          class="vatic-link text-sm font-normal"
-          @click="handleGo(registerPath)"
-        >
-          {{ $t('authentication.createAccount') }}
-        </span>
-      </div>
-    </slot>
   </div>
 </template>

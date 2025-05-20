@@ -26,7 +26,17 @@
     "search": [
       {
         "title": "角色名称",
-        "field": "name"
+        "field": "name",
+        "type": "Input"
+      },
+      {
+        "title": "创建时间",
+        "field": "createTime",
+        "type": "RangePicker",
+        "rangeFields": [
+          "startTime",
+          "endTime"
+        ]
       }
     ],
     "create": {

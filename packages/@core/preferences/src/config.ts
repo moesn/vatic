@@ -2,7 +2,7 @@ import type { Preferences } from './types';
 
 const defaultPreferences: Preferences = {
   app: {
-    accessMode: 'frontend',
+    accessMode: 'backend',
     authPageLayout: 'panel-right',
     checkUpdatesInterval: 1,
     colorGrayMode: false,
@@ -11,7 +11,7 @@ const defaultPreferences: Preferences = {
     contentCompact: 'wide',
     defaultAvatar:
       'https://unpkg.com/@vaticjs/static-source@0.1.7/source/avatar-v1.webp',
-    defaultHomePath: '/demos',
+    defaultHomePath: '/dashboard',
     dynamicTitle: true,
     enableCheckUpdates: true,
     enablePreferences: true,
@@ -56,7 +56,7 @@ const defaultPreferences: Preferences = {
       'https://unpkg.com/@vaticjs/static-source@0.1.7/source/logo-v1.webp',
   },
   navigation: {
-    accordion: true,
+    accordion: false,
     split: true,
     styleType: 'rounded',
   },

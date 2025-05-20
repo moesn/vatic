@@ -1,0 +1,105 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/system/role/list",
+    "title": "任务处理列表",
+    "nameField": "name",
+    "columns": [
+      {
+        "type": "seq",
+        "width": 70
+      },
+      {
+        "title": "任务名称",
+        "field": "name"
+      },
+      {
+        "title": "任务类型",
+        "field": "name"
+      },
+      {
+        "title": "任务生成时间",
+        "field": "createTime"
+      },
+      {
+        "title": "任务结束时间",
+        "field": "createTime"
+      },
+      {
+        "title": "任务处理时间",
+        "field": "createTime"
+      },
+      {
+        "title": "任务处理结果",
+        "field": "name"
+      },
+      {
+        "title": "处理人",
+        "field": "name"
+      },
+      {
+        "title": "任务状态",
+        "field": "name"
+      },
+      {
+        "title": "任务详情",
+        "field": "name"
+      }
+    ],
+    "search": [
+      {
+        "title": "任务名称",
+        "field": "name",
+        "type": "Input"
+      },
+      {
+        "title": "任务状态",
+        "field": "name",
+        "type": "Select"
+      }
+    ]
+  },
+  "form": {
+    "items": [
+      {
+        "title": "角色名称",
+        "field": "name",
+        "type": "Input"
+      },
+      {
+        "title": "备注",
+        "field": "remark",
+        "type": "Input"
+      }
+    ]
+  },
+  "operations": [
+    {
+      "title": "详情"
+    },
+    {
+      "title": "进度"
+    },
+    {
+      "title": "确认",
+      "form": {
+        "title": "任务确认",
+        "items": [
+          {
+            "title": "任务确认",
+            "field": "name",
+            "type": "Input"
+          },
+          {
+            "title": "确认说明",
+            "field": "remark",
+            "type": "Input"
+          }
+        ]
+      }
+    },
+    {
+      "title": "反馈"
+    }
+  ]
+}

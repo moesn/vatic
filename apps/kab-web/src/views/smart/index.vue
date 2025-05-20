@@ -12,7 +12,6 @@ import { ref, watch } from 'vue';
 
 import { Page, useVaticDrawer } from '@vatic/common-ui';
 import { Plus } from '@vatic/icons';
-import { $t } from '@vatic/locales';
 import { getPageSchema } from '@vatic/smart';
 
 import { Button, message, Modal } from 'ant-design-vue';
@@ -39,11 +38,11 @@ function onRefresh() {
 }
 
 function onCreate() {
-  formDrawerApi.setData({}).open();
+  formDrawerApi.setData({}, pageSchema.value.form).open();
 }
 
-function onEdit(row: any) {
-  formDrawerApi.setData(row).open();
+function onEdit(row: any, form: any) {
+  formDrawerApi.setData(row, form).open();
 }
 
 function confirm(content: string, title: string) {
@@ -90,7 +89,7 @@ function onActionClick(e: OnActionClickParams) {
       break;
     }
     case 'edit': {
-      onEdit(e.row);
+      onEdit(e.row, e.form);
       break;
     }
   }
@@ -99,17 +98,38 @@ function onActionClick(e: OnActionClickParams) {
 watch(
   () => pageSchema.value,
   (schema) => {
-    const { api, columns, search, edit, remove, state, nameField } =
-      schema.table;
+    const { operations, table, form } = schema;
+    const { api, columns, search, edit, remove, state, nameField } = table;
 
-    if (edit || remove) {
+    if (edit || remove || operations) {
       let width = 12;
+      const options = [];
+
+      if (operations) {
+        operations.forEach((opera: any) => {
+          width += (opera.title.length + 1) * 14;
+          options.push({
+            ...opera,
+            code: opera.form ? 'edit' : '',
+            text: opera.title,
+          });
+        });
+      }
+
       if (edit) {
         width += 45;
+        options.push({
+          code: 'edit',
+          text: '编辑',
+          form,
+        });
       }
+
       if (remove) {
         width += 45;
+        options.push('delete');
       }
+
       columns.push({
         cellRender: {
           attrs: {
@@ -117,6 +137,7 @@ watch(
             nameTitle: '数据',
             onClick: onActionClick,
           },
+          options,
           name: 'CellOperation',
         },
         field: 'operation',
@@ -169,12 +190,13 @@ watch(
       keepSource: true,
       proxyConfig: {
         ajax: {
-          query: async ({ page, sort }) => {
+          query: async ({ page, sort }, search) => {
             const params = {
               page: page.currentPage,
               pageSize: page.pageSize,
               sortBy: sort.field,
               sortOrder: sort.order,
+              ...search,
             };
             return await requestClient.get(api, { params });
           },
@@ -200,37 +222,14 @@ watch(
 
     if (search) {
       options.formOptions = {
-        fieldMappingTime: [['createTime', ['startTime', 'endTime']]],
-        schema: [
-          {
-            component: 'Input',
-            fieldName: 'name',
-            label: $t('system.role.roleName'),
-          },
-          { component: 'Input', fieldName: 'id', label: $t('system.role.id') },
-          {
-            component: 'Select',
-            componentProps: {
-              allowClear: true,
-              options: [
-                { label: $t('common.enabled'), value: 1 },
-                { label: $t('common.disabled'), value: 0 },
-              ],
-            },
-            fieldName: 'status',
-            label: $t('system.role.status'),
-          },
-          {
-            component: 'Input',
-            fieldName: 'remark',
-            label: $t('system.role.remark'),
-          },
-          {
-            component: 'RangePicker',
-            fieldName: 'createTime',
-            label: $t('system.role.createTime'),
-          },
-        ],
+        fieldMappingTime: search
+          .filter((s: any) => s.type === 'RangePicker')
+          .map((d: any) => [d.field, d.rangeFields]),
+        schema: search.map((d: any) => ({
+          component: d.type,
+          fieldName: d.field,
+          label: d.title,
+        })),
       };
     }
 

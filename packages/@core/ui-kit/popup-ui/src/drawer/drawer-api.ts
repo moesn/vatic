@@ -5,8 +5,9 @@ import { bindMethods, isFunction } from '@vatic-core/shared/utils';
 
 export class DrawerApi {
   // 共享数据
-  public sharedData: Record<'payload', any> = {
+  public sharedData: Record<string, any> = {
     payload: {},
+    schema: [],
   };
   public store: Store<DrawerState>;
 
@@ -106,6 +107,10 @@ export class DrawerApi {
     return (this.sharedData?.payload ?? {}) as T;
   }
 
+  getSchema<T extends object = Record<string, any>>() {
+    return (this.sharedData?.schema ?? []) as T;
+  }
+
   /**
    * 锁定抽屉状态（用于提交过程中的等待状态）
    * @description 锁定状态将禁用默认的取消按钮，使用spinner覆盖抽屉内容，隐藏关闭按钮，阻止手动关闭弹窗，将默认的提交按钮标记为loading状态
@@ -155,8 +160,9 @@ export class DrawerApi {
     this.store.setState((prev) => ({ ...prev, isOpen: true }));
   }
 
-  setData<T>(payload: T) {
+  setData<T>(payload: T, schema: T) {
     this.sharedData.payload = payload;
+    this.sharedData.schema = schema;
     return this;
   }
 

@@ -4,8 +4,6 @@ import { computed } from 'vue';
 import { AuthPageLayout } from '@vatic/layouts';
 import { preferences } from '@vatic/preferences';
 
-import { $t } from '#/locales';
-
 const appName = computed(() => preferences.app.name);
 const logo = computed(() => preferences.logo.source);
 const clickLogo = () => {};
@@ -15,8 +13,7 @@ const clickLogo = () => {};
   <AuthPageLayout
     :app-name="appName"
     :logo="logo"
-    :page-description="$t('authentication.pageDesc')"
-    :page-title="$t('authentication.pageTitle')"
+    page-title="XXXX系统"
     :click-logo="clickLogo"
   >
     <!-- 自定义工具栏 -->
