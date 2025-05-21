@@ -1,0 +1,118 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/device-list",
+    "title": "人员列表",
+    "keyField": "id",
+    "nameField": "name",
+    "export": true,
+    "columns": [
+      {
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "部署位置",
+        "field": "location"
+      },
+      {
+        "title": "设备名称",
+        "field": "deviceName"
+      },
+      {
+        "title": "SIM卡号",
+        "field": "simNo"
+      },
+      {
+        "title": "设备用途",
+        "field": "purpose"
+      },
+      {
+        "title": "负责人姓名",
+        "field": "manager"
+      },
+      {
+        "title": "负责人电话",
+        "field": "managerPhone"
+      },
+      {
+        "title": "设备型号",
+        "field": "model"
+      },
+      {
+        "title": "设备厂商",
+        "field": "vendor"
+      },
+      {
+        "title": "经纬度",
+        "field": "coordinates"
+      },
+      {
+        "title": "是否在线",
+        "field": "status",
+        "sortable": true
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keyword",
+        "type": "Input"
+      }
+    ],
+    "create": {
+      "url": "/system/role/$id"
+    },
+    "edit": {
+      "url": "/system/role/$id"
+    },
+    "delete": {
+      "url": "/system/role/$id"
+    }
+  },
+  "form": {
+    "title": "新增养护人员&修改养护人员",
+    "items": [
+      {
+        "title": "部署位置",
+        "field": "location"
+      },
+      {
+        "title": "设备名称",
+        "field": "deviceName"
+      },
+      {
+        "title": "SIM卡号",
+        "field": "simNo"
+      },
+      {
+        "title": "设备用途",
+        "field": "purpose"
+      },
+      {
+        "title": "负责人姓名",
+        "field": "manager"
+      },
+      {
+        "title": "负责人电话",
+        "field": "managerPhone"
+      },
+      {
+        "title": "设备型号",
+        "field": "model"
+      },
+      {
+        "title": "设备厂商",
+        "field": "vendor"
+      },
+      {
+        "title": "经纬度",
+        "field": "coordinates"
+      },
+      {
+        "title": "是否在线",
+        "field": "status"
+      }
+    ]
+  }
+}

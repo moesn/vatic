@@ -3,7 +3,8 @@
   "title": "页面配置",
   "description": "支持表格、表单、列表、树等，examples里是关键字说明",
   "examples": [
-
+    "下面是关键字说明：",
+    "formData：表单数据"
   ],
   "type": "object",
   "additionalProperties": false,
@@ -318,7 +319,6 @@
               }
             },
             "allOf": [
-
             ]
           }
         }

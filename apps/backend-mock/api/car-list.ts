@@ -1,19 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { verifyAccessToken } from '~/utils/jwt-utils';
-import { getMenuIds, MOCK_MENU_LIST } from '~/utils/mock-data';
 import { unAuthorizedResponse, usePageResponseSuccess } from '~/utils/response';
-
-const formatterCN = new Intl.DateTimeFormat('zh-CN', {
-  timeZone: 'Asia/Shanghai',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-});
-
-const menuIds = getMenuIds(MOCK_MENU_LIST);
 
 function generateMockDataList(count: number) {
   const dataList = [];
@@ -21,13 +8,26 @@ function generateMockDataList(count: number) {
   for (let i = 0; i < count; i++) {
     const dataItem: Record<string, any> = {
       id: faker.string.uuid(),
-      name: faker.commerce.product(),
-      status: faker.helpers.arrayElement([0, 1]),
-      createTime: formatterCN.format(
-        faker.date.between({ from: '2022-01-01', to: '2025-01-01' }),
-      ),
-      permissions: faker.helpers.arrayElements(menuIds),
-      remark: faker.lorem.sentence(),
+      plateNo:
+        faker.string.alpha(1) +
+        faker.number.int({
+          min: 10_000,
+          max: 99_999,
+        }),
+      VIN: faker.number.int({
+        min: 100_000_000_000_000,
+        max: 1_000_000_000_000_000,
+      }),
+      maintainCoName: faker.string.alpha(5),
+      maintainCoCode: faker.string.alpha(5),
+      inspectionDate: faker.string.alpha(5),
+      epLicenseExpire: faker.string.alpha(5),
+      ownerName: faker.string.alpha(5),
+      capacity: faker.string.alpha(5),
+      engineNo: faker.string.alpha(5),
+      modelNo: faker.string.alpha(5),
+      type: faker.string.alpha(5),
+      opLicenseNo: faker.string.alpha(5),
     };
 
     dataList.push(dataItem);
@@ -36,7 +36,7 @@ function generateMockDataList(count: number) {
   return dataList;
 }
 
-const mockData = generateMockDataList(10_000);
+const mockData = generateMockDataList(100);
 
 export default eventHandler(async (event) => {
   const userinfo = verifyAccessToken(event);

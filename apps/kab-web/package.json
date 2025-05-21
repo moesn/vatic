@@ -31,6 +31,7 @@
   "dependencies": {
     "@tanstack/vue-query": "catalog:",
     "@vatic-core/menu-ui": "workspace:*",
+    "@vatic-core/form-ui": "workspace:*",
     "@vatic/access": "workspace:*",
     "@vatic/common-ui": "workspace:*",
     "@vatic/constants": "workspace:*",

@@ -7,7 +7,7 @@
     "columns": [
       {
         "type": "seq",
-        "width": 70
+        "width": 50
       },
       {
         "title": "任务名称",
@@ -15,7 +15,8 @@
       },
       {
         "title": "任务类型",
-        "field": "name"
+        "field": "name",
+        "sortable": true
       },
       {
         "title": "任务生成时间",
@@ -54,8 +55,26 @@
       },
       {
         "title": "任务状态",
-        "field": "name",
-        "type": "Select"
+        "field": "status",
+        "type": "Select",
+        "options": [
+          {
+            "label": "待确认",
+            "value": "1"
+          },
+          {
+            "label": "待反馈",
+            "value": "2"
+          },
+          {
+            "label": "待复核",
+            "value": "3"
+          },
+          {
+            "label": "已完成",
+            "value": "4"
+          }
+        ]
       }
     ]
   },
@@ -87,13 +106,26 @@
         "items": [
           {
             "title": "任务确认",
-            "field": "name",
-            "type": "Input"
+            "field": "isMine",
+            "type": "RadioGroup",
+            "required": true,
+            "options": [
+              {
+                "label": "我的任务",
+                "value": "1"
+              },
+              {
+                "label": "不是我的任务",
+                "value": "2"
+              }
+            ]
           },
           {
             "title": "确认说明",
             "field": "remark",
-            "type": "Input"
+            "type": "Textarea",
+            "triggerField": "isMine",
+            "triggerValue": "1"
           }
         ]
       }

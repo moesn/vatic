@@ -8,7 +8,7 @@
     "columns": [
       {
         "type": "seq",
-        "width": 70
+        "width": 50
       },
       {
         "title": "角色名称",

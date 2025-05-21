@@ -86,6 +86,11 @@ async function generateRoutes(
   switch (mode) {
     case 'backend': {
       resultRoutes = await generateRoutesByBackend(options);
+      // resultRoutes = await generateRoutesByFrontend(
+      //   routes,
+      //   roles || [],
+      //   forbiddenComponent,
+      // );
       break;
     }
     case 'frontend': {

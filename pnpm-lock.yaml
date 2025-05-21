@@ -626,6 +626,9 @@ importers:
       '@tanstack/vue-query':
         specifier: 'catalog:'
         version: 5.76.0(vue@3.5.13(typescript@5.8.3))
+      '@vatic-core/form-ui':
+        specifier: workspace:*
+        version: link:../../packages/@core/ui-kit/form-ui
       '@vatic-core/menu-ui':
         specifier: workspace:*
         version: link:../../packages/@core/ui-kit/menu-ui
@@ -693,23 +696,7 @@ importers:
         specifier: 'catalog:'
         version: 4.5.1(vue@3.5.13(typescript@5.8.3))
 
-  apps/smart:
-    dependencies:
-      axios:
-        specifier: 'catalog:'
-        version: 1.9.0
-      vue:
-        specifier: ^3.5.13
-        version: 3.5.13(typescript@5.8.3)
-      vue-router:
-        specifier: 'catalog:'
-        version: 4.5.1(vue@3.5.13(typescript@5.8.3))
-      vxe-pc-ui:
-        specifier: 'catalog:'
-        version: 4.6.8(vue@3.5.13(typescript@5.8.3))
-      vxe-table:
-        specifier: 'catalog:'
-        version: 4.13.28(vue@3.5.13(typescript@5.8.3))
+  apps/smart: {}
 
   internal/lint-configs/commitlint-config:
     dependencies:

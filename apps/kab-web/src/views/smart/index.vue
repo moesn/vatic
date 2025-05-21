@@ -18,8 +18,8 @@ import { Button, message, Modal } from 'ant-design-vue';
 
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import { requestClient } from '#/api/request';
-import { parseApi } from '#/views/smart/helper';
 
+import { parseApi, parseFormSchema, parseTableColumns } from './helper';
 import Form from './modules/form.vue';
 
 const pageInit = ref(false);
@@ -37,12 +37,17 @@ function onRefresh() {
   gridApi.query();
 }
 
+function mergeFormSchema(formSchema: any) {
+  const { keyField } = pageSchema.value.table;
+  return { ...formSchema, keyField };
+}
+
 function onCreate() {
-  formDrawerApi.setData({}, pageSchema.value.form).open();
+  formDrawerApi.setData({}, mergeFormSchema(pageSchema.value.form)).open();
 }
 
 function onEdit(row: any, form: any) {
-  formDrawerApi.setData(row, form).open();
+  formDrawerApi.setData(row, mergeFormSchema(form)).open();
 }
 
 function confirm(content: string, title: string) {
@@ -61,7 +66,7 @@ function confirm(content: string, title: string) {
 }
 
 function onDelete(row: any) {
-  const { url } = parseApi(pageSchema.value.table.remove, row);
+  const { url } = parseApi(pageSchema.value.table.delete, row);
 
   const hideLoading = message.loading({
     content: `正在删除 ${row.name} ...`,
@@ -99,7 +104,17 @@ watch(
   () => pageSchema.value,
   (schema) => {
     const { operations, table, form } = schema;
-    const { api, columns, search, edit, remove, state, nameField } = table;
+    const {
+      api,
+      columns,
+      search,
+      edit,
+      delete: remove,
+      state,
+      nameField,
+    } = table;
+
+    parseTableColumns(columns);
 
     if (edit || remove || operations) {
       let width = 12;
@@ -185,7 +200,9 @@ watch(
         highlight: true,
         labelField: 'name',
       },
-      exportConfig: {},
+      exportConfig: {
+        excludeFields: ['operation'],
+      },
       height: 'auto',
       keepSource: true,
       proxyConfig: {
@@ -207,14 +224,16 @@ watch(
         keyField: 'id',
       },
       sortConfig: {
+        defaultSort: { field: 'deviceName', order: 'desc' },
         remote: true,
       },
       toolbarConfig: {
         custom: true,
-        export: false,
         refresh: { code: 'query' },
         search: true,
         zoom: true,
+        export: table.export,
+        import: table.import,
       },
     };
 
@@ -225,11 +244,7 @@ watch(
         fieldMappingTime: search
           .filter((s: any) => s.type === 'RangePicker')
           .map((d: any) => [d.field, d.rangeFields]),
-        schema: search.map((d: any) => ({
-          component: d.type,
-          fieldName: d.field,
-          label: d.title,
-        })),
+        schema: parseFormSchema(search),
       };
     }
 

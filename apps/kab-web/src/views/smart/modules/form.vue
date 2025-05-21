@@ -3,8 +3,6 @@ import type { DataNode } from 'ant-design-vue/es/tree';
 
 import type { Recordable } from '@vatic/types';
 
-import type { SystemRoleApi } from '#/api/system/role';
-
 import { ref } from 'vue';
 
 import { useVaticDrawer, VaticTree } from '@vatic/common-ui';
@@ -17,6 +15,8 @@ import { getMenuList } from '#/api/system/menu';
 import { createRole, updateRole } from '#/api/system/role';
 import { $t } from '#/locales';
 
+import { parseFormSchema } from '../helper';
+
 const emits = defineEmits(['success']);
 
 const permissions = ref<DataNode[]>([]);
@@ -26,7 +26,7 @@ const id = ref();
 const drawerInit = ref(false);
 const drawerTitle = ref('');
 
-const formData = ref<SystemRoleApi.SystemRole>();
+const formData = ref();
 
 let Form: any, formApi: any;
 
@@ -47,27 +47,25 @@ const [Drawer, drawerApi] = useVaticDrawer({
   },
   onOpenChange(isOpen) {
     if (isOpen) {
-      const { items, title } = drawerApi.getSchema();
-      drawerTitle.value = title;
+      const { items, title, keyField } = drawerApi.getSchema();
+      const titles = title.split('&');
 
       [Form, formApi] = useVaticForm({
-        schema: items.map((item: any) => {
-          return {
-            component: item.type,
-            fieldName: item.field,
-            label: item.title,
-          };
-        }),
+        schema: parseFormSchema(items),
         showDefaultActions: false,
       });
 
-      const data = drawerApi.getData<SystemRoleApi.SystemRole>();
+      const data = drawerApi.getData();
+      const key = data[keyField];
       formApi.resetForm();
-      if (data) {
+
+      if (key) {
+        drawerTitle.value = titles[1] || titles[0];
         formData.value = data;
-        id.value = data.id;
+        id.value = key;
         formApi.setValues(data);
       } else {
+        drawerTitle.value = titles[0];
         id.value = undefined;
       }
 

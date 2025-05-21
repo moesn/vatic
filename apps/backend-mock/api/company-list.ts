@@ -1,19 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { verifyAccessToken } from '~/utils/jwt-utils';
-import { getMenuIds, MOCK_MENU_LIST } from '~/utils/mock-data';
 import { unAuthorizedResponse, usePageResponseSuccess } from '~/utils/response';
-
-const formatterCN = new Intl.DateTimeFormat('zh-CN', {
-  timeZone: 'Asia/Shanghai',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-});
-
-const menuIds = getMenuIds(MOCK_MENU_LIST);
 
 function generateMockDataList(count: number) {
   const dataList = [];
@@ -21,13 +8,19 @@ function generateMockDataList(count: number) {
   for (let i = 0; i < count; i++) {
     const dataItem: Record<string, any> = {
       id: faker.string.uuid(),
-      name: faker.commerce.product(),
-      status: faker.helpers.arrayElement([0, 1]),
-      createTime: formatterCN.format(
-        faker.date.between({ from: '2022-01-01', to: '2025-01-01' }),
-      ),
-      permissions: faker.helpers.arrayElements(menuIds),
-      remark: faker.lorem.sentence(),
+      name: faker.company.name(),
+      shortName: faker.company.buzzNoun(),
+      code: faker.number.int({
+        min: 100_000_000_000_000,
+        max: 1_000_000_000_000_000,
+      }),
+      phone: faker.phone.number({ style: 'international' }),
+      license: faker.string.alpha(10),
+      legal: faker.string.alpha(10),
+      legalPhone: faker.string.alpha(10),
+      licenseTime: faker.string.alpha(10),
+      scope: faker.string.alpha(10),
+      staffCount: faker.string.alpha(10),
     };
 
     dataList.push(dataItem);
@@ -36,7 +29,7 @@ function generateMockDataList(count: number) {
   return dataList;
 }
 
-const mockData = generateMockDataList(10_000);
+const mockData = generateMockDataList(1);
 
 export default eventHandler(async (event) => {
   const userinfo = verifyAccessToken(event);

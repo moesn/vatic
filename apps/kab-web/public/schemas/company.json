@@ -1,0 +1,129 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/company-list",
+    "title": "企业列表",
+    "keyField": "id",
+    "nameField": "name",
+    "export": true,
+    "columns": [
+      {
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "企业名称",
+        "field": "name"
+      },
+      {
+        "title": "企业简称",
+        "field": "shortName"
+      },
+      {
+        "title": "机构代码(18位社会统一信用代码)",
+        "field": "code"
+      },
+      {
+        "title": "企业联系电话",
+        "field": "phone"
+      },
+      {
+        "title": "经营许可证",
+        "field": "license"
+      },
+      {
+        "title": "法人",
+        "field": "legal"
+      },
+      {
+        "title": "法人联系电话",
+        "field": "legalPhone"
+      },
+      {
+        "title": "经营许可时间",
+        "field": "licenseTime"
+      },
+      {
+        "title": "经营许可范围",
+        "field": "scope"
+      },
+      {
+        "title": "管理人员数",
+        "field": "staffCount"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keyword",
+        "type": "Input"
+      }
+    ],
+    "create": {
+      "url": "/system/role/$id"
+    },
+    "edit": {
+      "url": "/system/role/$id"
+    },
+    "delete": {
+      "url": "/system/role/$id"
+    }
+  },
+  "form": {
+    "title": "新增企业&修改企业",
+    "items": [
+      {
+        "title": "企业名称",
+        "field": "name",
+        "type": "Input",
+        "required": true
+      },
+      {
+        "title": "企业简称",
+        "field": "shortName",
+        "type": "Input"
+      },
+      {
+        "title": "机构代码(18位社会统一信用代码)",
+        "field": "code",
+        "type": "Input",
+        "labelWidth": 110
+      },
+      {
+        "title": "企业联系电话",
+        "field": "phone",
+        "type": "Input"
+      },
+      {
+        "title": "经营许可证",
+        "field": "license",
+        "type": "Input"
+      },
+      {
+        "title": "法人",
+        "field": "legal",
+        "type": "Input"
+      },
+      {
+        "title": "法人联系电话",
+        "field": "legalPhone",
+        "type": "Input"
+      },
+      {
+        "title": "经营许可时间",
+        "field": "licenseTime",
+        "type": "Input"
+      },
+      {
+        "title": "经营许可范围",
+        "field": "scope",
+        "type": "Input"
+      },
+      {
+        "title": "管理人员数",
+        "field": "staffCount",
+        "type": "Input"
+      }
+    ]
+  }
+}

@@ -218,7 +218,7 @@ const options = computed(() => {
       {
         pageSize: 20,
         background: true,
-        pageSizes: [10, 20, 30, 50, 100, 200],
+        pageSizes: [10, 20, 50, 100, 200, 500, 1000],
         className: 'mt-2 w-full',
         layouts: isMobile.value ? mobileLayouts : layouts,
         size: 'mini' as const,
@@ -374,7 +374,7 @@ onUnmounted(() => {
             </VaticHelpTooltip>
           </div>
         </slot>
-        <slot name="toolbar-actions" v-bind="slotProps"> </slot>
+        <slot name="toolbar-actions" v-bind="slotProps"></slot>
       </template>
 
       <!-- 继承默认的slot -->
