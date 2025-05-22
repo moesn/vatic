@@ -1,5 +1,8 @@
 <script lang="ts" setup>
+import { watch } from 'vue';
+
 import { Maximize, Minimize } from '@vatic-core/icons';
+import { updatePreferences, usePreferences } from '@vatic-core/preferences';
 
 import { useFullscreen } from '@vueuse/core';
 
@@ -19,6 +22,23 @@ isFullscreen.value = !!(
   // @ts-ignore
   document.msFullscreenElement
 );
+
+watch(isFullscreen, (isFull) => {
+  const { contentIsMaximize } = usePreferences();
+  const isMaximize = contentIsMaximize.value;
+
+  updatePreferences({
+    header: {
+      hidden: !isMaximize || isFull,
+    },
+    sidebar: {
+      hidden: !isMaximize || isFull,
+    },
+    tabbar: {
+      enable: !isFull,
+    },
+  });
+});
 </script>
 <template>
   <VaticIconButton @click="toggle">

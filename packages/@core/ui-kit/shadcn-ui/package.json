@@ -44,6 +44,7 @@
     "@vatic-core/icons": "workspace:*",
     "@vatic-core/shared": "workspace:*",
     "@vatic-core/typings": "workspace:*",
+    "@vatic-core/preferences": "workspace:*",
     "@vueuse/core": "catalog:",
     "class-variance-authority": "catalog:",
     "lucide-vue-next": "catalog:",

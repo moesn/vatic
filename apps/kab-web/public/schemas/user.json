@@ -1,0 +1,100 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/system/role/list",
+    "title": "用户列表",
+    "nameField": "name",
+    "columns": [
+      {
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "用户名",
+        "field": "name"
+      },
+      {
+        "title": "角色",
+        "field": "name",
+        "sortable": true
+      },
+      {
+        "title": "真实姓名",
+        "field": "createTime"
+      },
+      {
+        "title": "电话号码",
+        "field": "createTime"
+      },
+      {
+        "title": "邮箱",
+        "field": "createTime"
+      },
+      {
+        "title": "身份证号码",
+        "field": "name"
+      },
+      {
+        "title": "备注",
+        "field": "name"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keyword",
+        "type": "Input"
+      }
+    ],
+    "create": {
+      "url": ""
+    },
+    "edit": {
+      "url": ""
+    },
+    "delete": {
+      "url": "/system/role/$id"
+    }
+  },
+  "form": {
+    "title": "新增用户&修改用户",
+    "items": [
+      {
+        "title": "用户名",
+        "field": "name"
+      },
+      {
+        "title": "密码",
+        "field": "name"
+      },
+      {
+        "title": "确认密码",
+        "field": "name"
+      },
+      {
+        "title": "角色",
+        "field": "name"
+      },
+      {
+        "title": "真实姓名",
+        "field": "createTime"
+      },
+      {
+        "title": "电话号码",
+        "field": "createTime"
+      },
+      {
+        "title": "邮箱",
+        "field": "createTime"
+      },
+      {
+        "title": "身份证号码",
+        "field": "name"
+      },
+      {
+        "title": "备注",
+        "field": "name"
+      }
+    ]
+  }
+}

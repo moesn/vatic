@@ -55,12 +55,22 @@ const dashboardMenus = [
   {
     name: 'Dashboard',
     path: '/dashboard',
-    component: '/smart/index',
+    component: '/dashboard/index',
     meta: {
       affixTab: true,
       keepAlive: true,
       title: '首页',
       icon: 'mdi:monitor-dashboard',
+    },
+  },
+  {
+    name: 'Task',
+    path: '/task',
+    component: '/smart/index',
+    meta: {
+      keepAlive: true,
+      title: '任务管理',
+      icon: 'mdi:calendar-task-outline',
     },
   },
   {
@@ -82,34 +92,6 @@ const dashboardMenus = [
       title: '历史风险事件',
       icon: 'mdi:clipboard-text-history-outline',
     },
-  },
-  {
-    name: 'Task',
-    path: '/task',
-    meta: {
-      title: '任务管理',
-      icon: 'mdi:calendar-task-outline',
-    },
-    children: [
-      {
-        name: 'TaskDispose',
-        path: '/task/dispose',
-        component: '/smart/index',
-        meta: {
-          keepAlive: true,
-          title: '任务处理',
-        },
-      },
-      {
-        name: 'TaskReview',
-        path: '/task/review',
-        component: '/smart/index',
-        meta: {
-          keepAlive: true,
-          title: '任务复核',
-        },
-      },
-    ],
   },
   {
     name: 'Maintain',

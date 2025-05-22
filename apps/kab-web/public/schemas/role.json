@@ -45,10 +45,7 @@
     "edit": {
       "url": ""
     },
-    "state": {
-      "url": "/system/role/$id"
-    },
-    "remove": {
+    "delete": {
       "url": "/system/role/$id"
     }
   },

@@ -1,0 +1,43 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/system/role/list",
+    "title": "风险事件列表",
+    "nameField": "name",
+    "columns": [
+      {
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "警情类型",
+        "field": "type"
+      }
+    ],
+    "search": [
+      {
+        "title": "风险状态",
+        "field": "status",
+        "type": "Select",
+        "options": [
+          {
+            "label": "待确认",
+            "value": "1"
+          },
+          {
+            "label": "待反馈",
+            "value": "2"
+          },
+          {
+            "label": "待复核",
+            "value": "3"
+          },
+          {
+            "label": "已完成",
+            "value": "4"
+          }
+        ]
+      }
+    ]
+  }
+}

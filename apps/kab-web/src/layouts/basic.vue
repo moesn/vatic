@@ -4,9 +4,8 @@ import type { NotificationItem } from '@vatic/layouts';
 import { computed, onBeforeMount, ref, watch } from 'vue';
 
 import { AuthenticationLoginExpiredModal } from '@vatic/common-ui';
-import { VATIC_DOC_URL, VATIC_GITHUB_URL } from '@vatic/constants';
 import { useWatermark } from '@vatic/hooks';
-import { BookOpenText, CircleHelp, MdiGithub } from '@vatic/icons';
+import { CircleHelp } from '@vatic/icons';
 import {
   BasicLayout,
   LockScreen,
@@ -15,7 +14,6 @@ import {
 } from '@vatic/layouts';
 import { preferences } from '@vatic/preferences';
 import { useAccessStore, useTabbarStore, useUserStore } from '@vatic/stores';
-import { openWindow } from '@vatic/utils';
 
 import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
@@ -75,29 +73,7 @@ const showDot = computed(() =>
 
 const menus = computed(() => [
   {
-    handler: () => {
-      openWindow(VATIC_DOC_URL, {
-        target: '_blank',
-      });
-    },
-    icon: BookOpenText,
-    text: $t('ui.widgets.document'),
-  },
-  {
-    handler: () => {
-      openWindow(VATIC_GITHUB_URL, {
-        target: '_blank',
-      });
-    },
-    icon: MdiGithub,
-    text: 'GitHub',
-  },
-  {
-    handler: () => {
-      openWindow(`${VATIC_GITHUB_URL}/issues`, {
-        target: '_blank',
-      });
-    },
+    handler: () => {},
     icon: CircleHelp,
     text: $t('ui.widgets.qa'),
   },

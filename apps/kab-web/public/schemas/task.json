@@ -78,20 +78,6 @@
       }
     ]
   },
-  "form": {
-    "items": [
-      {
-        "title": "角色名称",
-        "field": "name",
-        "type": "Input"
-      },
-      {
-        "title": "备注",
-        "field": "remark",
-        "type": "Input"
-      }
-    ]
-  },
   "operations": [
     {
       "title": "详情"
@@ -100,38 +86,7 @@
       "title": "进度"
     },
     {
-      "title": "确认",
-      "form": {
-        "title": "任务确认",
-        "items": [
-          {
-            "title": "任务确认",
-            "field": "isMine",
-            "type": "RadioGroup",
-            "required": true,
-            "options": [
-              {
-                "label": "我的任务",
-                "value": "1"
-              },
-              {
-                "label": "不是我的任务",
-                "value": "2"
-              }
-            ]
-          },
-          {
-            "title": "确认说明",
-            "field": "remark",
-            "type": "Textarea",
-            "triggerField": "isMine",
-            "triggerValue": "1"
-          }
-        ]
-      }
-    },
-    {
-      "title": "反馈"
+      "title": "复核"
     }
   ]
 }
