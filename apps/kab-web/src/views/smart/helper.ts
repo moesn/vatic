@@ -18,7 +18,7 @@ export const parseTableColumns = (columns: any[]) => {
         const code: number = title.codePointAt(i) || 0;
         len += code >= 0x00 && code <= 0xef ? 1 : 2;
       }
-      item.minWidth = len * 5;
+      item.minWidth = len * 7.5;
     }
   });
 };

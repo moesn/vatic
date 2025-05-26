@@ -194,7 +194,7 @@ function usePreferences() {
       };
     }
 
-    const { header, sidebar, tabbar } = preferences;
+    const { header, sidebar } = preferences;
     const headerHidden = header.hidden;
     const sidebarHidden = sidebar.hidden;
 
@@ -212,11 +212,10 @@ function usePreferences() {
 
     // 如果是全屏模式或者没有固定在顶部，
     const fixed =
-      tabbar.enable &&
-      (contentIsMaximize ||
-        isFullContent.value ||
-        isMobile.value ||
-        !isShowHeaderNav.value);
+      contentIsMaximize ||
+      isFullContent.value ||
+      isMobile.value ||
+      !isShowHeaderNav.value;
 
     return {
       fixed,

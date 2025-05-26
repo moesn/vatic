@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/system/role/list",
+    "title": "养护记录列表",
+    "nameField": "name",
+    "columns": [
+      {
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "姓名",
+        "field": "name"
+      }
+    ],
+    "search": [
+      {
+        "title": "姓名",
+        "field": "name",
+        "type": "Input"
+      }
+    ]
+  }
+}

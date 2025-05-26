@@ -102,6 +102,15 @@ const dashboardMenus = [
     },
     children: [
       {
+        name: 'MaintainSnapshot',
+        path: '/maintain/snapshot',
+        component: '/smart/index',
+        meta: {
+          keepAlive: true,
+          title: '车辆识别查询',
+        },
+      },
+      {
         name: 'MaintainRecord',
         path: '/maintain/record',
         component: '/smart/index',
