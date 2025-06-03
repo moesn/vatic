@@ -213,6 +213,7 @@ function calcMenuWidthStyle(isHiddenDom: boolean): CSSProperties {
     ...(widthValue === '0px' ? { overflow: 'hidden' } : {}),
     flex: `0 0 ${widthValue}`,
     marginLeft: show ? 0 : `-${widthValue}`,
+    borderRightWidth: show ? '1px' : 0,
     maxWidth: widthValue,
     minWidth: widthValue,
     width: widthValue,
