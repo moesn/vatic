@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
     "api": "/device-list",
-    "title": "人员列表",
+    "title": "监控设备列表",
     "keyField": "id",
     "nameField": "name",
     "export": true,

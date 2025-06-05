@@ -64,22 +64,12 @@ const dashboardMenus = [
     },
   },
   {
-    name: 'Task',
-    path: '/task',
-    component: '/smart/index',
-    meta: {
-      keepAlive: true,
-      title: '任务管理',
-      icon: 'mdi:calendar-task-outline',
-    },
-  },
-  {
     name: 'RealTimeRiskEvent',
     path: '/realtime',
-    component: '/smart/index',
+    component: '/realtime/index',
     meta: {
       keepAlive: true,
-      title: '实时风险事件',
+      title: '事件视图',
       icon: 'mdi:progress-warning',
     },
   },
@@ -89,8 +79,18 @@ const dashboardMenus = [
     component: '/smart/index',
     meta: {
       keepAlive: true,
-      title: '历史风险事件',
+      title: '事件管理',
       icon: 'mdi:clipboard-text-history-outline',
+    },
+  },
+  {
+    name: 'Task',
+    path: '/task',
+    component: '/smart/index',
+    meta: {
+      keepAlive: true,
+      title: '任务管理',
+      icon: 'mdi:calendar-task-outline',
     },
   },
   {
@@ -104,25 +104,16 @@ const dashboardMenus = [
       {
         name: 'MaintainSnapshot',
         path: '/maintain/snapshot',
-        component: '/smart/index',
+        component: '/snapshot/index',
         meta: {
           keepAlive: true,
           title: '车辆识别查询',
         },
       },
       {
-        name: 'MaintainRecord',
-        path: '/maintain/record',
-        component: '/smart/index',
-        meta: {
-          keepAlive: true,
-          title: '养护记录管理',
-        },
-      },
-      {
         name: 'MaintainTrack',
         path: '/maintain/track',
-        component: '/smart/index',
+        component: '/track/index',
         meta: {
           keepAlive: true,
           title: '养护轨迹查看',

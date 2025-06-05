@@ -50,7 +50,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative w-full">
     <div
       v-if="
         description ||
