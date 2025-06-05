@@ -25,12 +25,13 @@ table {
     border-right: 2px solid;
     border-left: 2px solid;
     border-image: linear-gradient(
-                    to bottom,
-                    transparent 20px,
-                    #23fff9 20px,
-                    #23fff9 calc(100% - 20px),
-                    transparent calc(100% - 20px)
-    ) 1;
+        to bottom,
+        transparent 20px,
+        #23fff9 20px,
+        #23fff9 calc(100% - 20px),
+        transparent calc(100% - 20px)
+      )
+      1;
   }
 
   &::after {
@@ -44,12 +45,13 @@ table {
     border-top: 2px solid;
     border-bottom: 3px solid;
     border-image: linear-gradient(
-                    to right,
-                    transparent 250px,
-                    #23fff9 250px,
-                    #23fff9 calc(100% - 20px),
-                    transparent calc(100% - 20px)
-    ) 1;
+        to right,
+        transparent 250px,
+        #23fff9 250px,
+        #23fff9 calc(100% - 20px),
+        transparent calc(100% - 20px)
+      )
+      1;
   }
 }
 
