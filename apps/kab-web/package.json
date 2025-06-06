@@ -52,6 +52,7 @@
     "dayjs": "catalog:",
     "pinia": "catalog:",
     "vue": "catalog:",
-    "vue-router": "catalog:"
+    "vue-router": "catalog:",
+    "vue-tippy": "catalog:"
   }
 }

@@ -218,7 +218,7 @@ function loadTaskChart() {
         radius,
         center: [chartWidth * 2 - 160, 120],
         data: [
-          { value: 1048, name: '待开始（紧急）' },
+          { value: 1048, name: '未派发（紧急）' },
           { value: 735, name: '进行中' },
           { value: 580, name: '已完成' },
         ],
@@ -278,7 +278,7 @@ function loadTaskChart() {
         radius,
         center: [chartWidth * 3 - 140, 120],
         data: [
-          { value: 1048, name: '待开始 ' },
+          { value: 1048, name: '未派发 ' },
           { value: 735, name: '进行中 ' },
           { value: 580, name: '已完成 ' },
         ],
@@ -411,13 +411,13 @@ onMounted(() => {
             />
           </div>
           <div class="nav">
-            <h3 class="active">待派发(236)</h3>
+            <h3 class="active">未派发(236)</h3>
             <h3>处理中(326)</h3>
             <h3>待复核(623)</h3>
           </div>
           <div class="risk">
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -425,7 +425,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -433,7 +433,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -441,7 +441,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -449,7 +449,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -457,7 +457,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -465,7 +465,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -473,7 +473,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -481,7 +481,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
@@ -489,7 +489,7 @@ onMounted(() => {
               </div>
             </div>
             <div>
-              <img src="/assets/image/test.png" alt="" />
+              <img src="/test.png" alt="" />
               <div>
                 <h4>这是风险名称</h4>
                 <h5>这里是风险详细地址</h5>
