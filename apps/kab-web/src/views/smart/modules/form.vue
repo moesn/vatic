@@ -11,8 +11,7 @@ import { IconifyIcon } from '@vatic/icons';
 import { Spin } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
-import { getMenuList } from '#/api/system/menu';
-import { createRole, updateRole } from '#/api/system/role';
+import { requestClient } from '#/api/request';
 import { $t } from '#/locales';
 
 import { parseFormSchema } from '../helper';
@@ -22,7 +21,6 @@ const emits = defineEmits(['success']);
 const permissions = ref<DataNode[]>([]);
 const loadingPermissions = ref(false);
 
-const id = ref();
 const drawerInit = ref(false);
 const drawerTitle = ref('');
 
@@ -34,9 +32,19 @@ const [Drawer, drawerApi] = useVaticDrawer({
   async onConfirm() {
     const { valid } = await formApi.validate();
     if (!valid) return;
-    const values = await formApi.getValues();
+    const bodyValues = await formApi.getValues();
     drawerApi.lock();
-    (id.value ? updateRole(id.value, values) : createRole(values))
+
+    const { create, update, keyField } = drawerApi.getSchema();
+    const rawData = drawerApi.getData();
+
+    const keyValue = rawData[keyField];
+    bodyValues[keyField] = keyValue;
+
+    (keyValue
+      ? requestClient[update.method](update.url, bodyValues)
+      : requestClient[create.method](create.url, bodyValues)
+    )
       .then(() => {
         emits('success');
         drawerApi.close();
@@ -56,37 +64,20 @@ const [Drawer, drawerApi] = useVaticDrawer({
       });
 
       const data = drawerApi.getData();
-      const key = data[keyField];
       formApi.resetForm();
 
-      if (key) {
+      if (data[keyField]) {
         drawerTitle.value = titles[1] || titles[0];
         formData.value = data;
-        id.value = key;
         formApi.setValues(data);
       } else {
         drawerTitle.value = titles[0];
-        id.value = undefined;
-      }
-
-      if (permissions.value.length === 0) {
-        loadPermissions();
       }
 
       drawerInit.value = true;
     }
   },
 });
-
-async function loadPermissions() {
-  loadingPermissions.value = true;
-  try {
-    const res = await getMenuList();
-    permissions.value = res as unknown as DataNode[];
-  } finally {
-    loadingPermissions.value = false;
-  }
-}
 
 function getNodeClass(node: Recordable<any>) {
   const classes: string[] = [];

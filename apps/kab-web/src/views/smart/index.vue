@@ -46,7 +46,7 @@ function onCreate() {
   formDrawerApi.setData({}, mergeFormSchema(pageSchema.value.form)).open();
 }
 
-function onEdit(row: any, form: any) {
+function onUpdate(row: any, form: any) {
   formDrawerApi.setData(row, mergeFormSchema(form)).open();
 }
 
@@ -93,8 +93,8 @@ function onActionClick(e: OnActionClickParams) {
       onDelete(e.row);
       break;
     }
-    case 'edit': {
-      onEdit(e.row, e.form);
+    case 'update': {
+      onUpdate(e.row, e.form);
       break;
     }
   }
@@ -104,19 +104,13 @@ watch(
   () => pageSchema.value,
   (schema) => {
     const { operations, table, form } = schema;
-    const {
-      api,
-      columns,
-      search,
-      edit,
-      delete: remove,
-      state,
-      nameField,
-    } = table;
+    const { api, columns, search, delete: remove, state, nameField } = table;
+
+    const { update } = form;
 
     parseTableColumns(columns);
 
-    if (edit || remove || operations) {
+    if (update || remove || operations) {
       let width = 12;
       const options = [];
 
@@ -125,16 +119,16 @@ watch(
           width += (opera.title.length + 1) * 14;
           options.push({
             ...opera,
-            code: opera.form ? 'edit' : '',
+            code: opera.form ? 'update' : '',
             text: opera.title,
           });
         });
       }
 
-      if (edit) {
+      if (update) {
         width += 45;
         options.push({
-          code: 'edit',
+          code: 'update',
           text: '编辑',
           form,
         });
@@ -263,7 +257,7 @@ watch(
       :table-title-help="pageSchema.table.titleHelp"
     >
       <template #toolbar-tools>
-        <Button type="primary" @click="onCreate" v-if="pageSchema.table.create">
+        <Button type="primary" @click="onCreate" v-if="pageSchema.form?.create">
           <Plus class="size-5" />
           新增
         </Button>

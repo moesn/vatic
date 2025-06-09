@@ -82,8 +82,8 @@ export const parseFormSchema = (formSchema: any[]) => {
 const calcLabelWidth = (formSchema: any[]) => {
   return Math.max(
     ...formSchema.map((item: any) => {
-      if (item.labelWidth) {
-        return item.labelWidth;
+      if (item.labelWidth || !item.title) {
+        return item.labelWidth || 0;
       }
       let len = 2;
       for (let i = 0; i < item.title.length; i++) {

@@ -405,11 +405,11 @@ onUnmounted(() => {
           v-show="showSearchForm !== false"
           :class="
             cn(
-              'relative rounded py-3',
+              'relative rounded py-3 pt-0',
               isCompactForm
                 ? isSeparator
-                  ? 'pb-8'
-                  : 'pb-4'
+                  ? 'pb-4'
+                  : 'pb-0'
                 : isSeparator
                   ? 'pb-4'
                   : 'pb-0',

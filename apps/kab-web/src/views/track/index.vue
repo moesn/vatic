@@ -1,273 +1,174 @@
 <script lang="ts" setup>
-import type { VxeGridProps } from '@vatic/plugins/src/vxe-table/types';
+import { onMounted, ref } from 'vue';
 
-import type { Recordable } from '@vatic-core/typings';
+import { useVaticForm } from '#/adapter/form';
 
-import type {
-  OnActionClickParams,
-  VxeTableGridOptions,
-} from '#/adapter/vxe-table';
+const mapContainer = ref(null);
 
-import { ref, watch } from 'vue';
-
-import { Page, useVaticDrawer } from '@vatic/common-ui';
-import { Plus } from '@vatic/icons';
-import { getPageSchema } from '@vatic/smart';
-
-import { Button, message, Modal } from 'ant-design-vue';
-
-import { useVaticVxeGrid } from '#/adapter/vxe-table';
-import { requestClient } from '#/api/request';
-
-import { parseApi, parseFormSchema, parseTableColumns } from './helper';
-import Form from './modules/form.vue';
-
-const pageInit = ref(false);
-const pageSchema = ref<any>({});
-getPageSchema().then((schema) => (pageSchema.value = schema));
-
-let Grid: any, gridApi: any;
-
-const [FormDrawer, formDrawerApi] = useVaticDrawer({
-  connectedComponent: Form,
-  destroyOnClose: true,
+const [QueryForm] = useVaticForm({
+  collapsed: false,
+  commonConfig: {
+    componentProps: {
+      class: 'w-full',
+    },
+  },
+  handleSubmit: (values: Record<string, any>) => {
+    console.warn(values);
+    renderTrack();
+  },
+  layout: 'horizontal',
+  schema: [
+    {
+      component: 'Select',
+      hideLabel: true,
+      componentProps: {
+        allowClear: true,
+        filterOption: true,
+        options: [
+          {
+            label: '选项1',
+            value: '1',
+          },
+          {
+            label: '选项2',
+            value: '2',
+          },
+        ],
+        placeholder: '请选择车牌号',
+        showSearch: true,
+      },
+      fieldName: 'options',
+    },
+    {
+      component: 'RangePicker',
+      fieldName: 'createTime',
+      hideLabel: true,
+    },
+  ],
+  showCollapseButton: false,
+  resetButtonOptions: {
+    show: false,
+  },
+  submitButtonOptions: {
+    content: '查询',
+  },
+  actionWrapperClass: 'text-left col-span-1',
+  wrapperClass: 'grid-cols-3 z-50',
 });
 
-function onRefresh() {
-  gridApi.query();
-}
+let map: any;
 
-function mergeFormSchema(formSchema: any) {
-  const { keyField } = pageSchema.value.table;
-  return { ...formSchema, keyField };
-}
+function loadHuaXi() {
+  const boundary = new BMapGL.Boundary();
+  boundary.get('花溪区', (rs: any) => {
+    if (rs.boundaries.length === 0) {
+      setTimeout(() => loadHuaXi(), 500);
+    } else {
+      for (let i = 0; i < rs.boundaries.length; i++) {
+        const xyArr = rs.boundaries[i].split(';');
+        const ptArr = [];
 
-function onCreate() {
-  formDrawerApi.setData({}, mergeFormSchema(pageSchema.value.form)).open();
-}
+        for (const element of xyArr) {
+          const tmp = element.split(',');
+          const pt = new BMapGL.Point(tmp[0], tmp[1]);
+          ptArr.push(pt);
+        }
 
-function onEdit(row: any, form: any) {
-  formDrawerApi.setData(row, mergeFormSchema(form)).open();
-}
+        const mapMask = new BMapGL.MapMask(ptArr, {
+          isBuildingMask: true,
+          isPoiMask: true,
+          isMapMask: true,
+          showRegion: 'inside',
+          topFillColor: '#5679ea',
+          topFillOpacity: 0.5,
+          sideFillColor: '#5679ea',
+          sideFillOpacity: 0.9,
+        });
 
-function confirm(content: string, title: string) {
-  return new Promise((resolve, reject) => {
-    Modal.confirm({
-      content,
-      onCancel() {
-        reject(new Error('已取消'));
-      },
-      onOk() {
-        resolve(true);
-      },
-      title,
-    });
+        map.addOverlay(mapMask);
+        map.enableDragging();
+        map.enableScrollWheelZoom();
+      }
+    }
   });
 }
 
-function onDelete(row: any) {
-  const { url } = parseApi(pageSchema.value.table.delete, row);
-
-  const hideLoading = message.loading({
-    content: `正在删除 ${row.name} ...`,
-    duration: 0,
-    key: 'action_process_msg',
+function loadMap() {
+  map = new BMapGL.Map(mapContainer.value, {
+    enableMapClick: false,
+    enableScrollWheelZoom: false,
+    enableAutoResize: true,
   });
-  requestClient
-    .delete(url)
-    .then(() => {
-      message.success({
-        content: `${row.name} 删除成功`,
-        key: 'action_process_msg',
-      });
-      onRefresh();
-    })
-    .catch(() => {
-      hideLoading();
-    });
+  map.disableDragging();
+  map.centerAndZoom(
+    new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
+    13,
+  );
+
+  document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
+
+  loadHuaXi();
 }
 
-function onActionClick(e: OnActionClickParams) {
-  switch (e.code) {
-    case 'delete': {
-      onDelete(e.row);
-      break;
-    }
-    case 'edit': {
-      onEdit(e.row, e.form);
-      break;
-    }
+function renderTrack() {
+  const path = [{ lng: 106.623_548_548_890_23, lat: 26.396_209_157_438_058 }];
+  const polyline = new BMapGL.Polyline(
+    path.map((p: any) => new BMapGL.Point(p.lng, p.lat)),
+    { strokeColor: '#3388ff', strokeWeight: 3 },
+  );
+
+  const trackAni = new BMapGLLib.TrackAnimation(map, polyline, {
+    icon: new BMapGL.Icon(
+      '/assets/image/marker/car.png',
+      new BMapGL.Size(32, 32),
+    ),
+    speed: 1000,
+    autoView: true,
+  });
+
+  trackAni.start();
+}
+
+onMounted(() => {
+  loadMap();
+});
+</script>
+<template>
+  <div class="h-full w-full" style="min-width: 1700px">
+    <div ref="mapContainer" class="h-full w-full"></div>
+    <div class="absolute top-2 z-50 flex h-12 w-full justify-center">
+      <QueryForm />
+    </div>
+  </div>
+</template>
+<style lang="scss" scoped>
+::v-deep .vxe-table--body-wrapper {
+  z-index: 999;
+}
+
+::v-deep .vxe-grid {
+  padding: 0;
+
+  .vxe-table--header-wrapper {
+    background-color: transparent;
+  }
+
+  .vxe-toolbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+    height: 38px;
   }
 }
 
-watch(
-  () => pageSchema.value,
-  (schema) => {
-    const { operations, table, form } = schema;
-    const {
-      api,
-      columns,
-      search,
-      edit,
-      delete: remove,
-      state,
-      nameField,
-    } = table;
-
-    parseTableColumns(columns);
-
-    if (edit || remove || operations) {
-      let width = 12;
-      const options = [];
-
-      if (operations) {
-        operations.forEach((opera: any) => {
-          width += (opera.title.length + 1) * 14;
-          options.push({
-            ...opera,
-            code: opera.form ? 'edit' : '',
-            text: opera.title,
-          });
-        });
-      }
-
-      if (edit) {
-        width += 45;
-        options.push({
-          code: 'edit',
-          text: '编辑',
-          form,
-        });
-      }
-
-      if (remove) {
-        width += 45;
-        options.push('delete');
-      }
-
-      columns.push({
-        cellRender: {
-          attrs: {
-            nameField,
-            nameTitle: '数据',
-            onClick: onActionClick,
-          },
-          options,
-          name: 'CellOperation',
-        },
-        field: 'operation',
-        fixed: 'right',
-        title: '操作',
-        width,
-      });
-    }
-
-    if (state) {
-      columns.push({
-        cellRender: {
-          attrs: {
-            beforeChange: async (newStatus: number, row: any) => {
-              const status: Recordable<string> = {
-                0: '禁用',
-                1: '启用',
-              };
-              try {
-                await confirm(
-                  `确定将${row[nameField]}的状态切换为 【${status[newStatus.toString()]}】？`,
-                  `切换状态`,
-                );
-
-                const { url } = parseApi(state, row);
-
-                await requestClient.put(url, { status: newStatus });
-                return true;
-              } catch {
-                return false;
-              }
-            },
-          },
-          name: 'CellSwitch',
-        },
-        field: 'status',
-        title: '状态',
-        width: 100,
-      });
-    }
-
-    const gridOptions: VxeTableGridOptions = {
-      columns,
-      checkboxConfig: {
-        highlight: true,
-        labelField: 'name',
-      },
-      exportConfig: {
-        excludeFields: ['operation'],
-      },
-      height: 'auto',
-      keepSource: true,
-      proxyConfig: {
-        ajax: {
-          query: async ({ page, sort }, search) => {
-            const params = {
-              page: page.currentPage,
-              pageSize: page.pageSize,
-              sortBy: sort.field,
-              sortOrder: sort.order,
-              ...search,
-            };
-            return await requestClient.get(api, { params });
-          },
-        },
-        sort: true,
-      },
-      rowConfig: {
-        keyField: 'id',
-      },
-      sortConfig: {
-        defaultSort: { field: 'deviceName', order: 'desc' },
-        remote: true,
-      },
-      toolbarConfig: {
-        custom: true,
-        refresh: { code: 'query' },
-        search: true,
-        zoom: true,
-        export: table.export,
-        import: table.import,
-      },
-    };
-
-    const options: VxeGridProps = { gridOptions };
-
-    if (search) {
-      options.formOptions = {
-        fieldMappingTime: search
-          .filter((s: any) => s.type === 'RangePicker')
-          .map((d: any) => [d.field, d.rangeFields]),
-        schema: parseFormSchema(search),
-      };
-    }
-
-    [Grid, gridApi] = useVaticVxeGrid(options);
-    console.warn(options);
-    pageInit.value = true;
-  },
-);
-</script>
-
-<template>
-  <Page v-if="pageInit" auto-content-height>
-    <FormDrawer />
-    <Grid
-      :table-title="pageSchema.table.title"
-      :table-title-help="pageSchema.table.titleHelp"
-    >
-      <template #toolbar-tools>
-        <Button type="primary" @click="onCreate" v-if="pageSchema.table.create">
-          <Plus class="size-5" />
-          新增
-        </Button>
-      </template>
-    </Grid>
-  </Page>
-</template>
+.popover-image {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 500px;
+  max-height: calc(100vh - 250px);
+  margin-top: 10px;
+  overflow: auto;
+}
+</style>

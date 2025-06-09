@@ -75,8 +75,8 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   client.addResponseInterceptor(
     defaultResponseInterceptor({
       codeField: 'code',
-      dataField: 'data',
-      successCode: 0,
+      dataField: 'result',
+      successCode: 200,
     }),
   );
 
@@ -114,6 +114,7 @@ export const baseRequestClient = new RequestClient({ baseURL: apiURL });
 
 export interface PageFetchParams {
   [key: string]: any;
+
   pageNo?: number;
   pageSize?: number;
 }

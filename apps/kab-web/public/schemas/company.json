@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/company-list",
+    "api": "/kab/company/pageQueryList",
     "title": "企业列表",
     "keyField": "id",
     "nameField": "name",
@@ -59,18 +59,20 @@
         "type": "Input"
       }
     ],
-    "create": {
-      "url": "/system/role/$id"
-    },
-    "edit": {
-      "url": "/system/role/$id"
-    },
     "delete": {
       "url": "/system/role/$id"
     }
   },
   "form": {
     "title": "新增企业&修改企业",
+    "create": {
+      "url": "/kab/company/addCompany",
+      "method": "post"
+    },
+    "update": {
+      "url": "/kab/company/editCompany",
+      "method": "patch"
+    },
     "items": [
       {
         "title": "企业名称",

@@ -25,7 +25,7 @@ type ExtendOptions<T = any> = {
    * - body: 返回响应数据的BODY部分（只会根据status检查请求是否成功，忽略对code的判断，这种情况下应由调用方检查请求是否成功）。
    * - data: 解构响应的BODY数据，只返回其中的data节点数据（会检查status和code是否为成功状态）。
    */
-  responseReturn?: 'body' | 'data' | 'raw';
+  responseReturn?: 'body' | 'data' | 'raw' | 'result';
 };
 type RequestClientConfig<T = any> = AxiosRequestConfig<T> & ExtendOptions<T>;
 

@@ -60,19 +60,23 @@
         "type": "Input"
       }
     ],
-    "create": {
-      "url": "/system/role/$id"
-    },
-    "edit": {
-      "url": "/system/role/$id"
-    },
     "delete": {
       "url": "/system/role/$id"
     }
   },
   "form": {
     "title": "新增养护人员&修改养护人员",
+    "create": {
+      "url": "/system/role/$id"
+    },
+    "edit": {
+      "url": "/system/role/$id"
+    },
     "items": [
+      {
+        "title": "设备用途",
+        "field": "purpose"
+      },
       {
         "title": "部署位置",
         "field": "location"
@@ -84,10 +88,6 @@
       {
         "title": "SIM卡号",
         "field": "simNo"
-      },
-      {
-        "title": "设备用途",
-        "field": "purpose"
       },
       {
         "title": "负责人姓名",

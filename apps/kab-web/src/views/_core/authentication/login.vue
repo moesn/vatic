@@ -20,7 +20,7 @@ const formSchema = computed((): VaticFormSchema[] => {
       componentProps: {
         placeholder: $t('authentication.usernameTip'),
       },
-      fieldName: 'username',
+      fieldName: 'account',
       label: $t('authentication.username'),
       rules: z.string().min(1, { message: $t('authentication.usernameTip') }),
     },
