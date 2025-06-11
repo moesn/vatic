@@ -14,7 +14,7 @@ import { useVaticForm } from '#/adapter/form';
 import { requestClient } from '#/api/request';
 import { $t } from '#/locales';
 
-import { parseFormSchema } from '../helper';
+import { parseApi, parseFormSchema } from '../helper';
 
 const emits = defineEmits(['success']);
 
@@ -42,8 +42,8 @@ const [Drawer, drawerApi] = useVaticDrawer({
     bodyValues[keyField] = keyValue;
 
     (keyValue
-      ? requestClient[update.method](update.url, bodyValues)
-      : requestClient[create.method](create.url, bodyValues)
+      ? requestClient.patch(update, bodyValues)
+      : requestClient.post(create, bodyValues)
     )
       .then(() => {
         emits('success');
@@ -55,7 +55,7 @@ const [Drawer, drawerApi] = useVaticDrawer({
   },
   onOpenChange(isOpen) {
     if (isOpen) {
-      const { items, title, keyField } = drawerApi.getSchema();
+      const { items, title, keyField, detail } = drawerApi.getSchema();
       const titles = title.split('&');
 
       [Form, formApi] = useVaticForm({
@@ -65,11 +65,18 @@ const [Drawer, drawerApi] = useVaticDrawer({
 
       const data = drawerApi.getData();
       formApi.resetForm();
+      formData.value = data;
+      formApi.setValues(data);
 
       if (data[keyField]) {
         drawerTitle.value = titles[1] || titles[0];
-        formData.value = data;
-        formApi.setValues(data);
+        if (detail) {
+          const apiUrl = parseApi(detail, data);
+          requestClient.get(apiUrl).then((res) => {
+            formData.value = res;
+            formApi.setValues(res);
+          });
+        }
       } else {
         drawerTitle.value = titles[0];
       }

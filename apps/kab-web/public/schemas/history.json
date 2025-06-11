@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/system/role/list",
+    "api": "/kab/company/pageQueryList",
     "title": "风险事件列表",
     "nameField": "name",
     "columns": [

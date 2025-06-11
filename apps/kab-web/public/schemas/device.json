@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/device-list",
+    "api": "/kab/company/pageQueryList",
     "title": "监控设备列表",
     "keyField": "id",
     "nameField": "name",
@@ -49,8 +49,7 @@
       },
       {
         "title": "是否在线",
-        "field": "status",
-        "sortable": true
+        "field": "status"
       }
     ],
     "search": [
@@ -67,10 +66,12 @@
   "form": {
     "title": "新增养护人员&修改养护人员",
     "create": {
-      "url": "/system/role/$id"
+      "url": "/kab/company/addCompany",
+      "method": "post"
     },
-    "edit": {
-      "url": "/system/role/$id"
+    "update": {
+      "url": "/kab/company/editCompany",
+      "method": "patch"
     },
     "items": [
       {

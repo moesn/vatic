@@ -1,10 +1,10 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/car-list",
+    "api": "/kab/car/pageQueryList",
     "title": "车辆列表",
     "keyField": "id",
-    "nameField": "name",
+    "nameField": "plateNo",
     "export": true,
     "columns": [
       {
@@ -17,97 +17,15 @@
       },
       {
         "title": "车架号",
-        "field": "VIN"
-      },
-      {
-        "title": "养护企业名称",
-        "field": "maintainCoName"
-      },
-      {
-        "title": "养护企业机构代码",
-        "field": "maintainCoCode"
-      },
-      {
-        "title": "车辆年检时间",
-        "field": "inspectionDate"
-      },
-      {
-        "title": "营运证到期时间",
-        "field": "epLicenseExpire"
+        "field": "vin"
       },
       {
         "title": "车主姓名",
         "field": "ownerName"
       },
       {
-        "title": "荷载人数",
-        "field": "capacity"
-      },
-      {
-        "title": "发动机号",
-        "field": "engineNo"
-      },
-      {
-        "title": "车辆型号",
-        "field": "modelNo"
-      },
-      {
-        "title": "车辆类型",
-        "field": "type",
-        "sortable": true
-      },
-      {
-        "title": "运营许可证号",
-        "field": "opLicenseNo"
-      }
-    ],
-    "search": [
-      {
-        "title": "关键字",
-        "field": "keyword",
-        "type": "Input"
-      }
-    ],
-    "create": {
-      "url": "/system/role/$id"
-    },
-    "edit": {
-      "url": "/system/role/$id"
-    },
-    "delete": {
-      "url": "/system/role/$id"
-    }
-  },
-  "form": {
-    "title": "新增车辆&修改车辆",
-    "items": [
-      {
-        "title": "车牌号",
-        "field": "plateNo"
-      },
-      {
-        "title": "车架号",
-        "field": "VIN"
-      },
-      {
-        "title": "养护企业名称",
+        "title": "养护企业",
         "field": "maintainCoName"
-      },
-      {
-        "title": "养护企业机构代码",
-        "field": "maintainCoCode"
-      },
-      {
-        "title": "车辆年检时间",
-        "field": "inspectionDate"
-      },
-      {
-        "title": "营运证到期时间",
-        "field": "epLicenseExpire"
-      },
-      {
-        "title": "车主姓名",
-        "field": "ownerName"
       },
       {
         "title": "荷载人数",
@@ -128,6 +46,83 @@
       {
         "title": "运营许可证号",
         "field": "opLicenseNo"
+      },
+      {
+        "title": "车辆年检时间",
+        "field": "inspectionDate"
+      },
+      {
+        "title": "营运证到期时间",
+        "field": "epLicenseExpire"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keyword",
+        "type": "Input"
+      }
+    ],
+    "delete": "/kab/car/delCar"
+  },
+  "form": {
+    "title": "新增车辆&修改车辆",
+    "detail": "/kab/car/detail/$id",
+    "create": "/kab/car/addCar",
+    "update": "/kab/car/editCar",
+    "items": [
+      {
+        "title": "车牌号",
+        "field": "plateNo",
+        "required": true
+      },
+      {
+        "title": "车架号",
+        "field": "vin"
+      },
+      {
+        "title": "车主姓名",
+        "field": "ownerName"
+      },
+      {
+        "title": "养护企业",
+        "field": "maintainCoName",
+        "type": "ApiSelect",
+        "api": "/kab/company/pageQueryList"
+      },
+      {
+        "title": "荷载人数",
+        "field": "capacity",
+        "type": "InputNumber",
+        "required": true
+      },
+      {
+        "title": "发动机号",
+        "field": "engineNo"
+      },
+      {
+        "title": "车辆型号",
+        "field": "modelNo"
+      },
+      {
+        "title": "车辆类型",
+        "field": "type",
+        "type": "ApiSelect",
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=10"
+      },
+      {
+        "title": "运营许可证号",
+        "field": "opLicenseNo"
+      },
+      {
+        "title": "车辆年检时间",
+        "field": "inspectionDate",
+        "type": "DatePicker"
+      },
+      {
+        "title": "营运证到期时间",
+        "field": "epLicenseExpire",
+        "type": "DatePicker"
       }
     ]
   }

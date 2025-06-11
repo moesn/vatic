@@ -16,6 +16,14 @@
         "field": "name"
       },
       {
+        "title": "联络人",
+        "field": "contactPerson"
+      },
+      {
+        "title": "联络人联系电话",
+        "field": "contactPersonPhone"
+      },
+      {
         "title": "企业简称",
         "field": "shortName"
       },
@@ -30,14 +38,6 @@
       {
         "title": "经营许可证",
         "field": "license"
-      },
-      {
-        "title": "法人",
-        "field": "legal"
-      },
-      {
-        "title": "法人联系电话",
-        "field": "legalPhone"
       },
       {
         "title": "经营许可时间",
@@ -59,24 +59,29 @@
         "type": "Input"
       }
     ],
-    "delete": {
-      "url": "/system/role/$id"
-    }
+    "delete": "/kab/company/delCompany"
   },
   "form": {
     "title": "新增企业&修改企业",
-    "create": {
-      "url": "/kab/company/addCompany",
-      "method": "post"
-    },
-    "update": {
-      "url": "/kab/company/editCompany",
-      "method": "patch"
-    },
+    "detail": "/kab/company/detail/$id",
+    "create": "/kab/company/addCompany",
+    "update": "/kab/company/editCompany",
     "items": [
       {
         "title": "企业名称",
         "field": "name",
+        "type": "Input",
+        "required": true
+      },
+      {
+        "title": "联络人",
+        "field": "contactPerson",
+        "type": "Input",
+        "required": true
+      },
+      {
+        "title": "联络人联系电话",
+        "field": "contactPersonPhone",
         "type": "Input",
         "required": true
       },
@@ -102,19 +107,9 @@
         "type": "Input"
       },
       {
-        "title": "法人",
-        "field": "legal",
-        "type": "Input"
-      },
-      {
-        "title": "法人联系电话",
-        "field": "legalPhone",
-        "type": "Input"
-      },
-      {
         "title": "经营许可时间",
         "field": "licenseTime",
-        "type": "Input"
+        "type": "DatePicker"
       },
       {
         "title": "经营许可范围",

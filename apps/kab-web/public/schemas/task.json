@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/system/role/list",
+    "api": "/kab/company/pageQueryList",
     "title": "任务处理列表",
     "nameField": "name",
     "columns": [
@@ -15,8 +15,7 @@
       },
       {
         "title": "任务类型",
-        "field": "name",
-        "sortable": true
+        "field": "name"
       },
       {
         "title": "任务生成时间",

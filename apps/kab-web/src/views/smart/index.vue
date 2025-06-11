@@ -33,10 +33,6 @@ const [FormDrawer, formDrawerApi] = useVaticDrawer({
   destroyOnClose: true,
 });
 
-function onRefresh() {
-  gridApi.query();
-}
-
 function mergeFormSchema(formSchema: any) {
   const { keyField } = pageSchema.value.table;
   return { ...formSchema, keyField };
@@ -66,21 +62,22 @@ function confirm(content: string, title: string) {
 }
 
 function onDelete(row: any) {
-  const { url } = parseApi(pageSchema.value.table.delete, row);
+  const { delete: delUrl, keyField, nameField } = pageSchema.value.table;
 
   const hideLoading = message.loading({
-    content: `正在删除 ${row.name} ...`,
+    content: `正在删除 ${row[nameField]} ...`,
     duration: 0,
     key: 'action_process_msg',
   });
+
   requestClient
-    .delete(url)
+    .delete(delUrl, { data: { ids: [row[keyField]] } })
     .then(() => {
       message.success({
-        content: `${row.name} 删除成功`,
+        content: `${row[nameField]} 删除成功`,
         key: 'action_process_msg',
       });
-      onRefresh();
+      refreshGrid();
     })
     .catch(() => {
       hideLoading();
@@ -104,7 +101,15 @@ watch(
   () => pageSchema.value,
   (schema) => {
     const { operations, table, form } = schema;
-    const { api, columns, search, delete: remove, state, nameField } = table;
+    const {
+      api,
+      columns,
+      search,
+      delete: remove,
+      state,
+      nameField,
+      keyField,
+    } = table;
 
     const { update } = form;
 
@@ -171,9 +176,9 @@ watch(
                   `切换状态`,
                 );
 
-                const { url } = parseApi(state, row);
+                const apiUrl = parseApi(state, row);
 
-                await requestClient.put(url, { status: newStatus });
+                await requestClient.put(apiUrl, { status: newStatus });
                 return true;
               } catch {
                 return false;
@@ -215,7 +220,7 @@ watch(
         sort: true,
       },
       rowConfig: {
-        keyField: 'id',
+        keyField,
       },
       sortConfig: {
         defaultSort: { field: 'deviceName', order: 'desc' },
@@ -247,11 +252,15 @@ watch(
     pageInit.value = true;
   },
 );
+
+function refreshGrid() {
+  gridApi.query();
+}
 </script>
 
 <template>
   <Page v-if="pageInit" auto-content-height>
-    <FormDrawer />
+    <FormDrawer @success="refreshGrid" />
     <Grid
       :table-title="pageSchema.table.title"
       :table-title-help="pageSchema.table.titleHelp"

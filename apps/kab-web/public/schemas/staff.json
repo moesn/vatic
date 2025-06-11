@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/staff-list",
+    "api": "/kab/staff/pageQueryList",
     "title": "人员列表",
     "keyField": "id",
     "nameField": "name",
@@ -21,23 +21,14 @@
       },
       {
         "title": "人员类型",
-        "field": "type",
-        "sortable": true
+        "field": "type"
       },
       {
-        "title": "所属企业",
-        "field": "company"
+        "title": "身份证号",
+        "field": "idNo"
       },
       {
-        "title": "联系电话",
-        "field": "phone"
-      },
-      {
-        "title": "责任车辆",
-        "field": "carNo"
-      },
-      {
-        "title": "驾车级别",
+        "title": "驾照类型",
         "field": "driveClass"
       },
       {
@@ -45,12 +36,20 @@
         "field": "certNo"
       },
       {
-        "title": "从业资格证到期时间",
-        "field": "certExpire"
+        "title": "联系电话",
+        "field": "phone"
       },
       {
-        "title": "身份证号",
-        "field": "idNo"
+        "title": "所属企业",
+        "field": "company"
+      },
+      {
+        "title": "责任车辆",
+        "field": "carNo"
+      },
+      {
+        "title": "从业资格证到期时间",
+        "field": "certExpire"
       }
     ],
     "search": [
@@ -60,58 +59,80 @@
         "type": "Input"
       }
     ],
-    "create": {
-      "url": "/system/role/$id"
-    },
-    "edit": {
-      "url": "/system/role/$id"
-    },
     "delete": {
       "url": "/system/role/$id"
     }
   },
   "form": {
     "title": "新增养护人员&修改养护人员",
+    "detail": "/kab/staff/detail/$id",
+    "create": "/kab/staff/addStaff",
+    "update": "/kab/staff/editStaff",
     "items": [
       {
         "title": "姓名",
-        "field": "name"
+        "field": "name",
+        "required": true
       },
       {
         "title": "性别",
-        "field": "gender"
+        "field": "gender",
+        "required": true,
+        "type": "RadioGroup",
+        "options": [
+          {
+            "label": "男",
+            "value": "男"
+          },
+          {
+            "label": "女",
+            "value": "女"
+          }
+        ]
       },
       {
         "title": "人员类型",
-        "field": "type"
+        "field": "type",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=11"
       },
       {
-        "title": "所属企业",
-        "field": "company"
+        "title": "身份证号",
+        "field": "idNo",
+        "required": true
       },
       {
-        "title": "联系电话",
-        "field": "phone"
-      },
-      {
-        "title": "责任车辆",
-        "field": "carNo"
-      },
-      {
-        "title": "驾车级别",
-        "field": "driveClass"
+        "title": "驾照类型",
+        "field": "driveClass",
+        "type": "ApiSelect",
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=12"
       },
       {
         "title": "从业资格证号",
         "field": "certNo"
       },
       {
-        "title": "从业资格证到期时间",
-        "field": "certExpire"
+        "title": "联系电话",
+        "field": "phone"
       },
       {
-        "title": "身份证号",
-        "field": "idNo"
+        "title": "所属企业",
+        "field": "company",
+        "type": "ApiSelect",
+        "api": "/kab/company/pageQueryList"
+      },
+      {
+        "title": "责任车辆",
+        "field": "carNo",
+        "type": "ApiSelect",
+        "api": "/kab/car/pageQueryList",
+        "labelField": "plateNo"
+      },
+      {
+        "title": "从业资格证到期时间",
+        "field": "certExpire",
+        "type": "DatePicker"
       }
     ]
   }

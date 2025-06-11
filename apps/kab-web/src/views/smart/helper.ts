@@ -1,12 +1,13 @@
 import type { VaticFormSchema } from '@vatic-core/form-ui';
 
-export const parseApi = (api: any, row: any) => {
-  let { url, body } = api;
-  if (url.includes('$')) {
-    const urls = url.split('$');
-    url = urls[0] + row[urls[1]];
+import { requestClient } from '#/api/request';
+
+export const parseApi = (api: string, row: any) => {
+  if (api.includes('$')) {
+    const urls: any = api.split('$');
+    return `${urls[0]}${row[urls[1]]}`;
   }
-  return { url, body };
+  return api;
 };
 
 export const parseTableColumns = (columns: any[]) => {
@@ -27,16 +28,30 @@ export const parseFormSchema = (formSchema: any[]) => {
   const labelWidth = calcLabelWidth(formSchema);
 
   return formSchema.map((item: any) => {
+    const {
+      type,
+      field,
+      title,
+      rules,
+      required,
+      triggerField,
+      triggerValue,
+      options,
+      api,
+      labelField,
+    } = item;
+
     const formItem: VaticFormSchema = {
-      component: item.type || 'Input',
-      fieldName: item.field,
-      label: item.title,
-      rules: item.rules,
+      component: type || 'Input',
+      fieldName: field,
+      label: title,
+      rules,
       labelWidth,
+      controlClass: 'w-full',
     };
 
-    if (item.required) {
-      switch (item.type) {
+    if (required) {
+      switch (type) {
         case 'RadioGroup': {
           formItem.rules = 'selectRequired';
           break;
@@ -47,19 +62,34 @@ export const parseFormSchema = (formSchema: any[]) => {
       }
     }
 
-    if (item.triggerField) {
+    if (triggerField) {
       formItem.dependencies = {
         show: (values) => {
-          return [item.triggerValue].includes(values[item.triggerField]);
+          return [triggerValue].includes(values[triggerField]);
         },
-        triggerFields: [item.triggerField],
+        triggerFields: [triggerField],
       };
     }
 
-    switch (item.type) {
+    switch (type) {
+      case 'ApiSelect': {
+        formItem.componentProps = {
+          afterFetch: (data: any) => {
+            const records = data.records || data;
+            return records.map((record: any) => ({
+              label: record[labelField] || record.name,
+              value: record.code || record.id,
+            }));
+          },
+          api: () => requestClient.get(api),
+          autoSelect: 'first',
+          width: 200,
+        };
+        break;
+      }
       case 'RadioGroup': {
         formItem.componentProps = {
-          options: item.options,
+          options,
         };
         break;
       }
@@ -67,7 +97,7 @@ export const parseFormSchema = (formSchema: any[]) => {
         formItem.componentProps = {
           allowClear: true,
           filterOption: true,
-          options: item.options,
+          options,
           placeholder: '请选择',
           showSearch: true,
         };
