@@ -4,6 +4,7 @@
     "api": "/kab/role/pageQueryList",
     "title": "角色列表",
     "titleHelp": "角色管理",
+    "keyField": "id",
     "nameField": "name",
     "columns": [
       {
@@ -20,7 +21,7 @@
       },
       {
         "title": "创建时间",
-        "field": "createTime"
+        "field": "createdTime"
       }
     ],
     "search": [
@@ -40,11 +41,12 @@
     "items": [
       {
         "title": "角色名称",
-        "field": "name"
+        "field": "name",
+        "required": true
       },
       {
         "title": "菜单权限",
-        "field": "menus",
+        "field": "permissionIds",
         "type": "VaticTree",
         "api": "/kab/resources/resourcesTree"
       },

@@ -3,6 +3,7 @@
   "table": {
     "api": "/kab/user/pageQueryList",
     "title": "风险事件列表",
+    "keyField": "id",
     "nameField": "name",
     "columns": [
       {

@@ -19,7 +19,7 @@ type OptionsItem = {
   value?: string;
 };
 
-interface Props {
+export interface Props {
   /** 组件 */
   component: Component;
   /** 是否将value从数字转为string */
@@ -240,6 +240,7 @@ function emitChange() {
   }
   emit('optionsChange', unref(getOptions));
 }
+
 const componentRef = ref();
 defineExpose({
   /** 获取options数据 */

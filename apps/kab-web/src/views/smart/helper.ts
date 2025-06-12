@@ -1,5 +1,10 @@
+import type { SelectProps } from 'ant-design-vue';
+
+import type { ApiSelectProps } from '@vatic/common-ui';
+
 import type { VaticFormSchema } from '@vatic-core/form-ui';
 import type { TreeProps } from '@vatic-core/shadcn-ui';
+import type { Recordable } from '@vatic-core/typings';
 
 import { requestClient } from '#/api/request';
 
@@ -85,7 +90,7 @@ export const parseFormSchema = async (
             },
             api: () => requestClient.get(api),
             autoSelect: 'first',
-          },
+          } as ApiSelectProps,
           props || {},
         );
         break;
@@ -97,7 +102,7 @@ export const parseFormSchema = async (
             filterOption: true,
             placeholder: '请选择',
             showSearch: true,
-          },
+          } as SelectProps,
           props || {},
         );
         break;
@@ -105,26 +110,33 @@ export const parseFormSchema = async (
       case 'VaticTree': {
         if (api) {
           const treeData = await requestClient.get(api);
-          const treeProps: TreeProps = Object.assign(
+          formItem.componentProps = Object.assign(
             {
-              treeData,
+              treeData: JSON.parse(
+                JSON.stringify(treeData).replaceAll(
+                  '"children":[]',
+                  '"children":null',
+                ),
+              ),
               defaultExpandedLevel: 2,
               multiple: true,
               labelField: 'name',
-              valueField: 'code',
-              // :tree-data="permissions"
-              //   multiple
-              //   bordered
-              //     :default-expanded-level="2"
-              // :get-node-class="getNodeClass"
-              //   v-bind="slotProps"
-              //   value-field="id"
-              //   label-field="meta.title"
-              //   icon-field="meta.icon"
-            },
+              valueField: 'id',
+              iconField: 'icon',
+              getNodeClass: (node: Recordable<any>) => {
+                const classes: string[] = [];
+                if (node.value?.type.toLowerCase() === 'button') {
+                  classes.push('inline-flex');
+                  if (node.index % 3 >= 1) {
+                    classes.push('!pl-0');
+                  }
+                }
+
+                return classes.join(' ');
+              },
+            } as TreeProps,
             props || {},
           );
-          formItem.componentProps = treeProps;
         }
         break;
       }

@@ -3,6 +3,7 @@
   "table": {
     "api": "/kab/task/pageQueryList",
     "title": "任务处理列表",
+    "keyField": "id",
     "nameField": "name",
     "columns": [
       {

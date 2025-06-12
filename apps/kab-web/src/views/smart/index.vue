@@ -39,14 +39,10 @@ async function mergeFormSchema(formSchema: any) {
   return { ...formSchema, keyField };
 }
 
-async function onCreate() {
+async function onEdit(row: any) {
   formDrawerApi
-    .setData({}, await mergeFormSchema(pageSchema.value.form))
+    .setData(row, await mergeFormSchema(pageSchema.value.form))
     .open();
-}
-
-async function onUpdate(row: any, form: any) {
-  formDrawerApi.setData(row, await mergeFormSchema(form)).open();
 }
 
 function confirm(content: string, title: string) {
@@ -94,7 +90,7 @@ function onActionClick(e: OnActionClickParams) {
       break;
     }
     case 'update': {
-      onUpdate(e.row, e.form);
+      onEdit(e.row);
       break;
     }
   }
@@ -107,7 +103,7 @@ watch(
     const {
       api,
       columns,
-      search,
+      search: searchSchema,
       delete: remove,
       state,
       nameField,
@@ -241,12 +237,13 @@ watch(
 
     const options: VxeGridProps = { gridOptions };
 
-    if (search) {
+    if (searchSchema) {
+      await parseFormSchema(searchSchema);
       options.formOptions = {
-        fieldMappingTime: search
+        fieldMappingTime: searchSchema
           .filter((s: any) => s.type === 'RangePicker')
           .map((d: any) => [d.field, d.rangeFields]),
-        schema: await parseFormSchema(search),
+        schema: searchSchema,
       };
     }
 
@@ -269,7 +266,7 @@ function refreshGrid() {
       :table-title-help="pageSchema.table.titleHelp"
     >
       <template #toolbar-tools>
-        <Button type="primary" @click="onCreate" v-if="pageSchema.form?.create">
+        <Button type="primary" @click="onEdit" v-if="pageSchema.form?.create">
           <Plus class="size-5" />
           新增
         </Button>
