@@ -1,4 +1,5 @@
 import type { VaticFormSchema } from '@vatic-core/form-ui';
+import type { TreeProps } from '@vatic-core/shadcn-ui';
 
 import { requestClient } from '#/api/request';
 
@@ -24,10 +25,12 @@ export const parseTableColumns = (columns: any[]) => {
   });
 };
 
-export const parseFormSchema = (formSchema: any[]) => {
+export const parseFormSchema = async (
+  formSchema: any[] | VaticFormSchema[],
+) => {
   const labelWidth = calcLabelWidth(formSchema);
 
-  return formSchema.map((item: any) => {
+  for (const formItem of formSchema) {
     const {
       type,
       field,
@@ -36,19 +39,17 @@ export const parseFormSchema = (formSchema: any[]) => {
       required,
       triggerField,
       triggerValue,
-      options,
       api,
       labelField,
-    } = item;
+      props,
+    } = formItem;
 
-    const formItem: VaticFormSchema = {
-      component: type || 'Input',
-      fieldName: field,
-      label: title,
-      rules,
-      labelWidth,
-      controlClass: 'w-full',
-    };
+    formItem.component = type || 'Input';
+    formItem.fieldName = field;
+    formItem.label = title;
+    formItem.rules = rules;
+    formItem.labelWidth = labelWidth;
+    formItem.controlClass = 'w-full';
 
     if (required) {
       switch (type) {
@@ -64,7 +65,7 @@ export const parseFormSchema = (formSchema: any[]) => {
 
     if (triggerField) {
       formItem.dependencies = {
-        show: (values) => {
+        show: (values: any) => {
           return [triggerValue].includes(values[triggerField]);
         },
         triggerFields: [triggerField],
@@ -73,40 +74,62 @@ export const parseFormSchema = (formSchema: any[]) => {
 
     switch (type) {
       case 'ApiSelect': {
-        formItem.componentProps = {
-          afterFetch: (data: any) => {
-            const records = data.records || data;
-            return records.map((record: any) => ({
-              label: record[labelField] || record.name,
-              value: record.code || record.id,
-            }));
+        formItem.componentProps = Object.assign(
+          {
+            afterFetch: (data: any) => {
+              const records = data.records || data;
+              return records.map((record: any) => ({
+                label: record[labelField] || record.name,
+                value: record.code || record.id,
+              }));
+            },
+            api: () => requestClient.get(api),
+            autoSelect: 'first',
           },
-          api: () => requestClient.get(api),
-          autoSelect: 'first',
-          width: 200,
-        };
-        break;
-      }
-      case 'RadioGroup': {
-        formItem.componentProps = {
-          options,
-        };
+          props || {},
+        );
         break;
       }
       case 'Select': {
-        formItem.componentProps = {
-          allowClear: true,
-          filterOption: true,
-          options,
-          placeholder: '请选择',
-          showSearch: true,
-        };
+        formItem.componentProps = Object.assign(
+          {
+            allowClear: true,
+            filterOption: true,
+            placeholder: '请选择',
+            showSearch: true,
+          },
+          props || {},
+        );
+        break;
+      }
+      case 'VaticTree': {
+        if (api) {
+          const treeData = await requestClient.get(api);
+          const treeProps: TreeProps = Object.assign(
+            {
+              treeData,
+              defaultExpandedLevel: 2,
+              multiple: true,
+              labelField: 'name',
+              valueField: 'code',
+              // :tree-data="permissions"
+              //   multiple
+              //   bordered
+              //     :default-expanded-level="2"
+              // :get-node-class="getNodeClass"
+              //   v-bind="slotProps"
+              //   value-field="id"
+              //   label-field="meta.title"
+              //   icon-field="meta.icon"
+            },
+            props || {},
+          );
+          formItem.componentProps = treeProps;
+        }
         break;
       }
     }
-
-    return formItem;
-  });
+  }
 };
 
 const calcLabelWidth = (formSchema: any[]) => {

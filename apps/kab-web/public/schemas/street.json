@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
     "api": "/kab/device/pageQueryList",
-    "title": "监控设备列表",
+    "title": "社区街道",
     "keyField": "id",
     "nameField": "name",
     "export": true,
@@ -62,7 +62,7 @@
     "delete": "/kab/device/delDevice"
   },
   "form": {
-    "title": "新增监控设备&修改监控设备",
+    "title": "新增社区街道&修改社区街道",
     "detail": "/kab/device/detail/$id",
     "create": "/kab/device/addDevice",
     "update": "/kab/device/editDevice",

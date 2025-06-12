@@ -22,7 +22,7 @@ export async function getAllMenusApi() {
           component,
           meta: {
             title: name,
-            affixTab: true,
+            affixTab: code.toLowerCase() === 'dashboard',
             keepAlive,
             icon,
           },
@@ -42,7 +42,7 @@ export async function getAllMenusApi() {
               component,
               meta: {
                 title: name,
-                affixTab: true,
+                affixTab: false,
                 keepAlive: !!keepAlive,
                 icon,
               },

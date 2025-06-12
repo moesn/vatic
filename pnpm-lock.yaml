@@ -632,6 +632,9 @@ importers:
       '@vatic-core/menu-ui':
         specifier: workspace:*
         version: link:../../packages/@core/ui-kit/menu-ui
+      '@vatic-core/shadcn-ui':
+        specifier: workspace:*
+        version: link:../../packages/@core/ui-kit/shadcn-ui
       '@vatic/access':
         specifier: workspace:*
         version: link:../../packages/effects/access

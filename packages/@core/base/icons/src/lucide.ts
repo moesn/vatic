@@ -36,6 +36,7 @@ export {
   InspectionPanel,
   Languages,
   LoaderCircle,
+  LocationEdit,
   LockKeyhole,
   LogOut,
   MailCheck,

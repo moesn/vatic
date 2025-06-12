@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/company/pageQueryList",
+    "api": "/kab/role/pageQueryList",
     "title": "角色列表",
     "titleHelp": "角色管理",
     "nameField": "name",
@@ -28,34 +28,25 @@
         "title": "角色名称",
         "field": "name",
         "type": "Input"
-      },
-      {
-        "title": "创建时间",
-        "field": "createTime",
-        "type": "RangePicker",
-        "rangeFields": [
-          "startTime",
-          "endTime"
-        ]
       }
     ],
-    "delete": {
-      "url": "/system/role/$id"
-    }
+    "delete": "/kab/role/delRole"
   },
   "form": {
-    "create": {
-      "url": "/kab/company/addCompany",
-      "method": "post"
-    },
-    "update": {
-      "url": "/kab/company/editCompany",
-      "method": "patch"
-    },
+    "title": "新增角色&修改角色",
+    "detail": "/kab/role/detail/$id",
+    "create": "/kab/role/addRole",
+    "update": "/kab/role/editRole",
     "items": [
       {
         "title": "角色名称",
         "field": "name"
+      },
+      {
+        "title": "菜单权限",
+        "field": "menus",
+        "type": "VaticTree",
+        "api": "/kab/resources/resourcesTree"
       },
       {
         "title": "备注",

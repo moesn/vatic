@@ -1,25 +1,14 @@
 <script lang="ts" setup>
-import type { DataNode } from 'ant-design-vue/es/tree';
-
-import type { Recordable } from '@vatic/types';
-
 import { ref } from 'vue';
 
-import { useVaticDrawer, VaticTree } from '@vatic/common-ui';
-import { IconifyIcon } from '@vatic/icons';
-
-import { Spin } from 'ant-design-vue';
+import { useVaticDrawer } from '@vatic/common-ui';
 
 import { useVaticForm } from '#/adapter/form';
 import { requestClient } from '#/api/request';
-import { $t } from '#/locales';
 
-import { parseApi, parseFormSchema } from '../helper';
+import { parseApi } from '../helper';
 
 const emits = defineEmits(['success']);
-
-const permissions = ref<DataNode[]>([]);
-const loadingPermissions = ref(false);
 
 const drawerInit = ref(false);
 const drawerTitle = ref('');
@@ -35,11 +24,17 @@ const [Drawer, drawerApi] = useVaticDrawer({
     const bodyValues = await formApi.getValues();
     drawerApi.lock();
 
-    const { create, update, keyField } = drawerApi.getSchema();
+    const { create, update, keyField, mergeFields } = drawerApi.getSchema();
     const rawData = drawerApi.getData();
 
     const keyValue = rawData[keyField];
     bodyValues[keyField] = keyValue;
+
+    mergeFields?.forEach((field: any) => {
+      field.rawFields.forEach((key: string, index: number) => {
+        bodyValues[key] = bodyValues[field.newField][index];
+      });
+    });
 
     (keyValue
       ? requestClient.patch(update, bodyValues)
@@ -55,11 +50,17 @@ const [Drawer, drawerApi] = useVaticDrawer({
   },
   onOpenChange(isOpen) {
     if (isOpen) {
-      const { items, title, keyField, detail } = drawerApi.getSchema();
+      const {
+        items: schema,
+        title,
+        keyField,
+        detail,
+        mergeFields,
+      } = drawerApi.getSchema();
       const titles = title.split('&');
 
       [Form, formApi] = useVaticForm({
-        schema: parseFormSchema(items),
+        schema,
         showDefaultActions: false,
       });
 
@@ -73,6 +74,11 @@ const [Drawer, drawerApi] = useVaticDrawer({
         if (detail) {
           const apiUrl = parseApi(detail, data);
           requestClient.get(apiUrl).then((res) => {
+            mergeFields?.forEach((field: any) => {
+              res[field.newField] = field.rawFields.map(
+                (key: string) => res[key],
+              );
+            });
             formData.value = res;
             formApi.setValues(res);
           });
@@ -80,64 +86,13 @@ const [Drawer, drawerApi] = useVaticDrawer({
       } else {
         drawerTitle.value = titles[0];
       }
-
       drawerInit.value = true;
     }
   },
 });
-
-function getNodeClass(node: Recordable<any>) {
-  const classes: string[] = [];
-  if (node.value?.type === 'button') {
-    classes.push('inline-flex');
-    if (node.index % 3 >= 1) {
-      classes.push('!pl-0');
-    }
-  }
-
-  return classes.join(' ');
-}
 </script>
 <template>
   <Drawer :title="drawerTitle">
-    <Form v-if="drawerInit">
-      <template #permissions="slotProps">
-        <Spin :spinning="loadingPermissions" wrapper-class-name="w-full">
-          <VaticTree
-            :tree-data="permissions"
-            multiple
-            bordered
-            :default-expanded-level="2"
-            :get-node-class="getNodeClass"
-            v-bind="slotProps"
-            value-field="id"
-            label-field="meta.title"
-            icon-field="meta.icon"
-          >
-            <template #node="{ value }">
-              <IconifyIcon v-if="value.meta.icon" :icon="value.meta.icon" />
-              {{ $t(value.meta.title) }}
-            </template>
-          </VaticTree>
-        </Spin>
-      </template>
-    </Form>
+    <Form v-if="drawerInit" />
   </Drawer>
 </template>
-<style lang="css" scoped>
-:deep(.ant-tree-title) {
-  .tree-actions {
-    display: none;
-    margin-left: 20px;
-  }
-}
-
-:deep(.ant-tree-title:hover) {
-  .tree-actions {
-    display: flex;
-    flex: auto;
-    justify-content: flex-end;
-    margin-left: 20px;
-  }
-}
-</style>

@@ -33,17 +33,20 @@ const [FormDrawer, formDrawerApi] = useVaticDrawer({
   destroyOnClose: true,
 });
 
-function mergeFormSchema(formSchema: any) {
+async function mergeFormSchema(formSchema: any) {
   const { keyField } = pageSchema.value.table;
+  await parseFormSchema(formSchema.items);
   return { ...formSchema, keyField };
 }
 
-function onCreate() {
-  formDrawerApi.setData({}, mergeFormSchema(pageSchema.value.form)).open();
+async function onCreate() {
+  formDrawerApi
+    .setData({}, await mergeFormSchema(pageSchema.value.form))
+    .open();
 }
 
-function onUpdate(row: any, form: any) {
-  formDrawerApi.setData(row, mergeFormSchema(form)).open();
+async function onUpdate(row: any, form: any) {
+  formDrawerApi.setData(row, await mergeFormSchema(form)).open();
 }
 
 function confirm(content: string, title: string) {
@@ -99,7 +102,7 @@ function onActionClick(e: OnActionClickParams) {
 
 watch(
   () => pageSchema.value,
-  (schema) => {
+  async (schema) => {
     const { operations, table, form } = schema;
     const {
       api,
@@ -243,7 +246,7 @@ watch(
         fieldMappingTime: search
           .filter((s: any) => s.type === 'RangePicker')
           .map((d: any) => [d.field, d.rangeFields]),
-        schema: parseFormSchema(search),
+        schema: await parseFormSchema(search),
       };
     }
 

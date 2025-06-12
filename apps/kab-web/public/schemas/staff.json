@@ -59,9 +59,7 @@
         "type": "Input"
       }
     ],
-    "delete": {
-      "url": "/system/role/$id"
-    }
+    "delete": "/kab/staff/delStaff"
   },
   "form": {
     "title": "新增养护人员&修改养护人员",
@@ -120,13 +118,13 @@
         "title": "所属企业",
         "field": "company",
         "type": "ApiSelect",
-        "api": "/kab/company/pageQueryList"
+        "api": "/kab/company/queryList"
       },
       {
         "title": "责任车辆",
         "field": "carNo",
         "type": "ApiSelect",
-        "api": "/kab/car/pageQueryList",
+        "api": "/kab/car/queryList",
         "labelField": "plateNo"
       },
       {

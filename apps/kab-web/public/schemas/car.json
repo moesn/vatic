@@ -88,7 +88,7 @@
         "title": "养护企业",
         "field": "maintainCoName",
         "type": "ApiSelect",
-        "api": "/kab/company/pageQueryList"
+        "api": "/kab/company/queryList"
       },
       {
         "title": "荷载人数",

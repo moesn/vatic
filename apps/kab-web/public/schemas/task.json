@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/company/pageQueryList",
+    "api": "/kab/task/pageQueryList",
     "title": "任务处理列表",
     "nameField": "name",
     "columns": [

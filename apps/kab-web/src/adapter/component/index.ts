@@ -16,7 +16,13 @@ import {
   ref,
 } from 'vue';
 
-import { ApiComponent, globalShareState, IconPicker } from '@vatic/common-ui';
+import {
+  ApiComponent,
+  CoordinatePicker,
+  globalShareState,
+  IconPicker,
+  VaticTree,
+} from '@vatic/common-ui';
 import { $t } from '@vatic/locales';
 
 import { notification } from 'ant-design-vue';
@@ -109,6 +115,7 @@ export type ComponentType =
   | 'AutoComplete'
   | 'Checkbox'
   | 'CheckboxGroup'
+  | 'CoordinatePicker'
   | 'DatePicker'
   | 'DefaultButton'
   | 'Divider'
@@ -129,6 +136,7 @@ export type ComponentType =
   | 'TimePicker'
   | 'TreeSelect'
   | 'Upload'
+  | 'VaticTree'
   | BaseFormComponentType;
 
 async function initComponentAdapter() {
@@ -165,6 +173,8 @@ async function initComponentAdapter() {
       inputComponent: Input,
       modelValueProp: 'value',
     }),
+    CoordinatePicker: withDefaultPlaceholder(CoordinatePicker, 'select', {}),
+    VaticTree: withDefaultPlaceholder(VaticTree, 'select', { treeData: [] }),
     Input: withDefaultPlaceholder(Input, 'input'),
     InputNumber: withDefaultPlaceholder(InputNumber, 'input'),
     InputPassword: withDefaultPlaceholder(InputPassword, 'input'),

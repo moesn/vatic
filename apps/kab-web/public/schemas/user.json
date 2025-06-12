@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/company/pageQueryList",
+    "api": "/kab/user/pageQueryList",
     "title": "用户列表",
     "nameField": "name",
     "columns": [
@@ -45,20 +45,13 @@
         "type": "Input"
       }
     ],
-    "delete": {
-      "url": "/system/role/$id"
-    }
+    "delete": "/kab/user/delUser"
   },
   "form": {
     "title": "新增用户&修改用户",
-    "create": {
-      "url": "/kab/company/addCompany",
-      "method": "post"
-    },
-    "update": {
-      "url": "/kab/company/editCompany",
-      "method": "patch"
-    },
+    "detail": "/kab/user/detail/$id",
+    "create": "/kab/user/addUser",
+    "update": "/kab/user/editUser",
     "items": [
       {
         "title": "用户名",
