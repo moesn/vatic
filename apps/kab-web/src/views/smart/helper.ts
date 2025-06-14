@@ -1,4 +1,9 @@
-import type { DatePickerProps, SelectProps, SwitchProps } from 'ant-design-vue';
+import type {
+  DatePickerProps,
+  InputNumberProps,
+  SelectProps,
+  SwitchProps,
+} from 'ant-design-vue';
 
 import type { ApiSelectProps } from '@vatic/common-ui';
 
@@ -7,6 +12,9 @@ import type { TreeProps } from '@vatic-core/shadcn-ui';
 import type { Recordable } from '@vatic-core/typings';
 
 import { requestClient } from '#/api/request';
+import * as functions from '#/views/smart/pipes';
+
+const functionsAny: any = functions;
 
 export const parseApi = (api: string, row: any) => {
   if (api.includes('$')) {
@@ -19,7 +27,7 @@ export const parseApi = (api: string, row: any) => {
 export const parseTableColumns = (columns: any[]) => {
   columns.forEach((item: any) => {
     let len = 0;
-    const { title, type } = item;
+    const { title, type, options } = item;
     if (title) {
       for (let i = 0; i < title.length; i++) {
         const code: number = title.codePointAt(i) || 0;
@@ -33,6 +41,10 @@ export const parseTableColumns = (columns: any[]) => {
         item.cellRender = {
           name: 'ListTag',
         };
+        break;
+      }
+      case 'Tag': {
+        item.cellRender = { name: 'CellTag', options };
         break;
       }
     }
@@ -57,6 +69,7 @@ export const parseFormSchema = async (
       valueField,
       labelField,
       props,
+      afterFetch,
     } = formItem;
 
     formItem.component = type || 'Input';
@@ -114,6 +127,11 @@ export const parseFormSchema = async (
               labelField: labelField || 'name',
               valueField: valueField || 'id',
               childrenField: 'children',
+              afterFetch: (data: { name: string; path: string }[]) => {
+                if (afterFetch) {
+                  functionsAny[afterFetch](data);
+                }
+              },
             } as unknown as ApiSelectProps,
             props || {},
           );
@@ -126,6 +144,13 @@ export const parseFormSchema = async (
             format: 'YYYY-MM-DD',
             valueFormat: 'YYYY-MM-DD',
           } as DatePickerProps,
+          props || {},
+        );
+        break;
+      }
+      case 'InputNumber': {
+        formItem.componentProps = Object.assign(
+          {} as InputNumberProps,
           props || {},
         );
         break;

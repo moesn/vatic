@@ -121,22 +121,24 @@ function onActionClick(e: OnActionClickParams) {
   }
 }
 
-function updateDisabled(row: any) {
-  const condition = pageSchema.value.table.disableUpdate;
+function computeDisabled(condition: string, row: any) {
   if (condition && condition.includes('=')) {
-    const keyVal = condition.split('=');
-    return row[keyVal[0]].toString() === keyVal[1];
+    const keyVal: any = condition.split('=');
+    const rowValue = row[keyVal[0]].toString();
+    const disableValues = keyVal[1].split('|');
+    return disableValues.includes(rowValue);
   }
   return false;
 }
 
+function updateDisabled(row: any) {
+  const condition = pageSchema.value.table.disableUpdate;
+  return computeDisabled(condition, row);
+}
+
 function deleteDisabled(row: any) {
   const condition = pageSchema.value.table.disableDelete;
-  if (condition && condition.includes('=')) {
-    const keyVal = condition.split('=');
-    return row[keyVal[0]].toString() === keyVal[1];
-  }
-  return false;
+  return computeDisabled(condition, row);
 }
 
 watch(
@@ -153,7 +155,7 @@ watch(
       keyField,
     } = table;
 
-    const { update } = form;
+    const { update } = form || {};
 
     parseTableColumns(columns);
 
@@ -184,17 +186,11 @@ watch(
 
       if (remove) {
         width += 45;
-        options.push(
-          {
-            code: 'delete',
-            text: '删除',
-            disabled: deleteDisabled,
-          },
-          {
-            code: 'append',
-            text: '新增下级',
-          },
-        );
+        options.push({
+          code: 'delete',
+          text: '删除',
+          disabled: deleteDisabled,
+        });
       }
 
       columns.push({
@@ -313,6 +309,18 @@ watch(
   },
 );
 
+const isTreeGrid = () => {
+  return pageSchema.value.table.columns.some((column: any) => column.treeNode);
+};
+
+const expandAll = () => {
+  gridApi.grid?.setAllTreeExpand(true);
+};
+
+const collapseAll = () => {
+  gridApi.grid?.setAllTreeExpand(false);
+};
+
 function refreshGrid() {
   gridApi.query();
 }
@@ -326,6 +334,12 @@ function refreshGrid() {
       :table-title-help="pageSchema.table.titleHelp"
     >
       <template #toolbar-tools>
+        <div v-if="isTreeGrid()" class="absolute left-2 top-14 z-10">
+          <Button class="mr-2" size="small" type="link" @click="expandAll">
+            展开
+          </Button>
+          <Button size="small" type="link" @click="collapseAll"> 折叠</Button>
+        </div>
         <Button type="primary" @click="onCreate" v-if="pageSchema.form?.create">
           <Plus class="size-5" />
           新增

@@ -5,10 +5,13 @@ import { useVaticDrawer } from '@vatic/common-ui';
 
 import { useVaticForm } from '#/adapter/form';
 import { requestClient } from '#/api/request';
+import * as functions from '#/views/smart/pipes';
 
 import { parseApi } from '../helper';
 
 const emits = defineEmits(['success']);
+
+const functionsAny: any = functions;
 
 const drawerInit = ref(false);
 const drawerTitle = ref('');
@@ -21,24 +24,22 @@ const [Drawer, drawerApi] = useVaticDrawer({
   async onConfirm() {
     const { valid } = await formApi.validate();
     if (!valid) return;
-    const bodyValues = await formApi.getValues();
+    const body = await formApi.getValues();
     drawerApi.lock();
 
-    const { create, update, keyField, mergeFields } = drawerApi.getSchema();
+    const { create, update, keyField, transformBody } = drawerApi.getSchema();
     const rawData = drawerApi.getData();
 
     const keyValue = rawData[keyField];
-    bodyValues[keyField] = keyValue;
+    body[keyField] = keyValue;
 
-    mergeFields?.forEach((field: any) => {
-      field.rawFields.forEach((key: string, index: number) => {
-        bodyValues[key] = bodyValues[field.newField][index];
-      });
-    });
+    if (transformBody) {
+      functionsAny[transformBody](body);
+    }
 
     (keyValue
-      ? requestClient.patch(update, bodyValues)
-      : requestClient.post(create, bodyValues)
+      ? requestClient.patch(update, body)
+      : requestClient.post(create, body)
     )
       .then(() => {
         emits('success');
@@ -55,7 +56,7 @@ const [Drawer, drawerApi] = useVaticDrawer({
         title,
         keyField,
         detail,
-        mergeFields,
+        transformData,
       } = drawerApi.getSchema();
       const titles = title.split('&');
 
@@ -74,11 +75,9 @@ const [Drawer, drawerApi] = useVaticDrawer({
         if (detail) {
           const apiUrl = parseApi(detail, data);
           requestClient.get(apiUrl).then((res) => {
-            mergeFields?.forEach((field: any) => {
-              res[field.newField] = field.rawFields.map(
-                (key: string) => res[key],
-              );
-            });
+            if (transformData) {
+              functionsAny[transformData](res);
+            }
             formData.value = res;
             formApi.setValues(res);
           });

@@ -22,6 +22,11 @@ export const defaultResponseInterceptor = ({
     fulfilled: (response) => {
       const { config, data: responseData, status } = response;
 
+      if (responseData[codeField] === 401) {
+        localStorage.clear();
+        location.href = '/auth';
+      }
+
       if (config.responseReturn === 'raw') {
         return response;
       }

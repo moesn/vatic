@@ -66,15 +66,8 @@
     "detail": "/kab/device/detail/$id",
     "create": "/kab/device/addDevice",
     "update": "/kab/device/editDevice",
-    "mergeFields": [
-      {
-        "newField": "coordinate",
-        "rawFields": [
-          "longitude",
-          "latitude"
-        ]
-      }
-    ],
+    "transformData": "mergeCoordinate",
+    "transformBody": "separateCoordinate",
     "items": [
       {
         "title": "设备名称",

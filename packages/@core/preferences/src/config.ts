@@ -11,7 +11,7 @@ const defaultPreferences: Preferences = {
     contentCompact: 'wide',
     defaultAvatar:
       'https://unpkg.com/@vaticjs/static-source@0.1.7/source/avatar-v1.webp',
-    defaultHomePath: '/',
+    defaultHomePath: '/dashboard',
     dynamicTitle: true,
     enableCheckUpdates: true,
     enablePreferences: true,

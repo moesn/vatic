@@ -1,7 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 
 import { LOGIN_PATH } from '@vatic/constants';
-import { preferences } from '@vatic/preferences';
 
 import { $t } from '#/locales';
 
@@ -35,7 +34,7 @@ const coreRoutes: RouteRecordRaw[] = [
     },
     name: 'Root',
     path: '/',
-    redirect: preferences.app.defaultHomePath,
+    redirect: '/auth',
     children: [],
   },
   {

@@ -1,0 +1,64 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/kab/monitor/operlog/list",
+    "title": "系统日志",
+    "keyField": "id",
+    "nameField": "name",
+    "export": true,
+    "columns": [
+      {
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "真实姓名",
+        "field": "operName"
+      },
+      {
+        "title": "用户名",
+        "field": "operAccount"
+      },
+      {
+        "title": "角色",
+        "field": "operRoleNames"
+      },
+      {
+        "title": "操作时间",
+        "field": "operTime"
+      },
+      {
+        "title": "IP地址",
+        "field": "operIp"
+      },
+      {
+        "title": "操作描述",
+        "field": "title"
+      },
+      {
+        "title": "操作结果",
+        "field": "status",
+        "type": "Tag",
+        "options": [
+          {
+            "label": "成功",
+            "value": 0,
+            "color": "success"
+          },
+          {
+            "label": "失败",
+            "value": 1,
+            "color": "error"
+          }
+        ]
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keyword",
+        "type": "Input"
+      }
+    ]
+  }
+}

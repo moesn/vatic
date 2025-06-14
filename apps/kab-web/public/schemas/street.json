@@ -2,17 +2,15 @@
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
     "api": "/kab/region/lazy-list",
-    "title": "街道",
+    "title": "街道管理",
     "keyField": "id",
     "nameField": "name",
     "export": true,
+    "disableUpdate": "level=1|2|3",
+    "disableDelete": "level=1|2|3",
     "columns": [
       {
-        "type": "seq",
-        "width": 50
-      },
-      {
-        "title": "名称",
+        "title": " ",
         "field": "name",
         "align": "left",
         "treeNode": true
@@ -25,23 +23,36 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/device/delDevice"
+    "delete": "/kab/region/remove"
   },
   "form": {
-    "title": "新增街道&修改街道",
-    "detail": "/kab/device/detail/$id",
-    "create": "/kab/device/addDevice",
-    "update": "/kab/device/editDevice",
-    "mergeFields": [
-      {
-        "newField": "coordinate",
-        "rawFields": [
-          "longitude",
-          "latitude"
-        ]
-      }
-    ],
+    "title": "新增下级区域&修改区域",
+    "create": "/kab/region/submit",
+    "update": "/kab/region/submit",
+    "transformBody": "computeLevel",
     "items": [
+      {
+        "title": "上级区域",
+        "field": "districtCode",
+        "required": true,
+        "type": "ApiTreeSelect",
+        "api": "/kab/region/lazy-tree",
+        "labelField": "title",
+        "afterFetch": "filterLevelData"
+      },
+      {
+        "title": "名称",
+        "field": "name"
+      },
+      {
+        "title": "编码",
+        "field": "code",
+        "type": "InputNumber",
+        "props": {
+          "min": 10,
+          "max": 99
+        }
+      }
     ]
   }
 }
