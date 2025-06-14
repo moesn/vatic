@@ -44,7 +44,7 @@ export async function refreshTokenApi() {
  * 退出登录
  */
 export async function logoutApi() {
-  return baseRequestClient.post('/auth/logout', null, {
+  return requestClient.post('/kab/auth/logout', null, {
     withCredentials: true,
   });
 }

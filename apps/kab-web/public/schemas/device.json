@@ -77,11 +77,6 @@
     ],
     "items": [
       {
-        "title": "部署位置",
-        "field": "location",
-        "required": true
-      },
-      {
         "title": "设备名称",
         "field": "deviceName",
         "required": true
@@ -92,17 +87,26 @@
         "required": true
       },
       {
-        "title": "经纬度",
-        "field": "coordinate",
-        "required": true,
-        "type": "CoordinatePicker"
-      },
-      {
         "title": "设备用途",
         "field": "purpose",
         "required": true,
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=13"
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=13",
+        "valueField": "code"
+      },
+      {
+        "title": "部署位置",
+        "field": "location",
+        "required": true,
+        "type": "ApiTreeSelect",
+        "api": "/kab/region/lazy-tree",
+        "labelField": "title"
+      },
+      {
+        "title": "经纬度",
+        "field": "coordinate",
+        "required": true,
+        "type": "CoordinatePicker"
       },
       {
         "title": "设备型号",

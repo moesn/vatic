@@ -93,7 +93,8 @@
         "field": "type",
         "required": true,
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=11"
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=11",
+        "valueField": "code"
       },
       {
         "title": "身份证号",
@@ -104,7 +105,8 @@
         "title": "驾照类型",
         "field": "driveClass",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=12"
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=12",
+        "valueField": "code"
       },
       {
         "title": "从业资格证号",

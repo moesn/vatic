@@ -1,0 +1,165 @@
+{
+  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "table": {
+    "api": "/kab/slope/pageQueryList",
+    "title": "边坡",
+    "keyField": "id",
+    "nameField": "slopeName",
+    "export": true,
+    "columns": [
+      {
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "边坡名称",
+        "field": "slopeName"
+      },
+      {
+        "title": "位置",
+        "field": "location"
+      },
+      {
+        "title": "设计使用年限",
+        "field": "designLife"
+      },
+      {
+        "title": "边坡类型",
+        "field": "slopeType"
+      },
+      {
+        "title": "边坡形态",
+        "field": "slopeForm"
+      },
+      {
+        "title": "防护结构类型",
+        "field": "protectionType"
+      },
+      {
+        "title": "坡高",
+        "field": "length"
+      },
+      {
+        "title": "坡度",
+        "field": "gradient"
+      },
+      {
+        "title": "管理单位名称",
+        "field": "managementUnit"
+      },
+      {
+        "title": "管理单位联系方式",
+        "field": "managementContact"
+      },
+      {
+        "title": "养护单位名称",
+        "field": "maintenanceUnit"
+      },
+      {
+        "title": "养护单位联系方式",
+        "field": "maintenanceContact"
+      },
+      {
+        "title": "监管单位名称",
+        "field": "supervisionUnit"
+      },
+      {
+        "title": "监管单位联系方式",
+        "field": "supervisionContact"
+      },
+      {
+        "title": "施工单位名称",
+        "field": "constructionUnit"
+      },
+      {
+        "title": "施工单位联系方式",
+        "field": "constructionContact"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keyword",
+        "type": "Input"
+      }
+    ],
+    "delete": "/kab/slope/delSlope"
+  },
+  "form": {
+    "title": "新增边坡&修改边坡",
+    "detail": "/kab/slope/detail/$id",
+    "create": "/kab/slope/addSlope",
+    "update": "/kab/slope/editSlope",
+    "items": [
+      {
+        "title": "边坡名称",
+        "field": "slopeName",
+        "required": true
+      },
+      {
+        "title": "位置",
+        "field": "location",
+        "required": true
+      },
+      {
+        "title": "设计使用年限",
+        "field": "designLife",
+        "type": "InputNumber"
+      },
+      {
+        "title": "边坡类型",
+        "field": "slopeType"
+      },
+      {
+        "title": "边坡形态",
+        "field": "slopeForm"
+      },
+      {
+        "title": "防护结构类型",
+        "field": "protectionType"
+      },
+      {
+        "title": "坡高（米）",
+        "field": "length",
+        "type": "InputNumber"
+      },
+      {
+        "title": "坡度（度）",
+        "field": "gradient",
+        "type": "InputNumber"
+      },
+      {
+        "title": "管理单位名称",
+        "field": "managementUnit"
+      },
+      {
+        "title": "管理单位联系方式",
+        "field": "managementContact"
+      },
+      {
+        "title": "养护单位名称",
+        "field": "maintenanceUnit"
+      },
+      {
+        "title": "养护单位联系方式",
+        "field": "maintenanceContact"
+      },
+      {
+        "title": "监管单位名称",
+        "field": "supervisionUnit"
+      },
+      {
+        "title": "监管单位联系方式",
+        "field": "supervisionContact"
+      },
+      {
+        "title": "施工单位名称",
+        "field": "constructionUnit"
+      },
+      {
+        "title": "施工单位联系方式",
+        "field": "constructionContact"
+      }
+    ]
+  }
+}

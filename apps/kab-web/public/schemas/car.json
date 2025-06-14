@@ -108,7 +108,8 @@
         "title": "车辆类型",
         "field": "type",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=10"
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=10",
+        "valueField": "code"
       },
       {
         "title": "运营许可证号",

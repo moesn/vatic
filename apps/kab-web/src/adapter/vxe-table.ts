@@ -53,6 +53,20 @@ setupVaticVxeTable({
       }
     });
 
+    vxeUI.renderer.add('ListTag', {
+      renderTableDefault(_renderOpts, params) {
+        const { column, row } = params;
+        const fields = column.field.split('.');
+        return h(
+          'div',
+          { src: row[column.field] },
+          row[fields[0]]?.map((data: any) => {
+            return h(Tag, {}, data[fields[1]]);
+          }),
+        );
+      },
+    });
+
     // 表格配置项可以用 cellRender: { name: 'CellImage' },
     vxeUI.renderer.add('CellImage', {
       renderTableDefault(_renderOpts, params) {
@@ -96,12 +110,14 @@ setupVaticVxeTable({
     vxeUI.renderer.add('CellSwitch', {
       renderTableDefault({ attrs, props }, { column, row }) {
         const loadingKey = `__loading_${column.field}`;
+
         const finallyProps = {
-          checkedChildren: $t('common.enabled'),
-          checkedValue: 1,
-          unCheckedChildren: $t('common.disabled'),
-          unCheckedValue: 0,
+          checkedChildren: '启用',
+          checkedValue: true,
+          unCheckedChildren: '禁用',
+          unCheckedValue: false,
           ...props,
+          disabled: props?.disabled(row),
           checked: row[column.field],
           loading: row[loadingKey] ?? false,
           'onUpdate:checked': onChange,

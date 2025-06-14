@@ -1,8 +1,8 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/device/pageQueryList",
-    "title": "社区街道",
+    "api": "/kab/region/lazy-list",
+    "title": "街道",
     "keyField": "id",
     "nameField": "name",
     "export": true,
@@ -12,44 +12,10 @@
         "width": 50
       },
       {
-        "title": "部署位置",
-        "field": "location"
-      },
-      {
-        "title": "设备名称",
-        "field": "deviceName"
-      },
-      {
-        "title": "SIM卡号",
-        "field": "simNo"
-      },
-      {
-        "title": "设备用途",
-        "field": "purpose"
-      },
-      {
-        "title": "经度",
-        "field": "longitude"
-      },
-      {
-        "title": "纬度",
-        "field": "latitude"
-      },
-      {
-        "title": "设备型号",
-        "field": "model"
-      },
-      {
-        "title": "设备厂商",
-        "field": "vendor"
-      },
-      {
-        "title": "负责人姓名",
-        "field": "manager"
-      },
-      {
-        "title": "负责人电话",
-        "field": "managerPhone"
+        "title": "名称",
+        "field": "name",
+        "align": "left",
+        "treeNode": true
       }
     ],
     "search": [
@@ -62,7 +28,7 @@
     "delete": "/kab/device/delDevice"
   },
   "form": {
-    "title": "新增社区街道&修改社区街道",
+    "title": "新增街道&修改街道",
     "detail": "/kab/device/detail/$id",
     "create": "/kab/device/addDevice",
     "update": "/kab/device/editDevice",
@@ -76,50 +42,6 @@
       }
     ],
     "items": [
-      {
-        "title": "部署位置",
-        "field": "location",
-        "required": true
-      },
-      {
-        "title": "设备名称",
-        "field": "deviceName",
-        "required": true
-      },
-      {
-        "title": "SIM卡号",
-        "field": "simNo",
-        "required": true
-      },
-      {
-        "title": "经纬度",
-        "field": "coordinate",
-        "required": true,
-        "type": "CoordinatePicker"
-      },
-      {
-        "title": "设备用途",
-        "field": "purpose",
-        "required": true,
-        "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=13"
-      },
-      {
-        "title": "设备型号",
-        "field": "model"
-      },
-      {
-        "title": "设备厂商",
-        "field": "vendor"
-      },
-      {
-        "title": "负责人姓名",
-        "field": "manager"
-      },
-      {
-        "title": "负责人电话",
-        "field": "managerPhone"
-      }
     ]
   }
 }

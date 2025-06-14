@@ -14,6 +14,8 @@ import { Page, useVaticDrawer } from '@vatic/common-ui';
 import { Plus } from '@vatic/icons';
 import { getPageSchema } from '@vatic/smart';
 
+import { cloneDeep } from '@vatic-core/shared/utils';
+
 import { Button, message, Modal } from 'ant-design-vue';
 
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
@@ -33,16 +35,39 @@ const [FormDrawer, formDrawerApi] = useVaticDrawer({
   destroyOnClose: true,
 });
 
-async function mergeFormSchema(formSchema: any) {
+async function buildFormSchema(formSchema: any, row: any) {
   const { keyField } = pageSchema.value.table;
+  formSchema.items.map((item: any) => {
+    switch (item.disabled) {
+      case 'update': {
+        item.disabled = !!row[keyField];
+        break;
+      }
+    }
+
+    return item;
+  });
+
   await parseFormSchema(formSchema.items);
   return { ...formSchema, keyField };
 }
 
-async function onEdit(row: any) {
+async function onEdit(row: any, form: any) {
   formDrawerApi
-    .setData(row, await mergeFormSchema(pageSchema.value.form))
+    .setData(row, await buildFormSchema(cloneDeep(form), row))
     .open();
+}
+
+async function onCreate() {
+  const data: any = {};
+  const { items } = pageSchema.value.form;
+  items.forEach((item: any) => {
+    const { field, defaultValue } = item;
+    if (defaultValue) {
+      data[field] = defaultValue;
+    }
+  });
+  await onEdit(data, pageSchema.value.form);
 }
 
 function confirm(content: string, title: string) {
@@ -90,10 +115,28 @@ function onActionClick(e: OnActionClickParams) {
       break;
     }
     case 'update': {
-      onEdit(e.row);
+      onEdit(e.row, e.form);
       break;
     }
   }
+}
+
+function updateDisabled(row: any) {
+  const condition = pageSchema.value.table.disableUpdate;
+  if (condition && condition.includes('=')) {
+    const keyVal = condition.split('=');
+    return row[keyVal[0]].toString() === keyVal[1];
+  }
+  return false;
+}
+
+function deleteDisabled(row: any) {
+  const condition = pageSchema.value.table.disableDelete;
+  if (condition && condition.includes('=')) {
+    const keyVal = condition.split('=');
+    return row[keyVal[0]].toString() === keyVal[1];
+  }
+  return false;
 }
 
 watch(
@@ -134,13 +177,24 @@ watch(
         options.push({
           code: 'update',
           text: '编辑',
+          disabled: updateDisabled,
           form,
         });
       }
 
       if (remove) {
         width += 45;
-        options.push('delete');
+        options.push(
+          {
+            code: 'delete',
+            text: '删除',
+            disabled: deleteDisabled,
+          },
+          {
+            code: 'append',
+            text: '新增下级',
+          },
+        );
       }
 
       columns.push({
@@ -164,29 +218,34 @@ watch(
       columns.push({
         cellRender: {
           attrs: {
-            beforeChange: async (newStatus: number, row: any) => {
+            beforeChange: async (newStatus: boolean, row: any) => {
               const status: Recordable<string> = {
-                0: '禁用',
-                1: '启用',
+                false: '禁用',
+                true: '启用',
               };
               try {
                 await confirm(
-                  `确定将${row[nameField]}的状态切换为 【${status[newStatus.toString()]}】？`,
+                  `确定将【${row[nameField]}】的状态切换为 【${status[newStatus.toString()]}】？`,
                   `切换状态`,
                 );
 
                 const apiUrl = parseApi(state, row);
+                const data: any = { state: newStatus };
+                data[keyField] = row[keyField];
 
-                await requestClient.put(apiUrl, { status: newStatus });
+                await requestClient.patch(apiUrl, data);
                 return true;
               } catch {
                 return false;
               }
             },
           },
+          props: {
+            disabled: deleteDisabled,
+          },
           name: 'CellSwitch',
         },
-        field: 'status',
+        field: 'enable',
         title: '状态',
         width: 100,
       });
@@ -233,6 +292,7 @@ watch(
         export: table.export,
         import: table.import,
       },
+      treeConfig: {},
     };
 
     const options: VxeGridProps = { gridOptions };
@@ -248,7 +308,7 @@ watch(
     }
 
     [Grid, gridApi] = useVaticVxeGrid(options);
-    console.warn(options);
+
     pageInit.value = true;
   },
 );
@@ -266,7 +326,7 @@ function refreshGrid() {
       :table-title-help="pageSchema.table.titleHelp"
     >
       <template #toolbar-tools>
-        <Button type="primary" @click="onEdit" v-if="pageSchema.form?.create">
+        <Button type="primary" @click="onCreate" v-if="pageSchema.form?.create">
           <Plus class="size-5" />
           新增
         </Button>

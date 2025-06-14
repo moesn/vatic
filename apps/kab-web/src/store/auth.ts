@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { LOGIN_PATH } from '@vatic/constants';
-import { preferences } from '@vatic/preferences';
+import { preferences, updatePreferences } from '@vatic/preferences';
 import { resetAllStores, useAccessStore, useUserStore } from '@vatic/stores';
 
 import { notification } from 'ant-design-vue';
@@ -41,6 +41,11 @@ export const useAuthStore = defineStore('auth', () => {
         accessStore.setAccessToken(accessToken);
 
         userInfo = await fetchUserInfo();
+        updatePreferences({
+          app: {
+            defaultHomePath: userInfo.permissions[0]?.path,
+          },
+        });
         userStore.setUserInfo(userInfo);
         accessStore.setAccessCodes([]);
 

@@ -1,4 +1,4 @@
-import type { SelectProps } from 'ant-design-vue';
+import type { DatePickerProps, SelectProps, SwitchProps } from 'ant-design-vue';
 
 import type { ApiSelectProps } from '@vatic/common-ui';
 
@@ -19,13 +19,22 @@ export const parseApi = (api: string, row: any) => {
 export const parseTableColumns = (columns: any[]) => {
   columns.forEach((item: any) => {
     let len = 0;
-    const { title } = item;
+    const { title, type } = item;
     if (title) {
       for (let i = 0; i < title.length; i++) {
         const code: number = title.codePointAt(i) || 0;
         len += code >= 0x00 && code <= 0xef ? 1 : 2;
       }
-      item.minWidth = len * 7.5;
+      item.minWidth = len * 7;
+    }
+
+    switch (type) {
+      case 'List': {
+        item.cellRender = {
+          name: 'ListTag',
+        };
+        break;
+      }
     }
   });
 };
@@ -45,6 +54,7 @@ export const parseFormSchema = async (
       triggerField,
       triggerValue,
       api,
+      valueField,
       labelField,
       props,
     } = formItem;
@@ -54,7 +64,10 @@ export const parseFormSchema = async (
     formItem.label = title;
     formItem.rules = rules;
     formItem.labelWidth = labelWidth;
-    formItem.controlClass = 'w-full';
+
+    if (!['Switch'].includes(type)) {
+      formItem.controlClass = 'w-full';
+    }
 
     if (required) {
       switch (type) {
@@ -81,16 +94,38 @@ export const parseFormSchema = async (
       case 'ApiSelect': {
         formItem.componentProps = Object.assign(
           {
-            afterFetch: (data: any) => {
-              const records = data.records || data;
-              return records.map((record: any) => ({
-                label: record[labelField] || record.name,
-                value: record.code || record.id,
-              }));
-            },
             api: () => requestClient.get(api),
-            autoSelect: 'first',
-          } as ApiSelectProps,
+            showSearch: true,
+            autoSelect: props?.mode === 'multiple' ? false : 'first',
+            labelField: labelField || 'name',
+            valueField: valueField || 'id',
+          } as unknown as ApiSelectProps,
+          props || {},
+        );
+        break;
+      }
+      case 'ApiTreeSelect': {
+        if (api) {
+          formItem.componentProps = Object.assign(
+            {
+              allowClear: true,
+              api: () => requestClient.get(api),
+              class: 'w-full',
+              labelField: labelField || 'name',
+              valueField: valueField || 'id',
+              childrenField: 'children',
+            } as unknown as ApiSelectProps,
+            props || {},
+          );
+        }
+        break;
+      }
+      case 'DatePicker': {
+        formItem.componentProps = Object.assign(
+          {
+            format: 'YYYY-MM-DD',
+            valueFormat: 'YYYY-MM-DD',
+          } as DatePickerProps,
           props || {},
         );
         break;
@@ -103,6 +138,16 @@ export const parseFormSchema = async (
             placeholder: '请选择',
             showSearch: true,
           } as SelectProps,
+          props || {},
+        );
+        break;
+      }
+      case 'Switch': {
+        formItem.componentProps = Object.assign(
+          {
+            checkedChildren: '开',
+            unCheckedChildren: '关',
+          } as SwitchProps,
           props || {},
         );
         break;

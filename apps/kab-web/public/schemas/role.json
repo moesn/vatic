@@ -2,6 +2,10 @@
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
     "api": "/kab/role/pageQueryList",
+    "state": "/kab/role/setState",
+    "delete": "/kab/role/delRole",
+    "disableDelete": "code=SUPER_ADMIN",
+    "disableUpdate": "code=SUPER_ADMIN",
     "title": "角色列表",
     "titleHelp": "角色管理",
     "keyField": "id",
@@ -30,8 +34,7 @@
         "field": "name",
         "type": "Input"
       }
-    ],
-    "delete": "/kab/role/delRole"
+    ]
   },
   "form": {
     "title": "新增角色&修改角色",
@@ -43,6 +46,16 @@
         "title": "角色名称",
         "field": "name",
         "required": true
+      },
+      {
+        "title": "状态",
+        "field": "enable",
+        "type": "Switch",
+        "defaultValue": true,
+        "props": {
+          "checkedChildren": "启用",
+          "unCheckedChildren": "禁用"
+        }
       },
       {
         "title": "菜单权限",

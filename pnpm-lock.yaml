@@ -635,6 +635,9 @@ importers:
       '@vatic-core/shadcn-ui':
         specifier: workspace:*
         version: link:../../packages/@core/ui-kit/shadcn-ui
+      '@vatic-core/shared':
+        specifier: workspace:*
+        version: link:../../packages/@core/base/shared
       '@vatic-core/typings':
         specifier: workspace:*
         version: link:../../packages/@core/base/typings

@@ -34,6 +34,7 @@
     "@vatic-core/form-ui": "workspace:*",
     "@vatic-core/shadcn-ui": "workspace:*",
     "@vatic-core/typings": "workspace:*",
+    "@vatic-core/shared": "workspace:*",
     "@vatic/access": "workspace:*",
     "@vatic/common-ui": "workspace:*",
     "@vatic/constants": "workspace:*",

@@ -2,9 +2,13 @@
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
     "api": "/kab/user/pageQueryList",
+    "state": "/kab/user/setState",
+    "delete": "/kab/user/delUser",
+    "disableDelete": "account=admin",
+    "disableUpdate": "account=admin",
     "title": "用户列表",
     "keyField": "id",
-    "nameField": "name",
+    "nameField": "username",
     "columns": [
       {
         "type": "seq",
@@ -12,31 +16,32 @@
       },
       {
         "title": "用户名",
-        "field": "name"
+        "field": "account"
       },
       {
         "title": "角色",
-        "field": "name"
+        "field": "roles.name",
+        "type": "List"
       },
       {
         "title": "真实姓名",
-        "field": "createTime"
+        "field": "username"
       },
       {
         "title": "电话号码",
-        "field": "createTime"
+        "field": "phone"
+      },
+      {
+        "title": "身份证",
+        "field": "idCardNumber"
       },
       {
         "title": "邮箱",
-        "field": "createTime"
-      },
-      {
-        "title": "身份证号码",
-        "field": "name"
+        "field": "email"
       },
       {
         "title": "备注",
-        "field": "name"
+        "field": "remark"
       }
     ],
     "search": [
@@ -45,8 +50,7 @@
         "field": "keyword",
         "type": "Input"
       }
-    ],
-    "delete": "/kab/user/delUser"
+    ]
   },
   "form": {
     "title": "新增用户&修改用户",
@@ -56,39 +60,61 @@
     "items": [
       {
         "title": "用户名",
-        "field": "name"
+        "field": "account",
+        "required": true,
+        "disabled": "update"
       },
       {
         "title": "密码",
-        "field": "name"
-      },
-      {
-        "title": "确认密码",
-        "field": "name"
+        "field": "password",
+        "required": true,
+        "type": "InputPassword",
+        "defaultValue": "Ab.12321",
+        "disabled": "update"
       },
       {
         "title": "角色",
-        "field": "name"
+        "field": "roleIds",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/kab/role/queryList?enable=true",
+        "keyField": "id",
+        "props": {
+          "mode": "multiple"
+        },
+        "disabled": "update"
       },
       {
         "title": "真实姓名",
-        "field": "createTime"
+        "field": "username",
+        "required": true
       },
       {
         "title": "电话号码",
-        "field": "createTime"
+        "field": "phone",
+        "required": true
+      },
+      {
+        "title": "身份证",
+        "field": "idCardNumber"
       },
       {
         "title": "邮箱",
-        "field": "createTime"
+        "field": "email"
       },
       {
-        "title": "身份证号码",
-        "field": "name"
+        "title": "状态",
+        "field": "enable",
+        "type": "Switch",
+        "defaultValue": true,
+        "props": {
+          "checkedChildren": "启用",
+          "unCheckedChildren": "禁用"
+        }
       },
       {
         "title": "备注",
-        "field": "name"
+        "field": "remark"
       }
     ]
   }

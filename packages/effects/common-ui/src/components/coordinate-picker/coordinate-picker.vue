@@ -86,7 +86,7 @@ function loadMap() {
 watch(
   () => modelValue.value,
   (val) => {
-    if (val && mapIsLoaded.value) {
+    if (val) {
       map.getOverlays().forEach((overlay: any) => {
         map.removeOverlay(overlay);
       });

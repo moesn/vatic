@@ -29,6 +29,7 @@ class PreferenceManager {
   private state: Preferences = reactive<Preferences>({
     ...this.loadPreferences(),
   });
+
   constructor() {
     this.cache = new StorageManager();
 

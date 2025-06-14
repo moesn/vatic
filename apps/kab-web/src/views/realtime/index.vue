@@ -190,11 +190,7 @@ const [Grid, gridApi] = useVaticVxeGrid({
         },
       },
     },
-    treeConfig: {
-      parentField: 'pid',
-      rowField: 'id',
-      transform: false,
-    },
+    treeConfig: {},
   } as VxeTableGridOptions,
 });
 
@@ -230,11 +226,6 @@ const [TaskGrid, taskGridApi] = useVaticVxeGrid({
           return res;
         },
       },
-    },
-    treeConfig: {
-      parentField: 'pid',
-      rowField: 'id',
-      transform: false,
     },
   } as VxeTableGridOptions,
 });
