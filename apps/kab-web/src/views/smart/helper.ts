@@ -1,6 +1,7 @@
 import type {
   DatePickerProps,
   InputNumberProps,
+  RadioGroupProps,
   SelectProps,
   SwitchProps,
 } from 'ant-design-vue';
@@ -70,6 +71,7 @@ export const parseFormSchema = async (
       labelField,
       props,
       afterFetch,
+      options,
     } = formItem;
 
     formItem.component = type || 'Input';
@@ -94,10 +96,10 @@ export const parseFormSchema = async (
       }
     }
 
-    if (triggerField) {
+    if (triggerField && triggerValue) {
       formItem.dependencies = {
-        show: (values: any) => {
-          return [triggerValue].includes(values[triggerField]);
+        if: (values: any) => {
+          return triggerValue.split('|').includes(values[triggerField]);
         },
         triggerFields: [triggerField],
       };
@@ -122,6 +124,7 @@ export const parseFormSchema = async (
           formItem.componentProps = Object.assign(
             {
               allowClear: true,
+              showSearch: true,
               api: () => requestClient.get(api),
               class: 'w-full',
               labelField: labelField || 'name',
@@ -151,6 +154,15 @@ export const parseFormSchema = async (
       case 'InputNumber': {
         formItem.componentProps = Object.assign(
           {} as InputNumberProps,
+          props || {},
+        );
+        break;
+      }
+      case 'RadioGroup': {
+        formItem.componentProps = Object.assign(
+          {
+            options,
+          } as RadioGroupProps,
           props || {},
         );
         break;

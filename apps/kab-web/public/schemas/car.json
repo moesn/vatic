@@ -25,7 +25,7 @@
       },
       {
         "title": "养护企业",
-        "field": "maintainCoName"
+        "field": "companyName"
       },
       {
         "title": "荷载人数",
@@ -86,7 +86,7 @@
       },
       {
         "title": "养护企业",
-        "field": "maintainCoName",
+        "field": "companyId",
         "type": "ApiSelect",
         "api": "/kab/company/queryList"
       },

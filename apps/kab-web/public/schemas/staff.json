@@ -21,7 +21,7 @@
       },
       {
         "title": "人员类型",
-        "field": "type"
+        "field": "typeName"
       },
       {
         "title": "身份证号",
@@ -41,11 +41,11 @@
       },
       {
         "title": "所属企业",
-        "field": "company"
+        "field": "companyName"
       },
       {
         "title": "责任车辆",
-        "field": "carNo"
+        "field": "plateNo"
       },
       {
         "title": "从业资格证到期时间",
@@ -118,13 +118,13 @@
       },
       {
         "title": "所属企业",
-        "field": "company",
+        "field": "companyId",
         "type": "ApiSelect",
         "api": "/kab/company/queryList"
       },
       {
         "title": "责任车辆",
-        "field": "carNo",
+        "field": "carId",
         "type": "ApiSelect",
         "api": "/kab/car/queryList",
         "labelField": "plateNo"

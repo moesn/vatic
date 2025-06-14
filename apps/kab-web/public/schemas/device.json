@@ -93,7 +93,42 @@
         "required": true,
         "type": "ApiTreeSelect",
         "api": "/kab/region/lazy-tree",
-        "labelField": "title"
+        "labelField": "title",
+        "valueField": "title",
+        "triggerField": "purpose",
+        "triggerValue": "lumianjiankong",
+        "afterFetch": "filterLocationData"
+      },
+      {
+        "title": "部署位置",
+        "field": "location",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/kab/bridge/queryList",
+        "labelField": "bridgeName",
+        "valueField": "bridgeName",
+        "triggerField": "purpose",
+        "triggerValue": "qiaoliangjiankong",
+        "afterFetch": "filterLocationData"
+      },
+      {
+        "title": "部署位置",
+        "field": "location",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/kab/slope/queryList",
+        "labelField": "slopeName",
+        "valueField": "slopeName",
+        "triggerField": "purpose",
+        "triggerValue": "bianpojiankong",
+        "afterFetch": "filterLocationData"
+      },
+      {
+        "title": "部署位置",
+        "field": "location",
+        "required": true,
+        "triggerField": "purpose",
+        "triggerValue": "haishijiankong"
       },
       {
         "title": "经纬度",

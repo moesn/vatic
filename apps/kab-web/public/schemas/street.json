@@ -44,12 +44,14 @@
       },
       {
         "title": "名称",
-        "field": "name"
+        "field": "name",
+        "required": true
       },
       {
         "title": "编码",
         "field": "code",
         "type": "InputNumber",
+        "required": true,
         "disabled": "update",
         "props": {
           "min": 10,
