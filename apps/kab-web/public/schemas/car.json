@@ -41,7 +41,7 @@
       },
       {
         "title": "车辆类型",
-        "field": "type"
+        "field": "typeName"
       },
       {
         "title": "运营许可证号",

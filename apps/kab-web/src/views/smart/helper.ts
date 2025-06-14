@@ -98,8 +98,11 @@ export const parseFormSchema = async (
 
     if (triggerField && triggerValue) {
       formItem.dependencies = {
-        if: (values: any) => {
-          return triggerValue.split('|').includes(values[triggerField]);
+        if: (formData: any) => {
+          return triggerValue.split('|').includes(formData[triggerField]);
+        },
+        trigger: (formData: any) => {
+          formData[field] = null;
         },
         triggerFields: [triggerField],
       };
