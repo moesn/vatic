@@ -36,11 +36,11 @@
         "field": "protectionType"
       },
       {
-        "title": "坡高",
-        "field": "length"
+        "title": "坡高（米）",
+        "field": "height"
       },
       {
-        "title": "坡度",
+        "title": "坡长（米）",
         "field": "gradient"
       },
       {
@@ -120,11 +120,11 @@
       },
       {
         "title": "坡高（米）",
-        "field": "length",
+        "field": "height",
         "type": "InputNumber"
       },
       {
-        "title": "坡度（度）",
+        "title": "坡长（米）",
         "field": "gradient",
         "type": "InputNumber"
       },

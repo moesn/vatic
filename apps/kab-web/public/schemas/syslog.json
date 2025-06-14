@@ -4,7 +4,7 @@
     "api": "/kab/monitor/operlog/list",
     "title": "系统日志",
     "keyField": "id",
-    "nameField": "name",
+    "nameField": "operName",
     "export": true,
     "columns": [
       {
@@ -38,6 +38,7 @@
       {
         "title": "操作结果",
         "field": "status",
+        "width": "80",
         "type": "Tag",
         "options": [
           {

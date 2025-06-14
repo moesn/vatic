@@ -4,7 +4,7 @@
     "api": "/kab/device/pageQueryList",
     "title": "监控设备列表",
     "keyField": "id",
-    "nameField": "name",
+    "nameField": "deviceName",
     "export": true,
     "columns": [
       {
@@ -12,12 +12,12 @@
         "width": 50
       },
       {
-        "title": "部署位置",
-        "field": "location"
-      },
-      {
         "title": "设备名称",
         "field": "deviceName"
+      },
+      {
+        "title": "部署位置",
+        "field": "location"
       },
       {
         "title": "SIM卡号",
@@ -25,7 +25,7 @@
       },
       {
         "title": "设备用途",
-        "field": "purpose"
+        "field": "purposeName"
       },
       {
         "title": "经度",
