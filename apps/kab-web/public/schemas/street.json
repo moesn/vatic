@@ -29,12 +29,14 @@
     "title": "新增下级区域&修改区域",
     "create": "/kab/region/submit",
     "update": "/kab/region/submit",
+    "transformData": "computeCode",
     "transformBody": "computeLevel",
     "items": [
       {
         "title": "上级区域",
         "field": "districtCode",
         "required": true,
+        "disabled": "update",
         "type": "ApiTreeSelect",
         "api": "/kab/region/lazy-tree",
         "labelField": "title",
@@ -48,6 +50,7 @@
         "title": "编码",
         "field": "code",
         "type": "InputNumber",
+        "disabled": "update",
         "props": {
           "min": 10,
           "max": 99

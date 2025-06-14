@@ -321,8 +321,9 @@ const collapseAll = () => {
   gridApi.grid?.setAllTreeExpand(false);
 };
 
-function refreshGrid() {
-  gridApi.query();
+async function refreshGrid() {
+  await gridApi.query();
+  expandAll();
 }
 </script>
 

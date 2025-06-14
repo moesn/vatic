@@ -67,8 +67,6 @@ const [Drawer, drawerApi] = useVaticDrawer({
 
       const data = drawerApi.getData();
       formApi.resetForm();
-      formData.value = data;
-      formApi.setValues(data);
 
       if (data[keyField]) {
         drawerTitle.value = titles[1] || titles[0];
@@ -81,9 +79,17 @@ const [Drawer, drawerApi] = useVaticDrawer({
             formData.value = res;
             formApi.setValues(res);
           });
+        } else {
+          if (transformData) {
+            functionsAny[transformData](data);
+          }
+          formData.value = data;
+          formApi.setValues(data);
         }
       } else {
         drawerTitle.value = titles[0];
+        formData.value = data;
+        formApi.setValues(data);
       }
       drawerInit.value = true;
     }

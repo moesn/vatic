@@ -4,6 +4,10 @@ export function computeLevel(body: any) {
   body.level = Math.ceil(body.districtCode?.length / 2 + 1);
 }
 
+export function computeCode(data: any) {
+  data.code = data.code.replace(data.parentCode, '');
+}
+
 export function filterLevelData(rawData: any) {
   function disableLevel(data: any) {
     data.forEach((d: any) => {
