@@ -29,8 +29,8 @@
     "title": "新增下级区域&修改区域",
     "create": "/kab/region/submit",
     "update": "/kab/region/submit",
-    "transformData": "computeCode",
-    "transformBody": "computeLevel",
+    "transformData": true,
+    "transformBody": true,
     "items": [
       {
         "title": "上级区域",
@@ -40,7 +40,7 @@
         "type": "ApiTreeSelect",
         "api": "/kab/region/lazy-tree",
         "labelField": "title",
-        "afterFetch": "filterLevelData"
+        "afterFetch": true
       },
       {
         "title": "名称",

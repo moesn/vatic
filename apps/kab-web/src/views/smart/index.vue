@@ -26,7 +26,12 @@ import Form from './modules/form.vue';
 
 const pageInit = ref(false);
 const pageSchema = ref<any>({});
-getPageSchema().then((schema) => (pageSchema.value = schema));
+const pageName = ref<String>('');
+
+getPageSchema().then(({ schema, name }) => {
+  pageSchema.value = schema;
+  pageName.value = name;
+});
 
 let Grid: any, gridApi: any;
 
@@ -48,8 +53,8 @@ async function buildFormSchema(formSchema: any, row: any) {
     return item;
   });
 
-  await parseFormSchema(formSchema.items);
-  return { ...formSchema, keyField };
+  await parseFormSchema(formSchema.items, pageName.value);
+  return { ...formSchema, keyField, pageName: pageName.value };
 }
 
 async function onEdit(row: any, form: any) {

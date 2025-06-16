@@ -1,13 +1,13 @@
-export function mergeCoordinate(data: any) {
+export function transformData(data: any) {
   data.coordinate = [data.longitude, data.latitude];
 }
 
-export function separateCoordinate(body: any) {
+export function transformBody(body: any) {
   body.longitude = body.coordinate[0];
   body.latitude = body.coordinate[1];
 }
 
-export function filterLocationData(rawData: any) {
+export function afterFetch(rawData: any) {
   function disableLevel(data: any) {
     data.forEach((d: any) => {
       if (d.value === '520111') {

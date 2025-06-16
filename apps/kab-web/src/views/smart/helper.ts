@@ -13,9 +13,10 @@ import type { TreeProps } from '@vatic-core/shadcn-ui';
 import type { Recordable } from '@vatic-core/typings';
 
 import { requestClient } from '#/api/request';
-import * as functions from '#/views/smart/pipes';
 
-const functionsAny: any = functions;
+import * as transforms from './transforms';
+
+const transformsAny: any = transforms;
 
 export const parseApi = (api: string, row: any) => {
   if (api.includes('$')) {
@@ -54,6 +55,7 @@ export const parseTableColumns = (columns: any[]) => {
 
 export const parseFormSchema = async (
   formSchema: any[] | VaticFormSchema[],
+  pageName: string = '',
 ) => {
   const labelWidth = calcLabelWidth(formSchema);
 
@@ -135,7 +137,7 @@ export const parseFormSchema = async (
               childrenField: 'children',
               afterFetch: (data: { name: string; path: string }[]) => {
                 if (afterFetch) {
-                  functionsAny[afterFetch](data);
+                  transformsAny[pageName]?.afterFetch(data);
                 }
               },
             } as unknown as ApiSelectProps,

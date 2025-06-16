@@ -5,13 +5,13 @@ import { useVaticDrawer } from '@vatic/common-ui';
 
 import { useVaticForm } from '#/adapter/form';
 import { requestClient } from '#/api/request';
-import * as functions from '#/views/smart/pipes';
 
 import { parseApi } from '../helper';
+import * as transforms from '../transforms';
 
 const emits = defineEmits(['success']);
 
-const functionsAny: any = functions;
+const transformsAny: any = transforms;
 
 const drawerInit = ref(false);
 const drawerTitle = ref('');
@@ -27,14 +27,15 @@ const [Drawer, drawerApi] = useVaticDrawer({
     const body = await formApi.getValues();
     drawerApi.lock();
 
-    const { create, update, keyField, transformBody } = drawerApi.getSchema();
+    const { create, update, keyField, transformBody, pageName } =
+      drawerApi.getSchema();
     const rawData = drawerApi.getData();
 
     const keyValue = rawData[keyField];
     body[keyField] = keyValue;
 
     if (transformBody) {
-      functionsAny[transformBody](body);
+      transformsAny[pageName]?.transformBody(body);
     }
 
     (keyValue
@@ -57,6 +58,7 @@ const [Drawer, drawerApi] = useVaticDrawer({
         keyField,
         detail,
         transformData,
+        pageName,
       } = drawerApi.getSchema();
       const titles = title.split('&');
 
@@ -74,14 +76,14 @@ const [Drawer, drawerApi] = useVaticDrawer({
           const apiUrl = parseApi(detail, data);
           requestClient.get(apiUrl).then((res) => {
             if (transformData) {
-              functionsAny[transformData](res);
+              transformsAny[pageName]?.transformData(res);
             }
             formData.value = res;
             formApi.setValues(res);
           });
         } else {
           if (transformData) {
-            functionsAny[transformData](data);
+            transformsAny[pageName]?.transformData(data);
           }
           formData.value = data;
           formApi.setValues(data);
