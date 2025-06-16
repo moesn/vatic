@@ -65,7 +65,8 @@
       },
       {
         "title": "备注",
-        "field": "remark"
+        "field": "remark",
+        "type": "Textarea"
       }
     ]
   }

@@ -16,35 +16,35 @@
       },
       {
         "title": "任务类型",
-        "field": "name"
+        "field": "taskTypeName"
       },
       {
         "title": "任务生成时间",
         "field": "createTime"
       },
       {
-        "title": "任务结束时间",
-        "field": "createTime"
+        "title": "任务处理时间",
+        "field": "processTime"
       },
       {
-        "title": "任务处理时间",
-        "field": "createTime"
+        "title": "任务结束时间",
+        "field": "endTime"
       },
       {
         "title": "任务处理结果",
-        "field": "name"
+        "field": "result"
       },
       {
         "title": "处理人",
-        "field": "name"
+        "field": "handler"
       },
       {
         "title": "任务状态",
-        "field": "name"
+        "field": "statusName"
       },
       {
         "title": "任务详情",
-        "field": "name"
+        "field": "detail"
       }
     ],
     "search": [
@@ -56,25 +56,9 @@
       {
         "title": "任务状态",
         "field": "status",
-        "type": "Select",
-        "options": [
-          {
-            "label": "待确认",
-            "value": "1"
-          },
-          {
-            "label": "待反馈",
-            "value": "2"
-          },
-          {
-            "label": "待复核",
-            "value": "3"
-          },
-          {
-            "label": "已完成",
-            "value": "4"
-          }
-        ]
+        "type": "ApiSelect",
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=12",
+        "valueField": "code"
       }
     ]
   },
@@ -86,7 +70,23 @@
       "title": "进度"
     },
     {
-      "title": "复核"
+      "title": "复核",
+      "form": {
+        "title": "任务复核",
+        "update": "/kab/role/editRole",
+        "items": [
+          {
+            "title": "复核意见",
+            "field": "todo",
+            "required": true
+          },
+          {
+            "title": "复核意见说明",
+            "field": "todo",
+            "type": "Textarea"
+          }
+        ]
+      }
     }
   ]
 }
