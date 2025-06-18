@@ -122,5 +122,41 @@
         "type": "Input"
       }
     ]
-  }
+  },
+  "operations": [
+    {
+      "title": "短信",
+      "form": {
+        "title": "发送短信",
+        "detail": "/kab/company/detail/$id",
+        "update": "/kab/company/sendSms",
+        "items": [
+          {
+            "title": "企业名称",
+            "field": "name",
+            "type": "Input",
+            "disabled": true
+          },
+          {
+            "title": "联络人",
+            "field": "contactPerson",
+            "type": "Input",
+            "disabled": true
+          },
+          {
+            "title": "联络人联系电话",
+            "field": "contactPersonPhone",
+            "type": "Input",
+            "disabled": true
+          },
+          {
+            "title": "短信内容",
+            "field": "content",
+            "type": "Textarea",
+            "required": true
+          }
+        ]
+      }
+    }
+  ]
 }

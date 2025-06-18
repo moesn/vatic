@@ -54,11 +54,20 @@
         "type": "Input"
       },
       {
+        "title": "任务类型",
+        "field": "eventType",
+        "type": "ApiSelect",
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=15",
+        "valueField": "code",
+        "span": 1
+      },
+      {
         "title": "任务状态",
         "field": "status",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=12",
-        "valueField": "code"
+        "api": "/kab/dict/dictDataQueryList?dictTypeId=14",
+        "valueField": "code",
+        "span": 1
       }
     ]
   },
@@ -67,7 +76,8 @@
       "title": "详情"
     },
     {
-      "title": "进度"
+      "title": "进度",
+      "type": "Timeline"
     },
     {
       "title": "复核",

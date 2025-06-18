@@ -135,6 +135,11 @@
         "type": "CoordinatePicker"
       },
       {
+        "title": "视频播放URL",
+        "field": "videoUrl",
+        "required": true
+      },
+      {
         "title": "设备型号",
         "field": "model"
       },

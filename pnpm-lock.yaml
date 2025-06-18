@@ -707,6 +707,9 @@ importers:
       vue-tippy:
         specifier: 'catalog:'
         version: 6.7.0(vue@3.5.13(typescript@5.8.3))
+      zod:
+        specifier: 'catalog:'
+        version: 3.24.4
 
   apps/smart: {}
 

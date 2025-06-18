@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue';
 
-import { Switch } from 'ant-design-vue';
+import { Button, Popover, Select, SelectOption, Switch } from 'ant-design-vue';
 
 import box from './box.vue';
 import styleJson from './style.json';
@@ -24,20 +24,38 @@ const showDevice = ref<boolean>(true);
 const riskTotal = ref<number>(999);
 const riskPageSize = ref<number>(5);
 const riskPageNum = ref<number>(1);
+const allDevice = Array.from({ length: 25 }).map((_, i) => ({
+  value: (i + 10).toString(36) + (i + 1),
+}));
+
+const deviceStoreKey = 'device-to-be-played';
+const selectedDevices = ref(
+  JSON.parse(localStorage.getItem(deviceStoreKey) || '[]'),
+);
+const settingVisible = ref<boolean>(false);
+const handleChange = (devices: any) => {
+  if (devices.length > 5) {
+    selectedDevices.value = devices.slice(0, 5);
+  }
+};
+const storeDevice = () => {
+  localStorage.setItem(deviceStoreKey, JSON.stringify(selectedDevices.value));
+  settingVisible.value = false;
+};
 
 type MarkerType = 'car' | 'device';
 
 const markers: any = {
   car: [
     {
-      jin: 106.623_548_548_890_23,
-      wei: 26.396_209_157_438_058,
+      jin: 106.623,
+      wei: 26.396,
     },
   ],
   device: [
     {
-      jin: 106.523_548_548_890_23,
-      wei: 26.396_209_157_438_058,
+      jin: 106.523,
+      wei: 26.386,
     },
   ],
 };
@@ -501,6 +519,38 @@ onMounted(() => {
       </div>
       <div class="right" :style="{ width: `${videoWidth}px` }">
         <template v-for="_ in [1, 2, 3, 4, 5]" :key="_">
+          <Popover
+            placement="left"
+            v-if="_ === 1"
+            v-model:open="settingVisible"
+            trigger="click"
+          >
+            <template #content>
+              <Select
+                v-model:value="selectedDevices"
+                mode="multiple"
+                style="width: 300px"
+                placeholder="请选择5个要播放的监控设备"
+                @change="handleChange"
+              >
+                <SelectOption
+                  v-for="item in allDevice"
+                  :key="item.value"
+                  :value="item.value"
+                  :disabled="
+                    selectedDevices.length >= 5 &&
+                    !selectedDevices.includes(item.value)
+                  "
+                >
+                  {{ item.value }}
+                </SelectOption>
+              </Select>
+              <Button @click="storeDevice()">保存</Button>
+            </template>
+            <img src="/assets/image/setting.png" alt="" />
+            <h2 v-if="selectedDevices.length === 0">请设置要播放的监控设备</h2>
+          </Popover>
+          <h1>这里是监控名称</h1>
           <video class="videoElement" autoplay muted></video>
         </template>
       </div>

@@ -92,15 +92,18 @@
       {
         "title": "电话号码",
         "field": "phone",
+        "rules": "phone",
         "required": true
       },
       {
         "title": "身份证",
-        "field": "idCardNumber"
+        "field": "idCardNumber",
+        "rules": "idCard"
       },
       {
         "title": "邮箱",
-        "field": "email"
+        "field": "email",
+        "rules": "email"
       },
       {
         "title": "状态",

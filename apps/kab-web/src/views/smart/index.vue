@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import type { VxeGridProps } from '@vatic/plugins/src/vxe-table/types';
-
 import type { Recordable } from '@vatic-core/typings';
 
 import type {
   OnActionClickParams,
+  VxeGridProps,
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
@@ -23,6 +22,7 @@ import { requestClient } from '#/api/request';
 
 import { parseApi, parseFormSchema, parseTableColumns } from './helper';
 import Form from './modules/form.vue';
+import TimeLine from './modules/timeline.vue';
 
 const pageInit = ref(false);
 const pageSchema = ref<any>({});
@@ -119,6 +119,14 @@ function onActionClick(e: OnActionClickParams) {
       onDelete(e.row);
       break;
     }
+    case 'form': {
+      onEdit(e.row, e.form);
+      break;
+    }
+    case 'Timeline': {
+      onEdit(e.row, e.form);
+      break;
+    }
     case 'update': {
       onEdit(e.row, e.form);
       break;
@@ -158,6 +166,7 @@ watch(
       state,
       nameField,
       keyField,
+      cellHeight,
     } = table;
 
     const { update } = form || {};
@@ -173,7 +182,7 @@ watch(
           width += (opera.title.length + 1) * 14;
           options.push({
             ...opera,
-            code: opera.form ? 'update' : '',
+            code: opera.form ? 'form' : opera.type,
             text: opera.title,
           });
         });
@@ -261,6 +270,9 @@ watch(
       exportConfig: {
         excludeFields: ['operation'],
       },
+      cellConfig: {
+        height: cellHeight || 40,
+      },
       height: 'auto',
       keepSource: true,
       proxyConfig: {
@@ -305,6 +317,8 @@ watch(
           .filter((s: any) => s.type === 'RangePicker')
           .map((d: any) => [d.field, d.rangeFields]),
         schema: searchSchema,
+        wrapperClass: 'grid-cols-6',
+        showCollapseButton: false,
       };
     }
 
@@ -350,6 +364,10 @@ async function refreshGrid() {
           <Plus class="size-5" />
           新增
         </Button>
+      </template>
+
+      <template #timeline>
+        <TimeLine />
       </template>
     </Grid>
   </Page>

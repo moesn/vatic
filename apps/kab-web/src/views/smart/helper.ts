@@ -12,6 +12,8 @@ import type { VaticFormSchema } from '@vatic-core/form-ui';
 import type { TreeProps } from '@vatic-core/shadcn-ui';
 import type { Recordable } from '@vatic-core/typings';
 
+import { z } from '@vatic/common-ui';
+
 import { requestClient } from '#/api/request';
 
 import * as transforms from './transforms';
@@ -39,6 +41,12 @@ export const parseTableColumns = (columns: any[]) => {
     }
 
     switch (type) {
+      case 'Image': {
+        item.cellRender = {
+          name: 'CellImage',
+        };
+        break;
+      }
       case 'List': {
         item.cellRender = {
           name: 'ListTag',
@@ -74,19 +82,74 @@ export const parseFormSchema = async (
       props,
       afterFetch,
       options,
+      span,
     } = formItem;
 
     formItem.component = type || 'Input';
     formItem.fieldName = field;
     formItem.label = title;
-    formItem.rules = rules;
     formItem.labelWidth = labelWidth;
+    formItem.formItemClass = `col-span-${span || 2}`;
 
     if (!['Switch'].includes(type)) {
       formItem.controlClass = 'w-full';
     }
 
-    if (required) {
+    if (rules) {
+      let rule: any;
+      switch (rules) {
+        case 'email': {
+          rule = z.string().email('无效的邮箱');
+          break;
+        }
+        case 'idCard': {
+          rule = z
+            .string()
+            .length(18, '长度必须为18位')
+            .regex(/^[1-9]\d{5}/, '地址码格式错误')
+            .regex(
+              /(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])/,
+              '出生日期无效',
+            )
+            .refine((id) => {
+              const weights = [
+                7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2,
+              ];
+              const checkCodes = [
+                '1',
+                '0',
+                'X',
+                '9',
+                '8',
+                '7',
+                '6',
+                '5',
+                '4',
+                '3',
+                '2',
+              ];
+
+              // eslint-disable-next-line unicorn/no-useless-spread
+              const sum = [...id.slice(0, 17)].reduce(
+                (acc, digit, i) => acc + Number.parseInt(digit) * weights[i],
+                0,
+              );
+              return id[17]?.toUpperCase() === checkCodes[sum % 11];
+            }, '校验码不匹配');
+          break;
+        }
+        case 'phone': {
+          rule = z
+            .string()
+            .regex(
+              /^1(?:3\d|4[014-9]|5[0-35-9]|6[2567]|7[0-8]|8\d|9[0-35-9])\d{8}$/,
+              { message: '无效的手机号码' },
+            );
+          break;
+        }
+      }
+      formItem.rules = required ? rule : rule.optional();
+    } else if (required) {
       switch (type) {
         case 'RadioGroup': {
           formItem.rules = 'selectRequired';
@@ -242,7 +305,7 @@ const calcLabelWidth = (formSchema: any[]) => {
         const code: number = item.title.codePointAt(i) || 0;
         len += code >= 0x00 && code <= 0xef ? 1 : 2;
       }
-      return len * 7;
+      return len * 7.2;
     }),
   );
 };
