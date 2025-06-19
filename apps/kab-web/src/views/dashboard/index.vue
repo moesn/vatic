@@ -28,12 +28,6 @@ const mapContainer = ref(null);
 const videoWidth = ref(0);
 const showCar = ref<boolean>(true);
 const showDevice = ref<boolean>(true);
-const riskTotal = ref<number>(999);
-const riskPageSize = ref<number>(5);
-const riskPageNum = ref<number>(1);
-const allDevice = Array.from({ length: 25 }).map((_, i) => ({
-  value: (i + 10).toString(36) + (i + 1),
-}));
 
 // region 统计概览
 const statsData = ref<any>({});
@@ -47,6 +41,9 @@ function getStatsData() {
 // endregion
 
 // region 风险
+const riskTotal = ref<number>(100);
+const riskPageSize = ref<number>(5);
+const riskPageNum = ref<number>(1);
 const eventActive = ref('未派发');
 const eventStates: string[] = ['未派发', '待确认', '处理中', '待复核'];
 const allEventList = ref([]);
@@ -72,13 +69,15 @@ function switchEventType(eventType: string) {
   eventList.value = allEventList.value.filter(
     (event: any) => event.eventType === eventType,
   );
+  riskPageNum.value = 1;
+  riskTotal.value = eventList.value.length;
 }
 
 // endregion
 
 // region 监控视频
 const deviceStoreKey = 'device-to-be-played';
-const deviceList = ref([]);
+const allDeviceList = ref([]);
 const selectedDevices = ref(
   JSON.parse(localStorage.getItem(deviceStoreKey) || '[]'),
 );
@@ -95,35 +94,14 @@ const storeDevice = () => {
 
 function getDeviceList() {
   getDeviceListApi().then((res: any) => {
-    deviceList.value = res;
+    allDeviceList.value = res;
   });
 }
 
-const videos: any = [
-  {
-    url: '1.flv',
-  },
-  {
-    url: '2.flv',
-  },
-  {
-    url: '3.flv',
-  },
-  {
-    url: '4.flv',
-  },
-  {
-    url: '4.flv',
-  },
-];
-
 function calcVideoWidth() {
   videoWidth.value =
-    (document.querySelector('.right')?.offsetHeight * 168) /
-      (94 * videos.length) -
-    30;
+    (document.querySelector('.right')?.offsetHeight * 168) / (94 * 5) - 30;
 
-  riskPageNum.value = 1;
   riskPageSize.value = Math.floor(
     document.querySelector('.risk')?.offsetHeight / 100,
   );
@@ -133,12 +111,13 @@ function loadVideo() {
   if (flvjs.isSupported()) {
     const videoElements = document.querySelectorAll('.videoElement');
     videoElements?.forEach((videoElement: any, index: number) => {
-      const { url } = videos[index];
+      const video = selectedDevices.value[index];
+      const nameUrl: any = video.split('$');
       const player = flvjs.createPlayer(
         {
           type: 'flv',
           isLive: false,
-          url,
+          url: nameUrl[1],
         },
         {
           lazyLoadMaxDuration: 10 * 60,
@@ -155,6 +134,11 @@ function loadVideo() {
 
 getDeviceList();
 
+watch(selectedDevices, (val) => {
+  if (val && val.length > 0) {
+    loadVideo();
+  }
+});
 // endregion
 
 // region 气候
@@ -272,6 +256,13 @@ function renderMarkers(show: boolean, type: MarkerType) {
   }
 }
 
+watch(showCar, (val) => {
+  renderMarkers(val, 'car');
+});
+
+watch(showDevice, (val) => {
+  renderMarkers(val, 'device');
+});
 // endregion
 
 // region 养护统计
@@ -328,14 +319,6 @@ function loadTaskChart() {
 
 // endregion
 
-watch(showCar, (val) => {
-  renderMarkers(val, 'car');
-});
-
-watch(showDevice, (val) => {
-  renderMarkers(val, 'device');
-});
-
 window.addEventListener('resize', () => {
   calcVideoWidth();
   loadTaskChart();
@@ -347,7 +330,6 @@ async function reloadData() {
   getWeatherList();
   loadMap();
   calcVideoWidth();
-  loadVideo();
   loadTaskChart();
 }
 
@@ -419,101 +401,35 @@ onMounted(() => {
             <h3
               :class="{ active: event.type === eventActive }"
               v-for="event in eventTypeList"
-              :key="event"
+              :key="event.type"
               @click="switchEventType(event.type)"
             >
               {{ event.type }}({{ event.count }})
             </h3>
           </div>
           <div class="risk">
-            <div>
+            <div
+              v-for="event in eventList.slice(
+                (riskPageNum - 1) * riskPageSize,
+                riskPageNum * riskPageSize,
+              )"
+              :key="event.id"
+            >
               <img src="/test.png" alt="" />
               <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
-              </div>
-            </div>
-            <div>
-              <img src="/test.png" alt="" />
-              <div>
-                <h4>这是风险名称</h4>
-                <h5>这里是风险详细地址</h5>
-                <h5>2025-06-01 12:00:00</h5>
+                <h4>{{ event.name }}</h4>
+                <h5>{{ event.location }}</h5>
+                <h5>{{ event.createTime }}</h5>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div class="right" :style="{ width: `${videoWidth}px` }">
-        <template v-for="_ in [1, 2, 3, 4, 5]" :key="_">
+        <template v-for="(device, index) in selectedDevices" :key="device.id">
           <Popover
             placement="left"
-            v-if="_ === 1"
+            v-if="index === 0"
             v-model:open="settingVisible"
             trigger="click"
           >
@@ -526,15 +442,15 @@ onMounted(() => {
                 @change="handleChange"
               >
                 <SelectOption
-                  v-for="item in allDevice"
-                  :key="item.value"
-                  :value="item.value"
+                  v-for="item in allDeviceList"
+                  :key="item.id"
+                  :value="`${item.name}$${item.videoUrl}`"
                   :disabled="
                     selectedDevices.length >= 5 &&
-                    !selectedDevices.includes(item.value)
+                    !selectedDevices.includes(`${item.name}$${item.videoUrl}`)
                   "
                 >
-                  {{ item.value }}
+                  {{ item.name }}
                 </SelectOption>
               </Select>
               <Button @click="storeDevice()">保存</Button>
@@ -542,7 +458,7 @@ onMounted(() => {
             <img src="/assets/image/setting.png" alt="" />
             <h2 v-if="selectedDevices.length === 0">请设置要播放的监控设备</h2>
           </Popover>
-          <h1>这里是监控名称</h1>
+          <h1>{{ device.split('$')[0] }}</h1>
           <video class="videoElement" autoplay muted></video>
         </template>
       </div>
@@ -559,65 +475,65 @@ onMounted(() => {
           <box />
           <h2>气象监控设备</h2>
           <div class="weather">
-            <div>
+            <div v-if="weatherList[0]">
               <div>
-                <h3>花溪花溪路</h3>
+                <h3>{{ weatherList[0].location }}</h3>
                 <span></span>
               </div>
               <div>
                 <img src="/assets/image/weather/temperature.png" alt="" />
-                <h3>23℃</h3>
+                <h3>{{ weatherList[0].temperature }}℃</h3>
                 <h3>温</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/wet.png" alt="" />
-                <h3>65%RH</h3>
+                <h3>{{ weatherList[0].humidity }}%RH</h3>
                 <h3>湿</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/speed.png" alt="" />
-                <h3>3m/s</h3>
+                <h3>{{ weatherList[0].wind_speed }}m/s</h3>
                 <h3>风</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/direction.png" alt="" />
-                <h3>东风90°</h3>
+                <h3>{{ weatherList[0].wind_direction }}</h3>
                 <h3>风</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/pressure.png" alt="" />
-                <h3>30Pa</h3>
+                <h3>{{ weatherList[0].air_pressure }}Pa</h3>
                 <h3>气</h3>
               </div>
             </div>
-            <div>
+            <div v-if="weatherList[1]">
               <div>
                 <span></span>
-                <h3>花溪路花溪</h3>
+                <h3>{{ weatherList[0].location }}</h3>
               </div>
               <div>
                 <h3>度</h3>
-                <h3>23℃</h3>
+                <h3>{{ weatherList[0].temperature }}℃</h3>
                 <img src="/assets/image/weather/temperature.png" alt="" />
               </div>
               <div>
                 <h3>度</h3>
-                <h3>65%RH</h3>
+                <h3>{{ weatherList[0].humidity }}%RH</h3>
                 <img src="/assets/image/weather/wet.png" alt="" />
               </div>
               <div>
                 <h3>速</h3>
-                <h3>3m/s</h3>
+                <h3>{{ weatherList[0].wind_speed }}m/s</h3>
                 <img src="/assets/image/weather/speed.png" alt="" />
               </div>
               <div>
                 <h3>向</h3>
-                <h3>东风90°</h3>
+                <h3>{{ weatherList[0].wind_direction }}</h3>
                 <img src="/assets/image/weather/direction.png" alt="" />
               </div>
               <div>
                 <h3>压</h3>
-                <h3>30Pa</h3>
+                <h3>{{ weatherList[0].air_pressure }}Pa</h3>
                 <img src="/assets/image/weather/pressure.png" alt="" />
               </div>
             </div>
