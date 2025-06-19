@@ -3,6 +3,13 @@ import { onMounted, ref, watch } from 'vue';
 
 import { Button, Popover, Select, SelectOption, Switch } from 'ant-design-vue';
 
+import {
+  getDeviceListApi,
+  getStatsDataApi,
+  getWeatherListApi,
+} from '#/views/dashboard/data';
+import { getEventListApi } from '#/views/event/data';
+
 import box from './box.vue';
 import styleJson from './style.json';
 
@@ -28,7 +35,50 @@ const allDevice = Array.from({ length: 25 }).map((_, i) => ({
   value: (i + 10).toString(36) + (i + 1),
 }));
 
+// region 统计概览
+const statsData = ref<any>({});
+
+function getStatsData() {
+  getStatsDataApi().then((res: any) => {
+    statsData.value = res;
+  });
+}
+
+// endregion
+
+// region 风险
+const eventActive = ref('未派发');
+const eventStates: string[] = ['未派发', '待确认', '处理中', '待复核'];
+const allEventList = ref([]);
+const eventList = ref([]);
+const eventTypeList = ref<any>(eventStates.map((d) => ({ type: d, count: 0 })));
+
+function getEventList() {
+  getEventListApi({ eventStates }).then((res: any) => {
+    allEventList.value = res;
+    eventStates.forEach((eventType: string, index: number) => {
+      const events = res.filter((event: any) => (event.eventType = eventType));
+      eventTypeList.value.splice(index, 1, {
+        type: eventType,
+        count: events.lengt,
+      });
+    });
+    switchEventType(eventStates[0]);
+  });
+}
+
+function switchEventType(eventType: string) {
+  eventActive.value = eventType;
+  eventList.value = allEventList.value.filter(
+    (event: any) => event.eventType === eventType,
+  );
+}
+
+// endregion
+
+// region 监控视频
 const deviceStoreKey = 'device-to-be-played';
+const deviceList = ref([]);
 const selectedDevices = ref(
   JSON.parse(localStorage.getItem(deviceStoreKey) || '[]'),
 );
@@ -43,22 +93,11 @@ const storeDevice = () => {
   settingVisible.value = false;
 };
 
-type MarkerType = 'car' | 'device';
-
-const markers: any = {
-  car: [
-    {
-      jin: 106.623,
-      wei: 26.396,
-    },
-  ],
-  device: [
-    {
-      jin: 106.523,
-      wei: 26.386,
-    },
-  ],
-};
+function getDeviceList() {
+  getDeviceListApi().then((res: any) => {
+    deviceList.value = res;
+  });
+}
 
 const videos: any = [
   {
@@ -90,11 +129,6 @@ function calcVideoWidth() {
   );
 }
 
-window.addEventListener('resize', () => {
-  calcVideoWidth();
-  loadTaskChart();
-});
-
 function loadVideo() {
   if (flvjs.isSupported()) {
     const videoElements = document.querySelectorAll('.videoElement');
@@ -118,6 +152,39 @@ function loadVideo() {
     });
   }
 }
+
+getDeviceList();
+
+// endregion
+
+// region 气候
+const weatherList = ref([]);
+
+function getWeatherList() {
+  getWeatherListApi().then((res: any) => {
+    weatherList.value = res;
+  });
+}
+
+// endregion
+
+// region 地图
+type MarkerType = 'car' | 'device';
+
+const markers: any = {
+  car: [
+    {
+      jin: 106.623,
+      wei: 26.396,
+    },
+  ],
+  device: [
+    {
+      jin: 106.523,
+      wei: 26.386,
+    },
+  ],
+};
 
 let map: any;
 
@@ -205,156 +272,61 @@ function renderMarkers(show: boolean, type: MarkerType) {
   }
 }
 
+// endregion
+
+// region 养护统计
 let taskChart;
+const taskTypes: string[] = ['紧急', '普通'];
+const taskStates: string[] = ['待确认', '处理中', '待复核', '已完成'];
 
 function loadTaskChart() {
   taskChart?.dispose();
   taskChart = echarts.init(document.querySelector('#task-chart'));
-  const chartWidth = document.querySelector('.bottom-left')?.offsetWidth / 3;
-  const chartHeight = 200;
-  const radius = Math.min(chartWidth, chartHeight) / 2;
-
   const option = {
-    responsive: true,
-    tooltip: {
-      trigger: 'item',
-    },
     legend: {
-      orient: 'vertical',
-      top: 10,
-      left: 30,
-      itemGap: 22,
-      textStyle: {
-        color: '#FFFFFF',
-      },
+      data: taskTypes,
     },
-    series: [
+    xAxis: [
       {
-        title: '123',
-        name: 'task-high',
-        type: 'pie',
-        radius,
-        center: [chartWidth * 2 - 160, 120],
-        data: [
-          { value: 1048, name: '未派发（紧急）' },
-          { value: 735, name: '进行中' },
-          { value: 580, name: '已完成' },
-        ],
-        label: {
-          color: '#FFFFFF',
-          fontWeight: 600,
-          position: 'inside',
-        },
-        labelLine: {
-          show: false,
-        },
-        itemStyle: {
-          color(params: any) {
-            const colors = {
-              pending: {
-                type: 'linear',
-                x: 0.5,
-                y: 0.5,
-                x2: 0,
-                y2: 0,
-                colorStops: [
-                  { offset: 0.5, color: '#FF3B30' },
-                  { offset: 1, color: 'rgba(0, 0, 0, 0)' },
-                ],
-              },
-              process: {
-                type: 'linear',
-                x: 0.5,
-                y: 0.5,
-                x2: 0,
-                y2: 0,
-                colorStops: [
-                  { offset: 0.5, color: '#007AFF' },
-                  { offset: 1, color: 'rgba(0, 0, 0, 0)' },
-                ],
-              },
-              complete: {
-                type: 'linear',
-                x: 0.5,
-                y: 0.5,
-                x2: 0,
-                y2: 0,
-                colorStops: [
-                  { offset: 0.5, color: '#34C759' },
-                  { offset: 1, color: 'rgba(0, 0, 0, 0)' },
-                ],
-              },
-            };
-
-            return Object.values(colors)[params.dataIndex];
-          },
-        },
-      },
-      {
-        name: 'task-low',
-        type: 'pie',
-        radius,
-        center: [chartWidth * 3 - 140, 120],
-        data: [
-          { value: 1048, name: '未派发 ' },
-          { value: 735, name: '进行中 ' },
-          { value: 580, name: '已完成 ' },
-        ],
-        label: {
-          color: '#FFFFFF',
-          fontWeight: 600,
-          position: 'inside',
-        },
-        labelLine: {
-          show: false,
-        },
-        itemStyle: {
-          color(params: any) {
-            const colors = {
-              pending: {
-                type: 'linear',
-                x: 0.5,
-                y: 0.5,
-                x2: 0,
-                y2: 0,
-                colorStops: [
-                  { offset: 0.5, color: '#FF9500' },
-                  { offset: 1, color: 'rgba(0, 0, 0, 0)' },
-                ],
-              },
-              process: {
-                type: 'linear',
-                x: 0.5,
-                y: 0.5,
-                x2: 0,
-                y2: 0,
-                colorStops: [
-                  { offset: 0.5, color: '#007AFF' },
-                  { offset: 1, color: 'rgba(0, 0, 0, 0)' },
-                ],
-              },
-              complete: {
-                type: 'linear',
-                x: 0.5,
-                y: 0.5,
-                x2: 0,
-                y2: 0,
-                colorStops: [
-                  { offset: 0.5, color: '#34C759' },
-                  { offset: 1, color: 'rgba(0, 0, 0, 0)' },
-                ],
-              },
-            };
-
-            return Object.values(colors)[params.dataIndex];
-          },
-        },
+        type: 'category',
+        axisTick: { show: false },
+        data: taskStates,
       },
     ],
+    yAxis: [
+      {
+        type: 'value',
+      },
+    ],
+    series: taskTypes.map((type: string) => {
+      return {
+        name: type,
+        type: 'bar',
+        barGap: 0,
+        label: {
+          show: true,
+          position: 'insideBottom',
+          distance: 10,
+          align: 'left',
+          verticalAlign: 'middle',
+          rotate: 90,
+          formatter: '{c}  {name|{a}}',
+          fontSize: 16,
+          rich: {
+            name: {},
+          },
+        },
+        emphasis: {
+          focus: 'series',
+        },
+        data: [320, 332, 301, 334],
+      };
+    }),
   };
-
   taskChart.setOption(option, true);
 }
+
+// endregion
 
 watch(showCar, (val) => {
   renderMarkers(val, 'car');
@@ -364,12 +336,25 @@ watch(showDevice, (val) => {
   renderMarkers(val, 'device');
 });
 
-onMounted(() => {
+window.addEventListener('resize', () => {
+  calcVideoWidth();
+  loadTaskChart();
+});
+
+async function reloadData() {
+  getStatsData();
+  getEventList();
+  getWeatherList();
   loadMap();
   calcVideoWidth();
   loadVideo();
-  setTimeout(() => loadTaskChart());
-  setTimeout(() => (document.querySelector('table').innerHTML = ''), 5000);
+  loadTaskChart();
+}
+
+reloadData();
+
+onMounted(() => {
+  reloadData();
 });
 </script>
 <template>
@@ -383,27 +368,29 @@ onMounted(() => {
       <div class="left">
         <div class="box-card left-top">
           <box />
-          <h2>今日统计概览</h2>
+          <h2>统计概览</h2>
           <div class="lt-stats-dash">
             <h3>路产数量</h3>
             <h3>风险事件</h3>
-            <h4>0092</h4>
-            <h4>0265</h4>
+            <h4>{{ `0000${statsData.regionCount || 0}`.slice(-4) }}</h4>
+            <h4>{{ `0000${statsData.riskEventCount || 0}`.slice(-4) }}</h4>
           </div>
           <div class="lt-dash">
             <div>
-              <h3>人员(12)</h3>
-              <h3>桥梁(12)</h3>
-              <h3>边坡(12)</h3>
+              <h3>人员({{ statsData.staffCount }})</h3>
+              <h3>桥梁({{ statsData.bridgeCount }})</h3>
+              <h3>边坡({{ statsData.slopeCount }})</h3>
             </div>
             <div>
               <h3>养护车辆</h3>
-              <h3>12/341</h3>
+              <h3>{{ statsData.onlineCarCount }}/{{ statsData.carCount }}</h3>
               <Switch v-model:checked="showCar" />
             </div>
             <div>
               <h3>视频监控</h3>
-              <h3>12/34</h3>
+              <h3>
+                {{ statsData.onlineDeviceCount }}/{{ statsData.deviceCount }}
+              </h3>
               <Switch v-model:checked="showDevice" />
             </div>
           </div>
@@ -429,9 +416,14 @@ onMounted(() => {
             />
           </div>
           <div class="nav">
-            <h3 class="active">未派发(236)</h3>
-            <h3>处理中(326)</h3>
-            <h3>待复核(623)</h3>
+            <h3
+              :class="{ active: event.type === eventActive }"
+              v-for="event in eventTypeList"
+              :key="event"
+              @click="switchEventType(event.type)"
+            >
+              {{ event.type }}({{ event.count }})
+            </h3>
           </div>
           <div class="risk">
             <div>

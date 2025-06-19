@@ -16,7 +16,7 @@ export function afterFetch(rawData: any) {
         rawData.push(d);
       }
       const len = d.value?.length;
-      if (len < 8) {
+      if (len < 9) {
         d.disabled = true;
       }
       if (d.children) {

@@ -200,7 +200,9 @@ export const parseFormSchema = async (
               childrenField: 'children',
               afterFetch: (data: { name: string; path: string }[]) => {
                 if (afterFetch) {
-                  transformsAny[pageName]?.afterFetch(data);
+                  transformsAny[
+                    afterFetch === true ? pageName : afterFetch
+                  ]?.afterFetch(data);
                 }
               },
             } as unknown as ApiSelectProps,

@@ -19,6 +19,10 @@
         "field": "taskTypeName"
       },
       {
+        "title": "事件类型",
+        "field": "eventTypeName"
+      },
+      {
         "title": "任务生成时间",
         "field": "createTime"
       },
@@ -74,10 +78,6 @@
   "operations": [
     {
       "title": "详情"
-    },
-    {
-      "title": "进度",
-      "type": "Timeline"
     },
     {
       "title": "复核",

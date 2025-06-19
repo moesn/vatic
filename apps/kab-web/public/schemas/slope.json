@@ -97,9 +97,14 @@
         "required": true
       },
       {
-        "title": "位置",
+        "title": "部署位置",
         "field": "location",
-        "required": true
+        "required": true,
+        "type": "ApiTreeSelect",
+        "api": "/kab/region/lazy-tree",
+        "labelField": "title",
+        "valueField": "title",
+        "afterFetch": "device"
       },
       {
         "title": "设计使用年限",

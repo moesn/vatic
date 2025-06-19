@@ -27,3 +27,20 @@ export function afterFetch(rawData: any) {
 
   disableLevel(rawData);
 }
+
+export function transformTableData(resData: any) {
+  function deleteLevel(data: any) {
+    data.forEach((d: any) => {
+      if (d.code === '5201') {
+        resData.records.length = 0;
+      } else if (d.parentId === '5201') {
+        resData.records.push(d);
+      }
+      if (d.children) {
+        deleteLevel(d.children);
+      }
+    });
+  }
+
+  deleteLevel(resData.records);
+}

@@ -96,7 +96,7 @@
         "labelField": "title",
         "valueField": "title",
         "triggerField": "purpose",
-        "triggerValue": "lumianjiankong",
+        "triggerValue": "路面监控|海事监控",
         "afterFetch": true
       },
       {
@@ -105,10 +105,10 @@
         "required": true,
         "type": "ApiSelect",
         "api": "/kab/bridge/queryList",
-        "labelField": "bridgeName",
-        "valueField": "bridgeName",
+        "labelField": "location",
+        "valueField": "location",
         "triggerField": "purpose",
-        "triggerValue": "qiaoliangjiankong"
+        "triggerValue": "桥梁监控"
       },
       {
         "title": "部署位置",
@@ -116,17 +116,10 @@
         "required": true,
         "type": "ApiSelect",
         "api": "/kab/slope/queryList",
-        "labelField": "slopeName",
-        "valueField": "slopeName",
+        "labelField": "location",
+        "valueField": "location",
         "triggerField": "purpose",
-        "triggerValue": "bianpojiankong"
-      },
-      {
-        "title": "部署位置",
-        "field": "location",
-        "required": true,
-        "triggerField": "purpose",
-        "triggerValue": "haishijiankong"
+        "triggerValue": "边坡监控"
       },
       {
         "title": "经纬度",

@@ -23,6 +23,9 @@ import { requestClient } from '#/api/request';
 import { parseApi, parseFormSchema, parseTableColumns } from './helper';
 import Form from './modules/form.vue';
 import TimeLine from './modules/timeline.vue';
+import * as transforms from './transforms';
+
+const transformsAny: any = transforms;
 
 const pageInit = ref(false);
 const pageSchema = ref<any>({});
@@ -167,6 +170,7 @@ watch(
       nameField,
       keyField,
       cellHeight,
+      transformTableData,
     } = table;
 
     const { update } = form || {};
@@ -285,7 +289,11 @@ watch(
               sortOrder: sort.order,
               ...search,
             };
-            return await requestClient.get(api, { params });
+            const resData = await requestClient.get(api, { params });
+            if (transformTableData) {
+              transformsAny[pageName.value]?.transformTableData(resData);
+            }
+            return resData;
           },
         },
         sort: true,

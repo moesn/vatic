@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { VxeTableGridOptions } from '@vatic/plugins/vxe-table';
 
-import { h, onMounted, reactive, ref } from 'vue';
+import { h, onMounted, reactive, ref, watch } from 'vue';
 import { useTippy } from 'vue-tippy';
 
 import { ColPage, useVaticModal } from '@vatic/common-ui';
@@ -11,7 +11,12 @@ import { Button, Card, Image, message, Popover, Tooltip } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
-import { getDeptList, getSampleList } from '#/api';
+import { getSampleList } from '#/api';
+import {
+  getEventListApi,
+  getEventStatsApi,
+  getStreetTreeApi,
+} from '#/views/event/data';
 
 const props = reactive({
   leftCollapsedWidth: 3,
@@ -27,6 +32,15 @@ const props = reactive({
 
 const mapContainer = ref(null);
 const mapIsLoaded = ref(false);
+
+const eventStatInit = ref<boolean>(false);
+const eventStatList = ref<any>([]);
+const eventType = ref<any>([]);
+getEventStatsApi().then((res) => {
+  eventStatList.value = res.map((d: any) => {
+    return { label: d.eventType, value: d.eventType };
+  });
+});
 
 let map: any;
 
@@ -166,14 +180,31 @@ function createMarkers(risks: any) {
   }
 }
 
-const [Grid, gridApi] = useVaticVxeGrid({
+function transformTableData(resData: any) {
+  function deleteLevel(data: any) {
+    data.forEach((d: any) => {
+      if (d.value === '5201') {
+        resData.length = 0;
+      } else if (d.parentId === '5201') {
+        resData.push(d);
+      }
+      if (d.children) {
+        deleteLevel(d.children);
+      }
+    });
+  }
+
+  deleteLevel(resData);
+}
+
+const [LocationGrid, LocationGridApi] = useVaticVxeGrid({
   gridEvents: {},
   gridOptions: {
     columns: [
       { align: 'left', title: '', type: 'checkbox', width: 30 },
       {
         align: 'left',
-        field: 'name',
+        field: 'title',
         title: '位置',
         treeNode: true,
       },
@@ -186,7 +217,9 @@ const [Grid, gridApi] = useVaticVxeGrid({
     proxyConfig: {
       ajax: {
         query: async (_params) => {
-          return await getDeptList();
+          const resData = await getStreetTreeApi();
+          transformTableData(resData);
+          return resData;
         },
       },
     },
@@ -194,7 +227,7 @@ const [Grid, gridApi] = useVaticVxeGrid({
   } as VxeTableGridOptions,
 });
 
-const [TaskGrid, taskGridApi] = useVaticVxeGrid({
+const [TaskGrid, TaskGridApi] = useVaticVxeGrid({
   gridEvents: {},
   gridOptions: {
     columns: [
@@ -230,100 +263,57 @@ const [TaskGrid, taskGridApi] = useVaticVxeGrid({
   } as VxeTableGridOptions,
 });
 
-const [BaseForm] = useVaticForm({
-  commonConfig: {
-    hideLabel: true,
-    componentProps: {
-      class: 'w-full',
-    },
-  },
-  showDefaultActions: false,
-  handleValuesChange(_values, fieldsChanged) {
-    message.info(`表单以下字段发生变化：${fieldsChanged.join('，')}`);
-  },
-  schema: [
-    {
-      component: 'CheckboxGroup',
-      componentProps: {
-        name: 'cname',
-        options: [
-          {
-            label: '全部未派发事件（123）',
-            value: '0',
+let TypeForm: any, TypeFormApi: any;
+
+watch(
+  () => eventStatList.value,
+  async (options) => {
+    if (options && options.length > 0) {
+      [TypeForm, TypeFormApi] = useVaticForm({
+        commonConfig: {
+          hideLabel: true,
+          componentProps: {
+            class: 'w-full',
           },
+        },
+        showDefaultActions: false,
+        handleValuesChange(values) {
+          eventType.value = values.eventType;
+        },
+        schema: [
           {
-            label: '护栏缺失（23）',
-            value: '1',
-          },
-          {
-            label: '坑洼（20）',
-            value: '2',
-          },
-          {
-            label: '龟裂（30）',
-            value: '3',
-          },
-          {
-            label: '沉陷（50）',
-            value: '4',
-          },
-          {
-            label: '护栏缺失（23）',
-            value: '1',
-          },
-          {
-            label: '坑洼（20）',
-            value: '2',
-          },
-          {
-            label: '龟裂（30）',
-            value: '3',
-          },
-          {
-            label: '沉陷（50）',
-            value: '4',
-          },
-          {
-            label: '护栏缺失（23）',
-            value: '1',
-          },
-          {
-            label: '坑洼（20）',
-            value: '2',
-          },
-          {
-            label: '龟裂（30）',
-            value: '3',
-          },
-          {
-            label: '沉陷（50）',
-            value: '4',
+            component: 'CheckboxGroup',
+            componentProps: {
+              name: 'eventType',
+              options,
+            },
+            fieldName: 'eventType',
           },
         ],
-      },
-      fieldName: 'checkboxGroup',
-    },
-  ],
-});
+      });
+      eventStatInit.value = true;
+    }
+  },
+);
 
 const expandAll = () => {
-  gridApi.grid?.setAllTreeExpand(true);
+  LocationGridApi.grid?.setAllTreeExpand(true);
 };
 
 const collapseAll = () => {
-  gridApi.grid?.setAllTreeExpand(false);
+  LocationGridApi.grid?.setAllTreeExpand(false);
 };
 
-const [Form, formApi] = useVaticForm({
+const [Form, FormApi] = useVaticForm({
   handleSubmit: (_: Record<string, any>) => {
     message.loading({
       content: '派发中...',
       duration: 0,
       key: 'is-form-submitting',
     });
-    modalApi.lock();
+    ModalApi.lock();
     setTimeout(() => {
-      modalApi.close();
+      ModalApi.close();
       message.success({
         content: `派发成功`,
         duration: 2,
@@ -361,19 +351,19 @@ const [Form, formApi] = useVaticForm({
   showDefaultActions: false,
 });
 
-const [Modal, modalApi] = useVaticModal({
+const [Modal, ModalApi] = useVaticModal({
   fullscreenButton: false,
   onCancel() {
-    modalApi.close();
+    ModalApi.close();
   },
   onConfirm: async () => {
-    await formApi.validateAndSubmitForm();
+    await FormApi.validateAndSubmitForm();
   },
   onOpenChange(isOpen: boolean) {
     if (isOpen) {
-      const values = modalApi.getData<Record<string, any>>();
+      const values = ModalApi.getData<Record<string, any>>();
       if (values) {
-        formApi.setValues(values);
+        FormApi.setValues(values);
       }
     }
   },
@@ -381,15 +371,15 @@ const [Modal, modalApi] = useVaticModal({
 });
 
 function appendToDisposeList(row: any = '', toggle: boolean = false) {
-  if (typeof taskGridApi.grid.getCheckboxRecords === 'function') {
-    const checkedRecords = taskGridApi.grid.getCheckboxRecords();
+  if (typeof TaskGridApi.grid.getCheckboxRecords === 'function') {
+    const checkedRecords = TaskGridApi.grid.getCheckboxRecords();
 
     if (row) {
-      const risk = taskGridApi.grid
+      const risk = TaskGridApi.grid
         .getCheckboxRecords()
         .find((item) => item.id === row.id);
       if (toggle) {
-        taskGridApi.grid.setCheckboxRow(row, !risk);
+        TaskGridApi.grid.setCheckboxRow(row, !risk);
       } else {
         return !!risk;
       }
@@ -397,6 +387,20 @@ function appendToDisposeList(row: any = '', toggle: boolean = false) {
       return checkedRecords.length;
     }
   }
+}
+
+async function getEventList() {
+  const formValues = await TypeFormApi.getValues();
+  const params = {
+    eventType: formValues.eventType,
+    location: LocationGridApi.grid
+      .getCheckboxRecords()
+      .filter((d: any) => d.value.length > 8)
+      .map((d: any) => d.title),
+  };
+  getEventListApi(params).then((res) => {
+    console.warn(res);
+  });
 }
 
 onMounted(() => {
@@ -423,8 +427,15 @@ onMounted(() => {
               :body-style="{ height: '100%', padding: '12px' }"
               class="z-50 h-full"
             >
-              <BaseForm class="h-1/6 overflow-auto" />
-              <Grid class="mt-5 h-5/6">
+              <TypeForm class="mb-3 h-1/6 overflow-auto" v-if="eventStatInit" />
+              <Button
+                type="primary"
+                @click="getEventList"
+                class="position-absolute z-50 w-full"
+              >
+                查询
+              </Button>
+              <LocationGrid class="h-5/6">
                 <template #toolbar-tools>
                   <Button
                     class="mr-2"
@@ -438,7 +449,7 @@ onMounted(() => {
                     折叠
                   </Button>
                 </template>
-              </Grid>
+              </LocationGrid>
             </Card>
           </div>
         </template>
@@ -453,18 +464,16 @@ onMounted(() => {
                   size="small"
                   type="link"
                   @click="
-                    modalApi
-                      .setData({
-                        riskNameList: [
-                          '1、这里显示待派发的事件名称',
-                          '2、这里显示待派发的事件名称',
-                          '3、这里显示待派发的事件名称',
-                          '4、这里显示待派发的事件名称',
-                          '5、这里显示待派发的事件名称',
-                          '6、这里显示待派发的事件名称',
-                        ].join('\n'),
-                      })
-                      .open()
+                    ModalApi.setData({
+                      riskNameList: [
+                        '1、这里显示待派发的事件名称',
+                        '2、这里显示待派发的事件名称',
+                        '3、这里显示待派发的事件名称',
+                        '4、这里显示待派发的事件名称',
+                        '5、这里显示待派发的事件名称',
+                        '6、这里显示待派发的事件名称',
+                      ].join('\n'),
+                    }).open()
                   "
                 >
                   派发（{{ appendToDisposeList() }}）
