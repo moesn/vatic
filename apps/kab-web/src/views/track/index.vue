@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 
 import { useVaticForm } from '#/adapter/form';
+import { getCarListApi } from '#/views/track/data';
 
 const mapContainer = ref(null);
 
@@ -19,28 +20,19 @@ const [QueryForm] = useVaticForm({
   layout: 'horizontal',
   schema: [
     {
-      component: 'Select',
-      hideLabel: true,
+      component: 'ApiSelect',
+      fieldName: 'plateNo',
       componentProps: {
-        allowClear: true,
-        filterOption: true,
-        options: [
-          {
-            label: '选项1',
-            value: '1',
-          },
-          {
-            label: '选项2',
-            value: '2',
-          },
-        ],
-        placeholder: '请选择车牌号',
+        api: getCarListApi,
+        class: 'w-full',
+        labelField: 'name',
         showSearch: true,
+        valueField: 'id',
+        placeholder: '请选择车牌号',
       },
-      fieldName: 'options',
     },
     {
-      component: 'RangePicker',
+      component: 'DatePicker',
       fieldName: 'createTime',
       hideLabel: true,
     },

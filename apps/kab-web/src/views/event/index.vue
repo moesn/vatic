@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { VxeTableGridOptions } from '@vatic/plugins/vxe-table';
 
-import { h, onMounted, reactive, ref, watch } from 'vue';
+import { computed, h, onMounted, reactive, ref, watch } from 'vue';
 import { useTippy } from 'vue-tippy';
 
 import { ColPage, useVaticModal } from '@vatic/common-ui';
@@ -11,10 +11,10 @@ import { Button, Card, Image, message, Popover, Tooltip } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
-import { getSampleList } from '#/api';
 import {
   getEventListApi,
   getEventStatsApi,
+  getStaffListApi,
   getStreetTreeApi,
 } from '#/views/event/data';
 
@@ -35,9 +35,15 @@ const mapIsLoaded = ref(false);
 
 const eventStatInit = ref<boolean>(false);
 const eventStatList = ref<any>([]);
+const staffList = ref<any>([]);
 const eventType = ref<any>([]);
 getEventStatsApi().then((res) => {
   eventStatList.value = res.map((d: any) => {
+    return { label: d.eventType, value: d.eventType };
+  });
+});
+getStaffListApi().then((res) => {
+  staffList.value = res.map((d: any) => {
     return { label: d.eventType, value: d.eventType };
   });
 });
@@ -104,7 +110,7 @@ function createCircleImage(src: string, isDevice: boolean) {
 
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx: any = canvas.getContext('2d');
     const img = new window.Image();
 
     img.addEventListener('load', () => {
@@ -142,32 +148,27 @@ function createCircleImage(src: string, isDevice: boolean) {
   });
 }
 
-function createMarkers(risks: any) {
+function createMarkers(events: any) {
   if (mapIsLoaded.value) {
-    risks.forEach((item: any) => {
-      createCircleImage(item.rt$imageUrl, true).then((img) => {
-        const point = new BMapGL.Point(
-          106.523_548_548_890_23 + Math.random() * 0.2,
-          // eslint-disable-next-line no-loss-of-precision
-          26.296_209_157_438_058 + Math.random() * 0.2,
-        );
+    map.getOverlays().forEach((overlay: any) => {
+      map.removeOverlay(overlay);
+    });
+    events.forEach((event: any) => {
+      createCircleImage(event.imageUrl, !!event.sourceDeviceId).then((img) => {
+        const point = new BMapGL.Point(event.latitude, event.longitude);
         const icon = new BMapGL.Icon(img, new BMapGL.Size(40, 40));
 
-        const marker = new BMapGL.Marker(point, { icon, data: item });
+        const marker = new BMapGL.Marker(point, { icon, data: event });
         map.addOverlay(marker);
 
         setTimeout(() =>
           useTippy(marker.domElement, {
             content: h('div', [
-              h('p', '事件类型：护栏缺失'),
-              h('p', '事件名称：我是事件名称我是事件名称'),
-              h('p', '事件位置：贵北大道延安路与都会大街交叉口200米处'),
-              h('p', '发现设备：HK-Q2S8DM-GL/LN'),
-              h('p', '设备联系人：张三（13333333333）'),
-              h('p', '首次发现时间：2025-05-01 12:11:11'),
-              h('p', '最新发现时间：2025-05-03 17:23:15'),
+              h('p', `事件类型：${event.eventType}`),
+              h('p', `事件位置：${event.location}`),
+              h('p', `首次发现时间：${event.captureTime}`),
               h('img', {
-                src: item.rt$imageUrl,
+                src: event.imageUrl,
                 style: 'margin-top: 10px',
               }),
             ]),
@@ -176,7 +177,7 @@ function createMarkers(risks: any) {
       });
     });
   } else {
-    setTimeout(() => createMarkers(risks), 500);
+    setTimeout(() => createMarkers(events), 500);
   }
 }
 
@@ -214,6 +215,10 @@ const [LocationGrid, LocationGridApi] = useVaticVxeGrid({
     pagerConfig: {
       enabled: false,
     },
+    checkboxConfig: {
+      checkStrictly: false,
+      visibleMethod: ({ row }) => row.value.length > 8,
+    },
     proxyConfig: {
       ajax: {
         query: async (_params) => {
@@ -233,7 +238,7 @@ const [TaskGrid, TaskGridApi] = useVaticVxeGrid({
     columns: [
       { align: 'left', title: '', type: 'checkbox', width: 30 },
       {
-        field: 'rt$imageUrl',
+        field: 'imageUrl',
         slots: { default: 'image-url' },
         title: '图片',
         width: 80,
@@ -249,13 +254,23 @@ const [TaskGrid, TaskGridApi] = useVaticVxeGrid({
     keepSource: true,
     showOverflow: false,
     pagerConfig: {
-      enabled: false,
+      pageSize: 1,
+      pagerCount: 5,
+      layouts: ['PrevPage', 'NextPage', 'Jump', 'PageCount', 'Total'],
     },
     proxyConfig: {
       ajax: {
-        query: async (_params) => {
-          const res = await getSampleList();
-          createMarkers(res);
+        query: async () => {
+          const formValues = await TypeFormApi?.getValues();
+          const params = {
+            eventTypes: formValues?.eventType,
+            locations: LocationGridApi?.grid
+              .getCheckboxRecords()
+              .filter((d: any) => d.value.length > 8)
+              .map((d: any) => d.title),
+          };
+          const res = await getEventListApi(params);
+          createMarkers(res.records);
           return res;
         },
       },
@@ -280,6 +295,9 @@ watch(
         handleValuesChange(values) {
           eventType.value = values.eventType;
         },
+        handleSubmit(values) {
+          console.warn(values);
+        },
         schema: [
           {
             component: 'CheckboxGroup',
@@ -296,6 +314,77 @@ watch(
   },
 );
 
+let DispatchForm: any, DispatchFormApi: any;
+
+const selectEvents = computed(() =>
+  TaskGridApi.grid
+    .getCheckboxRecords()
+    .map((d) => `【${d.eventType}】${d.location}`),
+);
+
+watch(
+  () => eventStatList.value,
+  async (options) => {
+    if (options && options.length > 0) {
+      [DispatchForm, DispatchFormApi] = useVaticForm({
+        handleSubmit: (_: Record<string, any>) => {
+          message.loading({
+            content: '派发中...',
+            duration: 0,
+            key: 'is-form-submitting',
+          });
+          ModalApi.lock();
+          setTimeout(() => {
+            ModalApi.close();
+            message.success({
+              content: `派发成功`,
+              duration: 2,
+              key: 'is-form-submitting',
+            });
+          }, 2000);
+        },
+        schema: [
+          {
+            component: 'Textarea',
+            fieldName: 'eventNameList',
+            componentProps: {
+              rows: 10,
+            },
+            label: '事件列表',
+            labelWidth: 60,
+            disabled: true,
+          },
+          {
+            component: 'Switch',
+            fieldName: 'taskType',
+            label: '是否紧急',
+            componentProps: {
+              checkedChildren: '紧急',
+              unCheckedChildren: '普通',
+              checkedValue: '紧急',
+              unCheckedValue: '普通',
+            },
+            labelWidth: 60,
+          },
+          {
+            component: 'Select',
+            componentProps: {
+              options: staffList.value,
+              class: 'w-full',
+              placeholder: '请选择处理人',
+            },
+            fieldName: 'field3',
+            label: '处理人',
+            labelWidth: 60,
+            rules: 'required',
+          },
+        ],
+        showDefaultActions: false,
+      });
+    }
+  },
+);
+
 const expandAll = () => {
   LocationGridApi.grid?.setAllTreeExpand(true);
 };
@@ -304,66 +393,19 @@ const collapseAll = () => {
   LocationGridApi.grid?.setAllTreeExpand(false);
 };
 
-const [Form, FormApi] = useVaticForm({
-  handleSubmit: (_: Record<string, any>) => {
-    message.loading({
-      content: '派发中...',
-      duration: 0,
-      key: 'is-form-submitting',
-    });
-    ModalApi.lock();
-    setTimeout(() => {
-      ModalApi.close();
-      message.success({
-        content: `派发成功`,
-        duration: 2,
-        key: 'is-form-submitting',
-      });
-    }, 2000);
-  },
-  schema: [
-    {
-      component: 'Textarea',
-      fieldName: 'riskNameList',
-      componentProps: {
-        rows: 6,
-      },
-      label: '事件列表',
-      labelWidth: 60,
-      disabled: true,
-    },
-    {
-      component: 'Select',
-      componentProps: {
-        options: [
-          { label: '张三', value: '1' },
-          { label: '李四', value: '2' },
-        ],
-        class: 'w-full',
-        placeholder: '请选择处理人',
-      },
-      fieldName: 'field3',
-      label: '处理人',
-      labelWidth: 60,
-      rules: 'required',
-    },
-  ],
-  showDefaultActions: false,
-});
-
 const [Modal, ModalApi] = useVaticModal({
   fullscreenButton: false,
   onCancel() {
     ModalApi.close();
   },
   onConfirm: async () => {
-    await FormApi.validateAndSubmitForm();
+    await DispatchFormApi.validateAndSubmitForm();
   },
   onOpenChange(isOpen: boolean) {
     if (isOpen) {
       const values = ModalApi.getData<Record<string, any>>();
       if (values) {
-        FormApi.setValues(values);
+        DispatchFormApi.setValues(values);
       }
     }
   },
@@ -387,20 +429,6 @@ function appendToDisposeList(row: any = '', toggle: boolean = false) {
       return checkedRecords.length;
     }
   }
-}
-
-async function getEventList() {
-  const formValues = await TypeFormApi.getValues();
-  const params = {
-    eventType: formValues.eventType,
-    location: LocationGridApi.grid
-      .getCheckboxRecords()
-      .filter((d: any) => d.value.length > 8)
-      .map((d: any) => d.title),
-  };
-  getEventListApi(params).then((res) => {
-    console.warn(res);
-  });
 }
 
 onMounted(() => {
@@ -430,7 +458,7 @@ onMounted(() => {
               <TypeForm class="mb-3 h-1/6 overflow-auto" v-if="eventStatInit" />
               <Button
                 type="primary"
-                @click="getEventList"
+                @click="TaskGridApi.grid.commitProxy('query')"
                 class="position-absolute z-50 w-full"
               >
                 查询
@@ -465,14 +493,7 @@ onMounted(() => {
                   type="link"
                   @click="
                     ModalApi.setData({
-                      riskNameList: [
-                        '1、这里显示待派发的事件名称',
-                        '2、这里显示待派发的事件名称',
-                        '3、这里显示待派发的事件名称',
-                        '4、这里显示待派发的事件名称',
-                        '5、这里显示待派发的事件名称',
-                        '6、这里显示待派发的事件名称',
-                      ].join('\n'),
+                      eventNameList: selectEvents.join('\n'),
                     }).open()
                   "
                 >
@@ -480,89 +501,85 @@ onMounted(() => {
                 </Button>
               </template>
               <template #image-url="{ row }">
-                <Image :src="row.rt$imageUrl" height="80" width="80" />
+                <Image :src="row.imageUrl" height="80" width="80" />
               </template>
               <template #risk-info="{ row }">
                 <Popover placement="left">
                   <template #content>
-                    <p>事件类型：护栏缺失</p>
-                    <p>事件名称：我是事件名称我是事件名称</p>
-                    <p>事件位置：贵北大道延安路与都会大街交叉口200米处</p>
-                    <p>发现设备：HK-Q2S8DM-GL/LN</p>
-                    <p>设备联系人：张三（13333333333）</p>
-                    <p>首次发现时间：2025-05-01 12:11:11</p>
-                    <p>最新发现时间：2025-05-03 17:23:15</p>
+                    <p>事件类型：{{ row.eventType }}</p>
+                    <p>事件位置：{{ row.location }}</p>
+                    <p>首次发现时间：{{ row.captureTime }}</p>
                     <div class="popover-image">
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                       <Popover placement="left">
                         <template #content>
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </template>
                         <div style="width: 30%">
-                          <Image :src="row.rt$imageUrl" :preview="false" />
+                          <Image :src="row.imageUrl" :preview="false" />
                         </div>
                       </Popover>
                     </div>
@@ -579,12 +596,12 @@ onMounted(() => {
                       style="color: #006be6"
                       @click="appendToDisposeList(row, true)"
                     >
-                      风险名称风险名称
+                      {{ row.eventType }}
                     </a>
                   </Tooltip>
                 </Popover>
-                <h6>风险地点风险地点风险位置地点</h6>
-                <h6>2025-06-01 20:12:33</h6>
+                <h6>{{ row.location }}</h6>
+                <h6>{{ row.captureTime }}</h6>
               </template>
             </TaskGrid>
           </Card>
@@ -592,7 +609,7 @@ onMounted(() => {
       </ColPage>
     </div>
     <Modal>
-      <Form />
+      <DispatchForm />
     </Modal>
   </div>
 </template>
@@ -603,6 +620,10 @@ onMounted(() => {
 
 ::v-deep .vxe-grid {
   padding: 0;
+
+  .vxe-pager {
+    margin-top: 0;
+  }
 
   .vxe-table--header-wrapper {
     background-color: transparent;

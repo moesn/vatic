@@ -1,5 +1,9 @@
 import { requestClient } from '#/api/request';
 
+export const getStaffListApi = async () => {
+  return requestClient.get('/kab/staff/queryList');
+};
+
 export const getEventStatsApi = async () => {
   return requestClient.get('/kab/riskevents/eventViewStatistics');
 };
