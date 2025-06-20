@@ -4,8 +4,10 @@ import { onMounted, ref, watch } from 'vue';
 import { Button, Popover, Select, SelectOption, Switch } from 'ant-design-vue';
 
 import {
+  getDataStatsApi,
   getDeviceListApi,
-  getStatsDataApi,
+  getEventStatsApi,
+  getTaskStatsApi,
   getWeatherListApi,
 } from '#/views/dashboard/data';
 import { getEventListApi } from '#/views/event/data';
@@ -33,7 +35,7 @@ const showDevice = ref<boolean>(true);
 const statsData = ref<any>({});
 
 function getStatsData() {
-  getStatsDataApi().then((res: any) => {
+  getDataStatsApi().then((res: any) => {
     statsData.value = res;
   });
 }
@@ -42,36 +44,47 @@ function getStatsData() {
 
 // region 风险
 const riskTotal = ref<number>(100);
-const riskPageSize = ref<number>(5);
-const riskPageNum = ref<number>(1);
+const riskPageSize = ref<number>(0);
+const riskPageNo = ref<number>(1);
+const riskPages = ref<number>(1);
 const eventActive = ref('未派发');
 const eventStates: string[] = ['未派发', '待确认', '处理中', '待复核'];
-const allEventList = ref([]);
-const eventList = ref([]);
-const eventTypeList = ref<any>(eventStates.map((d) => ({ type: d, count: 0 })));
+const eventStats = ref<any>([]);
+const eventList = ref<any>([]);
 
-function getEventList() {
-  getEventListApi({ eventStates }).then((res: any) => {
-    allEventList.value = res;
-    eventStates.forEach((eventType: string, index: number) => {
-      const events = res.filter((event: any) => (event.eventType = eventType));
-      eventTypeList.value.splice(index, 1, {
-        type: eventType,
-        count: events.lengt,
-      });
+function getEventStats() {
+  getEventStatsApi().then((res: any) => {
+    eventStats.value = eventStates.map((status) => {
+      const stat = res.find((d: any) => d.status === status);
+      return (
+        stat || {
+          status,
+          eventCount: 0,
+        }
+      );
     });
-    switchEventType(eventStates[0]);
   });
 }
 
-function switchEventType(eventType: string) {
-  eventActive.value = eventType;
-  eventList.value = allEventList.value.filter(
-    (event: any) => event.eventType === eventType,
-  );
-  riskPageNum.value = 1;
-  riskTotal.value = eventList.value.length;
+function getEventList(status: string, pageNo: number) {
+  eventActive.value = status;
+  riskPageNo.value = pageNo;
+  getEventListApi({
+    status,
+    pageSize: riskPageSize.value,
+    pageNo,
+  }).then((res: any) => {
+    eventList.value = res.records;
+    riskPages.value = res.pages;
+    riskTotal.value = res.total;
+  });
 }
+
+watch(riskPageSize, (val) => {
+  if (val) {
+    getEventList(eventActive.value, 1);
+  }
+});
 
 // endregion
 
@@ -102,7 +115,7 @@ function calcVideoWidth() {
   videoWidth.value =
     (document.querySelector('.right')?.offsetHeight * 168) / (94 * 5) - 30;
 
-  riskPageSize.value = Math.floor(
+  riskPageSize.value = Math.round(
     document.querySelector('.risk')?.offsetHeight / 100,
   );
 }
@@ -267,33 +280,66 @@ watch(showDevice, (val) => {
 
 // region 养护统计
 let taskChart;
+const colors = (i: number, a: number) =>
+  [`rgba(234,74,87,${a})`, `rgba(25,236,255,${a})`][i];
 const taskTypes: string[] = ['紧急', '普通'];
 const taskStates: string[] = ['待确认', '处理中', '待复核', '已完成'];
+const taskData = ref<any>({});
 
-function loadTaskChart() {
+function renderTaskChart() {
   taskChart?.dispose();
   taskChart = echarts.init(document.querySelector('#task-chart'));
+
   const option = {
     legend: {
       data: taskTypes,
+      top: 10,
+      textStyle: {
+        color: '#FFF',
+      },
+    },
+    grid: {
+      left: 20,
+      right: 20,
+      top: 50,
+      bottom: 50,
     },
     xAxis: [
       {
         type: 'category',
         axisTick: { show: false },
         data: taskStates,
+        axisLine: {
+          show: false,
+        },
+        axisLabel: {
+          color: '#FFF',
+        },
+        splitLine: {
+          show: false,
+        },
       },
     ],
     yAxis: [
       {
         type: 'value',
+        axisLine: {
+          show: false,
+        },
+        axisLabel: {
+          show: false,
+        },
+        splitLine: {
+          show: false,
+        },
       },
     ],
-    series: taskTypes.map((type: string) => {
+    series: taskTypes.map((type: string, index: number) => {
       return {
         name: type,
         type: 'bar',
-        barGap: 0,
+        barWidth: 20,
+        barGap: '20%',
         label: {
           show: true,
           position: 'insideBottom',
@@ -301,8 +347,9 @@ function loadTaskChart() {
           align: 'left',
           verticalAlign: 'middle',
           rotate: 90,
-          formatter: '{c}  {name|{a}}',
+          formatter: '{c}',
           fontSize: 16,
+          color: '#FFF',
           rich: {
             name: {},
           },
@@ -310,11 +357,42 @@ function loadTaskChart() {
         emphasis: {
           focus: 'series',
         },
-        data: [320, 332, 301, 334],
+        data: taskData.value[type],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: colors(index, 0.5) },
+            { offset: 0.6, color: colors(index, 0.8) },
+            { offset: 1, color: colors(index, 1) },
+          ]),
+          opacity: 0.8,
+          emphasis: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+          },
+        },
       };
     }),
   };
   taskChart.setOption(option, true);
+}
+
+function loadTaskChart(init: boolean = false) {
+  if (init) {
+    getTaskStatsApi().then((res) => {
+      taskTypes.forEach((type) => {
+        taskData.value[type] = taskStates.map((status) => {
+          const stat = res.find(
+            (d: any) => d.status === status && d.taskType === type,
+          );
+          return stat?.count || 0;
+        });
+      });
+      renderTaskChart();
+    });
+  } else {
+    renderTaskChart();
+  }
 }
 
 // endregion
@@ -325,15 +403,15 @@ window.addEventListener('resize', () => {
 });
 
 async function reloadData() {
+  calcVideoWidth();
   getStatsData();
-  getEventList();
+  getEventStats();
+  loadTaskChart(true);
   getWeatherList();
   loadMap();
-  calcVideoWidth();
-  loadTaskChart();
 }
 
-reloadData();
+setInterval(() => reloadData(), 60 * 60 * 1000);
 
 onMounted(() => {
   reloadData();
@@ -383,43 +461,43 @@ onMounted(() => {
           <div class="paging">
             <img
               src="/assets/image/risk/prev.png"
-              @click="riskPageNum > 1 ? (riskPageNum -= 1) : ''"
+              @click="
+                riskPageNo > 1
+                  ? getEventList(eventActive, (riskPageNo -= 1))
+                  : ''
+              "
             />
             <h3>
-              {{ (riskPageNum - 1) * riskPageSize }} ~
-              {{ Math.min(riskPageNum * riskPageSize, riskTotal) }} /
+              {{ (riskPageNo - 1) * riskPageSize }} ~
+              {{ Math.min(riskPageNo * riskPageSize, riskTotal) }} /
               {{ riskTotal }}
             </h3>
             <img
               src="/assets/image/risk/next.png"
               @click="
-                riskPageNum < riskTotal / riskPageSize ? (riskPageNum += 1) : ''
+                riskPageNo < riskPages
+                  ? getEventList(eventActive, (riskPageNo += 1))
+                  : ''
               "
             />
           </div>
           <div class="nav">
             <h3
-              :class="{ active: event.type === eventActive }"
-              v-for="event in eventTypeList"
-              :key="event.type"
-              @click="switchEventType(event.type)"
+              v-for="event in eventStats"
+              :class="{ active: event.status === eventActive }"
+              :key="event.status"
+              @click="getEventList(event.status, 1)"
             >
-              {{ event.type }}({{ event.count }})
+              {{ event.status }}({{ event.eventCount }})
             </h3>
           </div>
           <div class="risk">
-            <div
-              v-for="event in eventList.slice(
-                (riskPageNum - 1) * riskPageSize,
-                riskPageNum * riskPageSize,
-              )"
-              :key="event.id"
-            >
+            <div v-for="event in eventList" :key="event.id">
               <img src="/test.png" alt="" />
               <div>
-                <h4>{{ event.name }}</h4>
+                <h4>{{ event.eventType }}</h4>
                 <h5>{{ event.location }}</h5>
-                <h5>{{ event.createTime }}</h5>
+                <h5>{{ event.captureTime }}</h5>
               </div>
             </div>
           </div>

@@ -283,7 +283,7 @@ watch(
         ajax: {
           query: async ({ page, sort }, search) => {
             const params = {
-              page: page.currentPage,
+              pageNo: page.currentPage,
               pageSize: page.pageSize,
               sortBy: sort.field,
               sortOrder: sort.order,

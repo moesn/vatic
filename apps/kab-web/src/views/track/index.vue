@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 
 import { useVaticForm } from '#/adapter/form';
-import { getCarListApi } from '#/views/track/data';
+import { getCarListApi, getTracList } from '#/views/track/data';
 
 const mapContainer = ref(null);
 
@@ -102,10 +102,13 @@ function loadMap() {
   loadHuaXi();
 }
 
-function renderTrack() {
-  const path = [{ lng: 106.623_548_548_890_23, lat: 26.396_209_157_438_058 }];
+async function renderTrack() {
+  const data = await getTracList({
+    busNo: '贵AU4911',
+    recordTime: '2025-06-18',
+  });
   const polyline = new BMapGL.Polyline(
-    path.map((p: any) => new BMapGL.Point(p.lng, p.lat)),
+    data.map((p: any) => new BMapGL.Point(p[0], p[1])),
     { strokeColor: '#3388ff', strokeWeight: 3 },
   );
 

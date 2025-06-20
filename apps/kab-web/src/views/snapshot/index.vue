@@ -66,7 +66,7 @@ const [Grid] = useVaticVxeGrid({
               value: '30',
             },
           ],
-          placeholder: '请选择统计维度',
+          placeholder: '请选择统计时间维度',
           showSearch: true,
         },
       },
