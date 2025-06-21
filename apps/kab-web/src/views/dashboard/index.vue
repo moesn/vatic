@@ -570,48 +570,48 @@ onMounted(() => {
               </div>
               <div>
                 <img src="/assets/image/weather/speed.png" alt="" />
-                <h3>{{ weatherList[0].wind_speed }}m/s</h3>
+                <h3>{{ weatherList[0].windSpeed }}m/s</h3>
                 <h3>风</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/direction.png" alt="" />
-                <h3>{{ weatherList[0].wind_direction }}</h3>
+                <h3>{{ weatherList[0].windDirection }}</h3>
                 <h3>风</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/pressure.png" alt="" />
-                <h3>{{ weatherList[0].air_pressure }}Pa</h3>
+                <h3>{{ weatherList[0].airPressure }}Pa</h3>
                 <h3>气</h3>
               </div>
             </div>
             <div v-if="weatherList[1]">
               <div>
                 <span></span>
-                <h3>{{ weatherList[0].location }}</h3>
+                <h3>{{ weatherList[1].location }}</h3>
               </div>
               <div>
                 <h3>度</h3>
-                <h3>{{ weatherList[0].temperature }}℃</h3>
+                <h3>{{ weatherList[1].temperature }}℃</h3>
                 <img src="/assets/image/weather/temperature.png" alt="" />
               </div>
               <div>
                 <h3>度</h3>
-                <h3>{{ weatherList[0].humidity }}%RH</h3>
+                <h3>{{ weatherList[1].humidity }}%RH</h3>
                 <img src="/assets/image/weather/wet.png" alt="" />
               </div>
               <div>
                 <h3>速</h3>
-                <h3>{{ weatherList[0].wind_speed }}m/s</h3>
+                <h3>{{ weatherList[1].windSpeed }}m/s</h3>
                 <img src="/assets/image/weather/speed.png" alt="" />
               </div>
               <div>
                 <h3>向</h3>
-                <h3>{{ weatherList[0].wind_direction }}</h3>
+                <h3>{{ weatherList[1].windDirection }}</h3>
                 <img src="/assets/image/weather/direction.png" alt="" />
               </div>
               <div>
                 <h3>压</h3>
-                <h3>{{ weatherList[0].air_pressure }}Pa</h3>
+                <h3>{{ weatherList[1].airPressure }}Pa</h3>
                 <img src="/assets/image/weather/pressure.png" alt="" />
               </div>
             </div>

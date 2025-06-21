@@ -21,7 +21,8 @@
       },
       {
         "title": "开通日期",
-        "field": "constructionTime"
+        "field": "constructionTime",
+        "format": "date"
       },
       {
         "title": "桥梁类型",

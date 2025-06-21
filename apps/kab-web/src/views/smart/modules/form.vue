@@ -3,6 +3,8 @@ import { ref } from 'vue';
 
 import { useVaticDrawer } from '@vatic/common-ui';
 
+import { message } from 'ant-design-vue';
+
 import { useVaticForm } from '#/adapter/form';
 import { requestClient } from '#/api/request';
 
@@ -25,6 +27,12 @@ const [Drawer, drawerApi] = useVaticDrawer({
     const { valid } = await formApi.validate();
     if (!valid) return;
     const body = await formApi.getValues();
+
+    message.loading({
+      content: '保存中...',
+      duration: 0,
+      key: 'is-form-submitting',
+    });
     drawerApi.lock();
 
     const { create, update, keyField, transformBody, pageName } =
@@ -45,6 +53,11 @@ const [Drawer, drawerApi] = useVaticDrawer({
       .then(() => {
         emits('success');
         drawerApi.close();
+        message.success({
+          content: `保存成功`,
+          duration: 2,
+          key: 'is-form-submitting',
+        });
       })
       .catch(() => {
         drawerApi.unlock();

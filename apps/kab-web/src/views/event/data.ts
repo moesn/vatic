@@ -15,3 +15,7 @@ export const getStreetTreeApi = async () => {
 export const getEventListApi = async (data: any) => {
   return requestClient.post('/kab/riskevents/eventViewStatisticsList', data);
 };
+
+export const dispatchApi = async (data: any) => {
+  return requestClient.post('/kab/riskevents/dispatch', data);
+};

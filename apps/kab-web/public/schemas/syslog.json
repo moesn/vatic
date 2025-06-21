@@ -25,7 +25,8 @@
       },
       {
         "title": "操作时间",
-        "field": "operTime"
+        "field": "operTime",
+        "format": "datetime"
       },
       {
         "title": "IP地址",

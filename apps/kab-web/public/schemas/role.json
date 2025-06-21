@@ -25,7 +25,8 @@
       },
       {
         "title": "创建时间",
-        "field": "createdTime"
+        "field": "createdTime",
+        "format": "datetime"
       }
     ],
     "search": [

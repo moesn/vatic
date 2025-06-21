@@ -24,15 +24,18 @@
       },
       {
         "title": "任务生成时间",
-        "field": "createTime"
+        "field": "createTime",
+        "format": "datetime"
       },
       {
         "title": "任务处理时间",
-        "field": "processTime"
+        "field": "processTime",
+        "format": "datetime"
       },
       {
         "title": "任务结束时间",
-        "field": "endTime"
+        "field": "endTime",
+        "format": "datetime"
       },
       {
         "title": "任务处理结果",

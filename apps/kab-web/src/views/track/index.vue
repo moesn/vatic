@@ -1,8 +1,12 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
 
+import { message } from 'ant-design-vue';
+import dayjs from 'dayjs';
+
 import { useVaticForm } from '#/adapter/form';
-import { getCarListApi, getTracList } from '#/views/track/data';
+import { getCarListApi } from '#/views/data';
+import { getTrackList } from '#/views/track/data';
 
 const mapContainer = ref(null);
 
@@ -14,27 +18,34 @@ const [QueryForm] = useVaticForm({
     },
   },
   handleSubmit: (values: Record<string, any>) => {
-    console.warn(values);
-    renderTrack();
+    renderTrack(values);
   },
   layout: 'horizontal',
   schema: [
     {
       component: 'ApiSelect',
-      fieldName: 'plateNo',
+      fieldName: 'busNo',
+      hideLabel: true,
       componentProps: {
         api: getCarListApi,
         class: 'w-full',
-        labelField: 'name',
+        labelField: 'plateNo',
         showSearch: true,
-        valueField: 'id',
+        valueField: 'plateNo',
+        autoSelect: 'first',
         placeholder: '请选择车牌号',
       },
     },
     {
       component: 'DatePicker',
-      fieldName: 'createTime',
+      fieldName: 'recordTime',
       hideLabel: true,
+      defaultValue: dayjs().format('YYYY-MM-DD'),
+      componentProps: {
+        allowClear: false,
+        format: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD',
+      },
     },
   ],
   showCollapseButton: false,
@@ -102,26 +113,27 @@ function loadMap() {
   loadHuaXi();
 }
 
-async function renderTrack() {
-  const data = await getTracList({
-    busNo: '贵AU4911',
-    recordTime: '2025-06-18',
-  });
-  const polyline = new BMapGL.Polyline(
-    data.map((p: any) => new BMapGL.Point(p[0], p[1])),
-    { strokeColor: '#3388ff', strokeWeight: 3 },
-  );
+async function renderTrack(values) {
+  const data = await getTrackList(values);
+  if (data && data.length > 0) {
+    const polyline = new BMapGL.Polyline(
+      data.map((p: any) => new BMapGL.Point(p[0], p[1])),
+      { strokeColor: '#3388ff', strokeWeight: 3 },
+    );
 
-  const trackAni = new BMapGLLib.TrackAnimation(map, polyline, {
-    icon: new BMapGL.Icon(
-      '/assets/image/marker/car.png',
-      new BMapGL.Size(32, 32),
-    ),
-    speed: 1000,
-    autoView: true,
-  });
+    const trackAni = new BMapGLLib.TrackAnimation(map, polyline, {
+      icon: new BMapGL.Icon(
+        '/assets/image/marker/car.png',
+        new BMapGL.Size(32, 32),
+      ),
+      speed: 1000,
+      autoView: true,
+    });
 
-  trackAni.start();
+    trackAni.start();
+  } else {
+    message.error('没有查询到轨迹数据！');
+  }
 }
 
 onMounted(() => {

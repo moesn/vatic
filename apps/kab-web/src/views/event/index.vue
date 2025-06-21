@@ -12,6 +12,7 @@ import { Button, Card, Image, message, Popover, Tooltip } from 'ant-design-vue';
 import { useVaticForm } from '#/adapter/form';
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import {
+  dispatchApi,
   getEventListApi,
   getEventStatsApi,
   getStaffListApi,
@@ -44,7 +45,7 @@ getEventStatsApi().then((res) => {
 });
 getStaffListApi().then((res) => {
   staffList.value = res.map((d: any) => {
-    return { label: d.eventType, value: d.eventType };
+    return { label: d.name, value: d.id };
   });
 });
 
@@ -317,31 +318,41 @@ watch(
 let DispatchForm: any, DispatchFormApi: any;
 
 const selectEvents = computed(() =>
-  TaskGridApi.grid
-    .getCheckboxRecords()
-    .map((d) => `【${d.eventType}】${d.location}`),
+  TaskGridApi.grid.getCheckboxRecords().map((d) => ({
+    eventType: d.eventType,
+    location: d.location,
+    latitude: d.latitude,
+    longitude: d.longitude,
+  })),
 );
 
 watch(
-  () => eventStatList.value,
+  () => staffList.value,
   async (options) => {
     if (options && options.length > 0) {
       [DispatchForm, DispatchFormApi] = useVaticForm({
-        handleSubmit: (_: Record<string, any>) => {
+        handleSubmit: (formData: Record<string, any>) => {
           message.loading({
             content: '派发中...',
             duration: 0,
             key: 'is-form-submitting',
           });
           ModalApi.lock();
-          setTimeout(() => {
+          const { taskType, assignedTo } = formData;
+          const data = {
+            taskType,
+            assignedTo,
+            riskEventsEntityList: selectEvents.value,
+          };
+          dispatchApi(data).then((_) => {
             ModalApi.close();
+            TaskGridApi.grid.commitProxy('query');
             message.success({
               content: `派发成功`,
               duration: 2,
               key: 'is-form-submitting',
             });
-          }, 2000);
+          });
         },
         schema: [
           {
@@ -373,7 +384,7 @@ watch(
               class: 'w-full',
               placeholder: '请选择处理人',
             },
-            fieldName: 'field3',
+            fieldName: 'assignedTo',
             label: '处理人',
             labelWidth: 60,
             rules: 'required',
@@ -493,7 +504,9 @@ onMounted(() => {
                   type="link"
                   @click="
                     ModalApi.setData({
-                      eventNameList: selectEvents.join('\n'),
+                      eventNameList: selectEvents
+                        .map((d) => `【${d.eventType}】${d.location}`)
+                        .join('\n'),
                     }).open()
                   "
                 >

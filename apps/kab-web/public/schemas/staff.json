@@ -48,8 +48,9 @@
         "field": "plateNo"
       },
       {
-        "title": "从业资格证到期时间",
-        "field": "certExpire"
+        "title": "从业资格证到期日期",
+        "field": "certExpire",
+        "format": "date"
       }
     ],
     "search": [
@@ -130,7 +131,7 @@
         "labelField": "plateNo"
       },
       {
-        "title": "从业资格证到期时间",
+        "title": "从业资格证到期日期",
         "field": "certExpire",
         "type": "DatePicker"
       }

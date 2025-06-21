@@ -16,6 +16,7 @@ import { getPageSchema } from '@vatic/smart';
 import { cloneDeep } from '@vatic-core/shared/utils';
 
 import { Button, message, Modal } from 'ant-design-vue';
+import dayjs from 'dayjs';
 
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import { requestClient } from '#/api/request';
@@ -29,7 +30,7 @@ const transformsAny: any = transforms;
 
 const pageInit = ref(false);
 const pageSchema = ref<any>({});
-const pageName = ref<String>('');
+const pageName = ref<string>('');
 
 getPageSchema().then(({ schema, name }) => {
   pageSchema.value = schema;
@@ -175,6 +176,22 @@ watch(
 
     const { update } = form || {};
 
+    const dateFields: any = [];
+    const datetimeFields: any = [];
+    columns.forEach((column: any) => {
+      const { format, field } = column;
+      switch (format) {
+        case 'date': {
+          dateFields.push(field);
+          break;
+        }
+        case 'datetime': {
+          datetimeFields.push(field);
+          break;
+        }
+      }
+    });
+
     parseTableColumns(columns);
 
     if (update || remove || operations) {
@@ -290,9 +307,25 @@ watch(
               ...search,
             };
             const resData = await requestClient.get(api, { params });
+
+            if (dateFields.length > 0 || datetimeFields.length > 0) {
+              resData.records.map((d: any) => {
+                try {
+                  dateFields.forEach((field: string) => {
+                    d[field] = dayjs(d[field]).format('YYYY-MM-DD');
+                  });
+                  datetimeFields.forEach((field: string) => {
+                    d[field] = dayjs(d[field]).format('YYYY-MM-DD HH:mm:ss');
+                  });
+                } catch {}
+                return d;
+              });
+            }
+
             if (transformTableData) {
               transformsAny[pageName.value]?.transformTableData(resData);
             }
+
             return resData;
           },
         },

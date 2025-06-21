@@ -49,11 +49,13 @@
       },
       {
         "title": "车辆年检时间",
-        "field": "inspectionDate"
+        "field": "inspectionDate",
+        "format": "datetime"
       },
       {
         "title": "营运证到期时间",
-        "field": "epLicenseExpire"
+        "field": "epLicenseExpire",
+        "format": "datetime"
       }
     ],
     "search": [
