@@ -1,7 +1,14 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue';
 
-import { Button, Popover, Select, SelectOption, Switch } from 'ant-design-vue';
+import {
+  Button,
+  message,
+  Popover,
+  Select,
+  SelectOption,
+  Switch,
+} from 'ant-design-vue';
 
 import {
   getDataStatsApi,
@@ -101,13 +108,24 @@ const handleChange = (devices: any) => {
   }
 };
 const storeDevice = () => {
-  localStorage.setItem(deviceStoreKey, JSON.stringify(selectedDevices.value));
-  settingVisible.value = false;
+  if (selectedDevices.value.length > 0) {
+    localStorage.setItem(deviceStoreKey, JSON.stringify(selectedDevices.value));
+    settingVisible.value = false;
+    loadVideo();
+  } else {
+    message.error('请至少选择1个监控设备！');
+  }
 };
 
 function getDeviceList() {
   getDeviceListApi().then((res: any) => {
     allDeviceList.value = res;
+    if (selectedDevices.value.length === 0) {
+      const defaultDevices = res.slice(0, 5).map((d: any) => d.videoUrl);
+      selectedDevices.value.push(...defaultDevices);
+      storeDevice();
+    }
+    setTimeout(() => loadVideo());
   });
 }
 
@@ -124,13 +142,12 @@ function loadVideo() {
   if (flvjs.isSupported()) {
     const videoElements = document.querySelectorAll('.videoElement');
     videoElements?.forEach((videoElement: any, index: number) => {
-      const video = selectedDevices.value[index];
-      const nameUrl: any = video.split('$');
+      const url = selectedDevices.value[index];
       const player = flvjs.createPlayer(
         {
           type: 'flv',
           isLive: false,
-          url: nameUrl[1],
+          url,
         },
         {
           lazyLoadMaxDuration: 10 * 60,
@@ -145,13 +162,12 @@ function loadVideo() {
   }
 }
 
-getDeviceList();
+function deviceName(videoUrl: string) {
+  return allDeviceList.value.find((d: any) => d.videoUrl === videoUrl)
+    ?.location;
+}
 
-watch(selectedDevices, (val) => {
-  if (val && val.length > 0) {
-    loadVideo();
-  }
-});
+getDeviceList();
 // endregion
 
 // region 气候
@@ -167,22 +183,6 @@ function getWeatherList() {
 
 // region 地图
 type MarkerType = 'car' | 'device';
-
-const markers: any = {
-  car: [
-    {
-      jin: 106.623,
-      wei: 26.396,
-    },
-  ],
-  device: [
-    {
-      jin: 106.523,
-      wei: 26.386,
-    },
-  ],
-};
-
 let map: any;
 
 function loadHuaXi() {
@@ -522,21 +522,22 @@ onMounted(() => {
                 <SelectOption
                   v-for="item in allDeviceList"
                   :key="item.id"
-                  :value="`${item.name}$${item.videoUrl}`"
+                  :value="item.videoUrl"
                   :disabled="
-                    selectedDevices.length >= 5 &&
-                    !selectedDevices.includes(`${item.name}$${item.videoUrl}`)
+                    (selectedDevices.length >= 5 &&
+                      !selectedDevices.includes(item.videoUrl)) ||
+                    (selectedDevices.length === 1 &&
+                      selectedDevices.includes(item.videoUrl))
                   "
                 >
-                  {{ item.name }}
+                  {{ item.location }}
                 </SelectOption>
               </Select>
               <Button @click="storeDevice()">保存</Button>
             </template>
             <img src="/assets/image/setting.png" alt="" />
-            <h2 v-if="selectedDevices.length === 0">请设置要播放的监控设备</h2>
           </Popover>
-          <h1>{{ device.split('$')[0] }}</h1>
+          <h1>{{ deviceName(device) }}</h1>
           <video class="videoElement" autoplay muted></video>
         </template>
       </div>

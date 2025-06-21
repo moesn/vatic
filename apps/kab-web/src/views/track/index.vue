@@ -113,7 +113,7 @@ function loadMap() {
   loadHuaXi();
 }
 
-async function renderTrack(values) {
+async function renderTrack(values: any) {
   const data = await getTrackList(values);
   if (data && data.length > 0) {
     const polyline = new BMapGL.Polyline(

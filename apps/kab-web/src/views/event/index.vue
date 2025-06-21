@@ -264,6 +264,7 @@ const [TaskGrid, TaskGridApi] = useVaticVxeGrid({
         query: async () => {
           const formValues = await TypeFormApi?.getValues();
           const params = {
+            status: '未派发',
             eventTypes: formValues?.eventType,
             locations: LocationGridApi?.grid
               .getCheckboxRecords()
@@ -369,6 +370,7 @@ watch(
             component: 'Switch',
             fieldName: 'taskType',
             label: '是否紧急',
+            defaultValue: '普通',
             componentProps: {
               checkedChildren: '紧急',
               unCheckedChildren: '普通',
