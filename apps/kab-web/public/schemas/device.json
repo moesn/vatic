@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/device/pageQueryList",
+    "api": "/device/pageQueryList",
     "title": "监控设备列表",
     "keyField": "id",
     "nameField": "deviceName",
@@ -59,13 +59,13 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/device/delDevice"
+    "delete": "/device/delDevice"
   },
   "form": {
     "title": "新增监控设备&修改监控设备",
-    "detail": "/kab/device/detail/$id",
-    "create": "/kab/device/addDevice",
-    "update": "/kab/device/editDevice",
+    "detail": "/device/detail/$id",
+    "create": "/device/addDevice",
+    "update": "/device/editDevice",
     "transformData": true,
     "transformBody": true,
     "items": [
@@ -84,7 +84,7 @@
         "field": "purpose",
         "required": true,
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=13",
+        "api": "/dict/dictDataQueryList?dictTypeId=13",
         "valueField": "code"
       },
       {
@@ -92,7 +92,7 @@
         "field": "location",
         "required": true,
         "type": "ApiTreeSelect",
-        "api": "/kab/region/lazy-tree",
+        "api": "/region/lazy-tree",
         "labelField": "title",
         "valueField": "title",
         "triggerField": "purpose",
@@ -104,7 +104,7 @@
         "field": "location",
         "required": true,
         "type": "ApiSelect",
-        "api": "/kab/bridge/queryList",
+        "api": "/bridge/queryList",
         "labelField": "location",
         "valueField": "location",
         "triggerField": "purpose",
@@ -115,7 +115,7 @@
         "field": "location",
         "required": true,
         "type": "ApiSelect",
-        "api": "/kab/slope/queryList",
+        "api": "/slope/queryList",
         "labelField": "location",
         "valueField": "location",
         "triggerField": "purpose",

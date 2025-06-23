@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/bridge/pageQueryList",
+    "api": "/bridge/pageQueryList",
     "title": "桥梁",
     "keyField": "id",
     "nameField": "bridgeName",
@@ -80,13 +80,13 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/bridge/delBridge"
+    "delete": "/bridge/delBridge"
   },
   "form": {
     "title": "新增桥梁&修改桥梁",
-    "detail": "/kab/bridge/detail/$id",
-    "create": "/kab/bridge/addBridge",
-    "update": "/kab/bridge/editBridge",
+    "detail": "/bridge/detail/$id",
+    "create": "/bridge/addBridge",
+    "update": "/bridge/editBridge",
     "items": [
       {
         "title": "桥梁名称",
@@ -98,7 +98,7 @@
         "field": "location",
         "required": true,
         "type": "ApiTreeSelect",
-        "api": "/kab/region/lazy-tree",
+        "api": "/region/lazy-tree",
         "labelField": "title",
         "valueField": "title",
         "afterFetch": "device"

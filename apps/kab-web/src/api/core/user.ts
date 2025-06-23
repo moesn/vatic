@@ -6,5 +6,5 @@ import { requestClient } from '#/api/request';
  * 获取用户信息
  */
 export async function getUserInfoApi() {
-  return requestClient.get<UserInfo>('/kab/auth/authenticationUserDetail');
+  return requestClient.get<UserInfo>('/auth/authenticationUserDetail');
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/monitor/operlog/list",
+    "api": "/monitor/operlog/list",
     "title": "系统日志",
     "keyField": "id",
     "nameField": "operName",

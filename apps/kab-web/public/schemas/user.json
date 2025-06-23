@@ -1,9 +1,9 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/user/pageQueryList",
-    "state": "/kab/user/setState",
-    "delete": "/kab/user/delUser",
+    "api": "/user/pageQueryList",
+    "state": "/user/setState",
+    "delete": "/user/delUser",
     "disableDelete": "account=admin",
     "disableUpdate": "account=admin",
     "title": "用户列表",
@@ -54,9 +54,9 @@
   },
   "form": {
     "title": "新增用户&修改用户",
-    "detail": "/kab/user/detail/$id",
-    "create": "/kab/user/addUser",
-    "update": "/kab/user/editUser",
+    "detail": "/user/detail/$id",
+    "create": "/user/addUser",
+    "update": "/user/editUser",
     "items": [
       {
         "title": "用户名",
@@ -77,7 +77,7 @@
         "field": "roleIds",
         "required": true,
         "type": "ApiSelect",
-        "api": "/kab/role/queryList?enable=true",
+        "api": "/role/queryList?enable=true",
         "keyField": "id",
         "props": {
           "mode": "multiple"

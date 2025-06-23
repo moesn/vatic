@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/slope/pageQueryList",
+    "api": "/slope/pageQueryList",
     "title": "边坡",
     "keyField": "id",
     "nameField": "slopeName",
@@ -83,13 +83,13 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/slope/delSlope"
+    "delete": "/slope/delSlope"
   },
   "form": {
     "title": "新增边坡&修改边坡",
-    "detail": "/kab/slope/detail/$id",
-    "create": "/kab/slope/addSlope",
-    "update": "/kab/slope/editSlope",
+    "detail": "/slope/detail/$id",
+    "create": "/slope/addSlope",
+    "update": "/slope/editSlope",
     "items": [
       {
         "title": "边坡名称",
@@ -101,7 +101,7 @@
         "field": "location",
         "required": true,
         "type": "ApiTreeSelect",
-        "api": "/kab/region/lazy-tree",
+        "api": "/region/lazy-tree",
         "labelField": "title",
         "valueField": "title",
         "afterFetch": "device"

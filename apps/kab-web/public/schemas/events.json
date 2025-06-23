@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/riskevents/pageQueryList",
+    "api": "/riskevents/pageQueryList",
     "title": "已派发风险事件列表",
     "keyField": "id",
     "nameField": "name",
@@ -58,7 +58,7 @@
         "title": "事件类型",
         "field": "eventType",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=99",
+        "api": "/dict/dictDataQueryList?dictTypeId=99",
         "valueField": "code",
         "span": 1
       },
@@ -66,7 +66,7 @@
         "title": "事件状态",
         "field": "status",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=14",
+        "api": "/dict/dictDataQueryList?dictTypeId=14",
         "valueField": "code",
         "span": 1
       }

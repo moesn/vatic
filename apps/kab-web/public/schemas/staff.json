@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/staff/pageQueryList",
+    "api": "/staff/pageQueryList",
     "title": "人员列表",
     "keyField": "id",
     "nameField": "name",
@@ -60,13 +60,13 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/staff/delStaff"
+    "delete": "/staff/delStaff"
   },
   "form": {
     "title": "新增养护人员&修改养护人员",
-    "detail": "/kab/staff/detail/$id",
-    "create": "/kab/staff/addStaff",
-    "update": "/kab/staff/editStaff",
+    "detail": "/staff/detail/$id",
+    "create": "/staff/addStaff",
+    "update": "/staff/editStaff",
     "items": [
       {
         "title": "姓名",
@@ -94,7 +94,7 @@
         "field": "type",
         "required": true,
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=11",
+        "api": "/dict/dictDataQueryList?dictTypeId=11",
         "valueField": "code"
       },
       {
@@ -106,7 +106,7 @@
         "title": "驾照类型",
         "field": "driveClass",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=12",
+        "api": "/dict/dictDataQueryList?dictTypeId=12",
         "valueField": "code"
       },
       {
@@ -121,13 +121,13 @@
         "title": "所属企业",
         "field": "companyId",
         "type": "ApiSelect",
-        "api": "/kab/company/queryList"
+        "api": "/company/queryList"
       },
       {
         "title": "责任车辆",
         "field": "carId",
         "type": "ApiSelect",
-        "api": "/kab/car/queryList",
+        "api": "/car/queryList",
         "labelField": "plateNo"
       },
       {

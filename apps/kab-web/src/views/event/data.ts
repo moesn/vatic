@@ -1,21 +1,21 @@
 import { requestClient } from '#/api/request';
 
 export const getStaffListApi = async () => {
-  return requestClient.get('/kab/staff/queryList');
+  return requestClient.get('/staff/queryList');
 };
 
 export const getEventStatsApi = async () => {
-  return requestClient.get('/kab/riskevents/eventViewStatistics');
+  return requestClient.get('/riskevents/eventViewStatistics');
 };
 
 export const getStreetTreeApi = async () => {
-  return requestClient.get('/kab/region/lazy-tree');
+  return requestClient.get('/region/lazy-tree');
 };
 
 export const getEventListApi = async (data: any) => {
-  return requestClient.post('/kab/riskevents/eventViewStatisticsList', data);
+  return requestClient.post('/riskevents/eventViewStatisticsList', data);
 };
 
 export const dispatchApi = async (data: any) => {
-  return requestClient.post('/kab/riskevents/dispatch', data);
+  return requestClient.post('/riskevents/dispatch', data);
 };

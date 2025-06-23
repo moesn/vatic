@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/region/lazy-list",
+    "api": "/region/lazy-list",
     "title": "街道管理",
     "keyField": "id",
     "nameField": "name",
@@ -24,12 +24,12 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/region/remove"
+    "delete": "/region/remove"
   },
   "form": {
     "title": "新增下级区域&修改区域",
-    "create": "/kab/region/submit",
-    "update": "/kab/region/submit",
+    "create": "/region/submit",
+    "update": "/region/submit",
     "transformData": true,
     "transformBody": true,
     "items": [
@@ -39,7 +39,7 @@
         "required": true,
         "disabled": "update",
         "type": "ApiTreeSelect",
-        "api": "/kab/region/lazy-tree",
+        "api": "/region/lazy-tree",
         "labelField": "title",
         "afterFetch": true
       },

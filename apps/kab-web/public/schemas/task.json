@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/task/pageQueryList",
+    "api": "/task/pageQueryList",
     "title": "任务处理列表",
     "keyField": "id",
     "nameField": "name",
@@ -60,7 +60,7 @@
         "title": "任务类型",
         "field": "eventType",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=15",
+        "api": "/dict/dictDataQueryList?dictTypeId=15",
         "valueField": "code",
         "span": 1
       },
@@ -68,7 +68,7 @@
         "title": "任务状态",
         "field": "status",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=14",
+        "api": "/dict/dictDataQueryList?dictTypeId=14",
         "valueField": "code",
         "span": 1
       }
@@ -83,7 +83,7 @@
       "disabled": "status!=待复核",
       "form": {
         "title": "任务复核",
-        "update": "/kab/role/editRole",
+        "update": "/role/editRole",
         "items": [
           {
             "title": "复核意见",

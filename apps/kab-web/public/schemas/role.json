@@ -1,9 +1,9 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/role/pageQueryList",
-    "state": "/kab/role/setState",
-    "delete": "/kab/role/delRole",
+    "api": "/role/pageQueryList",
+    "state": "/role/setState",
+    "delete": "/role/delRole",
     "disableDelete": "code=SUPER_ADMIN",
     "disableUpdate": "code=SUPER_ADMIN",
     "title": "角色列表",
@@ -39,9 +39,9 @@
   },
   "form": {
     "title": "新增角色&修改角色",
-    "detail": "/kab/role/detail/$id",
-    "create": "/kab/role/addRole",
-    "update": "/kab/role/editRole",
+    "detail": "/role/detail/$id",
+    "create": "/role/addRole",
+    "update": "/role/editRole",
     "items": [
       {
         "title": "角色名称",
@@ -62,7 +62,7 @@
         "title": "菜单权限",
         "field": "permissionIds",
         "type": "VaticTree",
-        "api": "/kab/resources/resourcesTree"
+        "api": "/resources/resourcesTree"
       },
       {
         "title": "备注",

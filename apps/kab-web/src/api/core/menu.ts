@@ -7,7 +7,7 @@ import { requestClient } from '#/api/request';
  */
 export async function getAllMenusApi() {
   const res = await requestClient.get<RouteRecordStringComponent[]>(
-    '/kab/auth/queryPermissionsTree',
+    '/auth/queryPermissionsTree',
   );
 
   return new Promise((resolve) => {

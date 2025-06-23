@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/company/pageQueryList",
+    "api": "/company/pageQueryList",
     "title": "企业列表",
     "keyField": "id",
     "nameField": "name",
@@ -60,13 +60,13 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/company/delCompany"
+    "delete": "/company/delCompany"
   },
   "form": {
     "title": "新增企业&修改企业",
-    "detail": "/kab/company/detail/$id",
-    "create": "/kab/company/addCompany",
-    "update": "/kab/company/editCompany",
+    "detail": "/company/detail/$id",
+    "create": "/company/addCompany",
+    "update": "/company/editCompany",
     "items": [
       {
         "title": "企业名称",
@@ -129,8 +129,8 @@
       "title": "短信",
       "form": {
         "title": "发送短信",
-        "detail": "/kab/company/detail/$id",
-        "update": "/kab/company/sendSms",
+        "detail": "/company/detail/$id",
+        "update": "/company/sendSms",
         "items": [
           {
             "title": "企业名称",

@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/@vatic/smart/schema.json",
   "table": {
-    "api": "/kab/car/pageQueryList",
+    "api": "/car/pageQueryList",
     "title": "车辆列表",
     "keyField": "id",
     "nameField": "plateNo",
@@ -65,13 +65,13 @@
         "type": "Input"
       }
     ],
-    "delete": "/kab/car/delCar"
+    "delete": "/car/delCar"
   },
   "form": {
     "title": "新增车辆&修改车辆",
-    "detail": "/kab/car/detail/$id",
-    "create": "/kab/car/addCar",
-    "update": "/kab/car/editCar",
+    "detail": "/car/detail/$id",
+    "create": "/car/addCar",
+    "update": "/car/editCar",
     "items": [
       {
         "title": "车牌号",
@@ -90,7 +90,7 @@
         "title": "养护企业",
         "field": "companyId",
         "type": "ApiSelect",
-        "api": "/kab/company/queryList"
+        "api": "/company/queryList"
       },
       {
         "title": "荷载人数",
@@ -110,7 +110,7 @@
         "title": "车辆类型",
         "field": "type",
         "type": "ApiSelect",
-        "api": "/kab/dict/dictDataQueryList?dictTypeId=10",
+        "api": "/dict/dictDataQueryList?dictTypeId=10",
         "valueField": "code"
       },
       {
