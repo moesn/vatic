@@ -139,13 +139,24 @@ function onActionClick(e: OnActionClickParams) {
 }
 
 function computeDisabled(condition: string, row: any) {
-  if (condition && condition.includes('=')) {
-    const keyVal: any = condition.split('=');
-    const rowValue = row[keyVal[0]].toString();
-    const disableValues = keyVal[1].split('|');
-    return disableValues.includes(rowValue);
+  if (condition) {
+    if (condition.includes('!=')) {
+      const keyVal: any = condition.split('!=');
+      const rowValue = row[keyVal[0]].toString();
+      const disableValues = keyVal[1].split('|');
+      return !disableValues.includes(rowValue);
+    } else if (condition.includes('=')) {
+      const keyVal: any = condition.split('=');
+      const rowValue = row[keyVal[0]].toString();
+      const disableValues = keyVal[1].split('|');
+      return disableValues.includes(rowValue);
+    }
   }
   return false;
+}
+
+function operationDisabled(row: any, condition: string) {
+  return computeDisabled(condition, row);
 }
 
 function updateDisabled(row: any) {
@@ -205,6 +216,7 @@ watch(
             ...opera,
             code: opera.form ? 'form' : opera.type,
             text: opera.title,
+            disabled: (row: any) => operationDisabled(row, opera.disabled),
           });
         });
       }
@@ -312,10 +324,11 @@ watch(
               resData.records.map((d: any) => {
                 try {
                   dateFields.forEach((field: string) => {
-                    d[field] = dayjs(d[field]).format('YYYY-MM-DD');
+                    d[field] = d[field] && dayjs(d[field]).format('YYYY-MM-DD');
                   });
                   datetimeFields.forEach((field: string) => {
-                    d[field] = dayjs(d[field]).format('YYYY-MM-DD HH:mm:ss');
+                    d[field] =
+                      d[field] && dayjs(d[field]).format('YYYY-MM-DD HH:mm:ss');
                   });
                 } catch {}
                 return d;

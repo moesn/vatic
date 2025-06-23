@@ -48,6 +48,7 @@
     "vue-tippy": "catalog:"
   },
   "devDependencies": {
-    "@types/qrcode": "catalog:"
+    "@types/qrcode": "catalog:",
+    "ant-design-vue": "catalog:"
   }
 }

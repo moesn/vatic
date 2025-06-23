@@ -7,6 +7,3 @@
     <div class="b-r"></div>
   </div>
 </template>
-<style lang="scss" scoped>
-@use './style';
-</style>

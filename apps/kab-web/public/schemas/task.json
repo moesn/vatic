@@ -16,11 +16,11 @@
       },
       {
         "title": "任务类型",
-        "field": "taskTypeName"
+        "field": "taskType"
       },
       {
         "title": "事件类型",
-        "field": "eventTypeName"
+        "field": "eventType"
       },
       {
         "title": "任务生成时间",
@@ -47,11 +47,7 @@
       },
       {
         "title": "任务状态",
-        "field": "statusName"
-      },
-      {
-        "title": "任务详情",
-        "field": "detail"
+        "field": "status"
       }
     ],
     "search": [
@@ -84,18 +80,30 @@
     },
     {
       "title": "复核",
+      "disabled": "status!=待复核",
       "form": {
         "title": "任务复核",
         "update": "/kab/role/editRole",
         "items": [
           {
             "title": "复核意见",
-            "field": "todo",
-            "required": true
+            "field": "status",
+            "required": true,
+            "type": "RadioGroup",
+            "options": [
+              {
+                "label": "通过",
+                "value": "已完成"
+              },
+              {
+                "label": "驳回",
+                "value": "处理中"
+              }
+            ]
           },
           {
             "title": "复核意见说明",
-            "field": "todo",
+            "field": "result",
             "type": "Textarea"
           }
         ]

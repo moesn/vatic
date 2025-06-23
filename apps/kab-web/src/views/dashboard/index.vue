@@ -35,8 +35,6 @@ timer = setInterval(() => {
 
 const mapContainer = ref(null);
 const videoWidth = ref(0);
-const showCar = ref<boolean>(true);
-const showDevice = ref<boolean>(true);
 
 // region 统计概览
 const statsData = ref<any>({});
@@ -182,7 +180,27 @@ function getWeatherList() {
 // endregion
 
 // region 地图
-type MarkerType = 'car' | 'device';
+const deviceTypes = [
+  {
+    name: '桥梁监控',
+    online: 'onlineDeviceCount',
+    all: 'deviceCount',
+    show: true,
+  },
+  {
+    name: '路面监控',
+    online: 'onlineDeviceCount',
+    all: 'deviceCount',
+    show: true,
+  },
+  {
+    name: '边坡监控',
+    online: 'onlineDeviceCount',
+    all: 'deviceCount',
+    show: true,
+  },
+];
+
 let map: any;
 
 function loadHuaXi() {
@@ -216,8 +234,7 @@ function loadHuaXi() {
         map.enableDragging();
         map.enableScrollWheelZoom();
 
-        renderMarkers(true, 'car');
-        renderMarkers(true, 'device');
+        deviceTypes.forEach((item: any) => createMarkersByType(item.name));
       }
     }
   });
@@ -241,19 +258,21 @@ function loadMap() {
   setTimeout(() => loadHuaXi(), 100);
 }
 
-function createMarkersByType(type: MarkerType) {
-  markers[type]?.forEach((item: any) => {
-    const icon = new BMapGL.Icon(
-      `/assets/image/marker/${type}.png`,
-      new BMapGL.Size(50, 50),
-    );
-    const pt = new BMapGL.Point(item.jin, item.wei);
-    const marker = new BMapGL.Marker(pt, { icon, type });
-    map.addOverlay(marker);
-  });
+function createMarkersByType(type: string) {
+  allDeviceList.value
+    ?.filter((d: any) => d.purpose === type)
+    .forEach((item: any) => {
+      const icon = new BMapGL.Icon(
+        `/assets/image/marker/${type}${item.status || 0}.png`,
+        new BMapGL.Size(50, 50),
+      );
+      const pt = new BMapGL.Point(item.longitude, item.latitude);
+      const marker = new BMapGL.Marker(pt, { icon, type });
+      map.addOverlay(marker);
+    });
 }
 
-function deleteMarkersByType(type: MarkerType) {
+function deleteMarkersByType(type: string) {
   map.getOverlays().forEach((overlay: any) => {
     if (overlay._config?.type === type) {
       map.removeOverlay(overlay);
@@ -261,7 +280,7 @@ function deleteMarkersByType(type: MarkerType) {
   });
 }
 
-function renderMarkers(show: boolean, type: MarkerType) {
+function renderMarkers(show: boolean, type: string) {
   if (show) {
     createMarkersByType(type);
   } else {
@@ -269,13 +288,6 @@ function renderMarkers(show: boolean, type: MarkerType) {
   }
 }
 
-watch(showCar, (val) => {
-  renderMarkers(val, 'car');
-});
-
-watch(showDevice, (val) => {
-  renderMarkers(val, 'device');
-});
 // endregion
 
 // region 养护统计
@@ -437,21 +449,20 @@ onMounted(() => {
           </div>
           <div class="lt-dash">
             <div>
+              <h3>车辆({{ statsData.carCount }})</h3>
               <h3>人员({{ statsData.staffCount }})</h3>
               <h3>桥梁({{ statsData.bridgeCount }})</h3>
               <h3>边坡({{ statsData.slopeCount }})</h3>
             </div>
-            <div>
-              <h3>养护车辆</h3>
-              <h3>{{ statsData.onlineCarCount }}/{{ statsData.carCount }}</h3>
-              <Switch v-model:checked="showCar" />
-            </div>
-            <div>
-              <h3>视频监控</h3>
+            <div v-for="item in deviceTypes" :key="item.name">
+              <h3>{{ item.name }}</h3>
               <h3>
-                {{ statsData.onlineDeviceCount }}/{{ statsData.deviceCount }}
+                {{ statsData[item.online] || 0 }}/{{ statsData[item.all] || 0 }}
               </h3>
-              <Switch v-model:checked="showDevice" />
+              <Switch
+                v-model:checked="item.show"
+                @click="() => renderMarkers(item.show, item.name)"
+              />
             </div>
           </div>
         </div>
