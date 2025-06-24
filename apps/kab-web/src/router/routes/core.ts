@@ -34,7 +34,7 @@ const coreRoutes: RouteRecordRaw[] = [
     },
     name: 'Root',
     path: '/',
-    redirect: '/auth',
+    redirect: '/login',
     children: [],
   },
   {
@@ -44,7 +44,7 @@ const coreRoutes: RouteRecordRaw[] = [
       title: 'Authentication',
     },
     name: 'Authentication',
-    path: '/auth',
+    path: '/',
     redirect: LOGIN_PATH,
     children: [
       {

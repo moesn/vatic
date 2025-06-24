@@ -24,7 +24,7 @@ export const defaultResponseInterceptor = ({
 
       if (responseData[codeField] === 401) {
         localStorage.clear();
-        location.href = '/auth';
+        location.href = '/login';
       }
 
       if (config.responseReturn === 'raw') {
