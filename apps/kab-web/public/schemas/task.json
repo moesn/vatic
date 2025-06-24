@@ -76,20 +76,44 @@
   },
   "operations": [
     {
-      "title": "详情"
+      "title": "详情",
+      "table": {
+        "api": "/task/detail/$id",
+        "title": "详情列表",
+        "width": 960,
+        "dataField": "riskEvents",
+        "cellHeight": "80",
+        "columns": [
+          {
+            "type": "seq",
+            "width": 50
+          },
+          {
+            "title": "抓拍时间",
+            "field": "captureTime",
+            "format": "datetime"
+          },
+          {
+            "title": "抓拍图片",
+            "field": "imageUrl",
+            "type": "Image"
+          }
+        ]
+      }
     },
     {
       "title": "复核",
       "disabled": "status!=待复核",
       "form": {
         "title": "任务复核",
-        "update": "/role/editRole",
+        "update": "/task/review",
         "items": [
           {
             "title": "复核意见",
             "field": "status",
             "required": true,
             "type": "RadioGroup",
+            "clearValue": true,
             "options": [
               {
                 "label": "通过",

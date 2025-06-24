@@ -259,12 +259,16 @@ function loadMap() {
 }
 
 function createMarkersByType(type: string) {
+  const bodyWidth = document.body.offsetWidth;
+  const width = Math.min(bodyWidth * 0.03, 90);
+  const height = Math.min(bodyWidth * 0.04, 120);
+
   allDeviceList.value
     ?.filter((d: any) => d.purpose === type)
     .forEach((item: any) => {
       const icon = new BMapGL.Icon(
         `/assets/image/marker/${type}${item.status || 0}.png`,
-        new BMapGL.Size(50, 50),
+        new BMapGL.Size(width, height),
       );
       const pt = new BMapGL.Point(item.longitude, item.latitude);
       const marker = new BMapGL.Marker(pt, { icon, type });
@@ -457,7 +461,9 @@ onMounted(() => {
             <div v-for="item in deviceTypes" :key="item.name">
               <h3>{{ item.name }}</h3>
               <h3>
-                {{ statsData[item.online] || 0 }}/{{ statsData[item.all] || 0 }}
+                {{ statsData[item.online]?.[item.name] || 0 }}/{{
+                  statsData[item.all]?.[item.name] || 0
+                }}
               </h3>
               <Switch
                 v-model:checked="item.show"

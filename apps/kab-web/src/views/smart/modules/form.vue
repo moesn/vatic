@@ -20,24 +20,24 @@ const drawerTitle = ref('');
 
 const formData = ref();
 
-let Form: any, formApi: any;
+let Form: any, FormApi: any;
 
-const [Drawer, drawerApi] = useVaticDrawer({
+const [Drawer, DrawerApi] = useVaticDrawer({
   async onConfirm() {
-    const { valid } = await formApi.validate();
+    const { valid } = await FormApi.validate();
     if (!valid) return;
-    const body = await formApi.getValues();
+    const body = await FormApi.getValues();
 
     message.loading({
       content: '保存中...',
       duration: 0,
       key: 'is-form-submitting',
     });
-    drawerApi.lock();
+    DrawerApi.lock();
 
     const { create, update, keyField, transformBody, pageName } =
-      drawerApi.getSchema();
-    const rawData = drawerApi.getData();
+      DrawerApi.getSchema();
+    const rawData = DrawerApi.getData();
 
     const keyValue = rawData[keyField];
     body[keyField] = keyValue;
@@ -52,7 +52,7 @@ const [Drawer, drawerApi] = useVaticDrawer({
     )
       .then(() => {
         emits('success');
-        drawerApi.close();
+        DrawerApi.close();
         message.success({
           content: `保存成功`,
           duration: 2,
@@ -60,7 +60,7 @@ const [Drawer, drawerApi] = useVaticDrawer({
         });
       })
       .catch(() => {
-        drawerApi.unlock();
+        DrawerApi.unlock();
       });
   },
   onOpenChange(isOpen) {
@@ -72,16 +72,16 @@ const [Drawer, drawerApi] = useVaticDrawer({
         detail,
         transformData,
         pageName,
-      } = drawerApi.getSchema();
+      } = DrawerApi.getSchema();
       const titles = title.split('&');
 
-      [Form, formApi] = useVaticForm({
+      [Form, FormApi] = useVaticForm({
         schema,
         showDefaultActions: false,
       });
 
-      const data = drawerApi.getData();
-      formApi.resetForm();
+      const data = DrawerApi.getData();
+      FormApi.resetForm();
 
       if (data[keyField]) {
         drawerTitle.value = titles[1] || titles[0];
@@ -92,19 +92,19 @@ const [Drawer, drawerApi] = useVaticDrawer({
               transformsAny[pageName]?.transformData(res);
             }
             formData.value = res;
-            formApi.setValues(res);
+            FormApi.setValues(res);
           });
         } else {
           if (transformData) {
             transformsAny[pageName]?.transformData(data);
           }
           formData.value = data;
-          formApi.setValues(data);
+          FormApi.setValues(data);
         }
       } else {
         drawerTitle.value = titles[0];
         formData.value = data;
-        formApi.setValues(data);
+        FormApi.setValues(data);
       }
       drawerInit.value = true;
     }

@@ -299,6 +299,7 @@ export type OnActionClickParams<T = Recordable<any>> = {
   code: string;
   form: T;
   row: T;
+  table: T;
 };
 export type OnActionClickFn<T = Recordable<any>> = (
   params: OnActionClickParams<T>,

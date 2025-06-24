@@ -3,7 +3,7 @@ import type { Recordable } from '@vatic-core/typings';
 
 import type {
   OnActionClickParams,
-  VxeGridProps,
+  VaticGridProps,
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
@@ -23,11 +23,13 @@ import { requestClient } from '#/api/request';
 
 import { parseApi, parseFormSchema, parseTableColumns } from './helper';
 import Form from './modules/form.vue';
+import Table from './modules/table.vue';
 import TimeLine from './modules/timeline.vue';
 import * as transforms from './transforms';
 
 const transformsAny: any = transforms;
 
+const drawerWidth = ref('520px');
 const pageInit = ref(false);
 const pageSchema = ref<any>({});
 const pageName = ref<string>('');
@@ -37,11 +39,19 @@ getPageSchema().then(({ schema, name }) => {
   pageName.value = name;
 });
 
-let Grid: any, gridApi: any;
+let Grid: any, GridApi: any;
 
-const [FormDrawer, formDrawerApi] = useVaticDrawer({
+const [FormDrawer, FormDrawerApi] = useVaticDrawer({
   connectedComponent: Form,
   destroyOnClose: true,
+  closeOnClickModal: false,
+  closeOnPressEscape: false,
+});
+
+const [TableDrawer, TableDrawerApi] = useVaticDrawer({
+  connectedComponent: Table,
+  destroyOnClose: true,
+  footer: false,
 });
 
 async function buildFormSchema(formSchema: any, row: any) {
@@ -61,10 +71,25 @@ async function buildFormSchema(formSchema: any, row: any) {
   return { ...formSchema, keyField, pageName: pageName.value };
 }
 
+async function openTable(row: any, tableSchema: any) {
+  TableDrawerApi.setData(row, tableSchema).open();
+}
+
 async function onEdit(row: any, form: any) {
-  formDrawerApi
-    .setData(row, await buildFormSchema(cloneDeep(form), row))
-    .open();
+  const { items } = form;
+  const data = { ...row };
+
+  items.forEach((item: any) => {
+    const { field, clearValue } = item;
+    if (clearValue) {
+      data[field] = null;
+    }
+  });
+
+  FormDrawerApi.setData(
+    data,
+    await buildFormSchema(cloneDeep(form), data),
+  ).open();
 }
 
 async function onCreate() {
@@ -118,6 +143,8 @@ function onDelete(row: any) {
 }
 
 function onActionClick(e: OnActionClickParams) {
+  drawerWidth.value = `${e.form?.width || e.table?.width || 520}px`;
+
   switch (e.code) {
     case 'delete': {
       onDelete(e.row);
@@ -125,6 +152,10 @@ function onActionClick(e: OnActionClickParams) {
     }
     case 'form': {
       onEdit(e.row, e.form);
+      break;
+    }
+    case 'table': {
+      openTable(e.row, e.table);
       break;
     }
     case 'Timeline': {
@@ -212,9 +243,15 @@ watch(
       if (operations) {
         operations.forEach((opera: any) => {
           width += (opera.title.length + 1) * 14;
+          let code = opera.type;
+          if (opera.form) {
+            code = 'form';
+          } else if (opera.table) {
+            code = 'table';
+          }
           options.push({
             ...opera,
-            code: opera.form ? 'form' : opera.type,
+            code,
             text: opera.title,
             disabled: (row: any) => operationDisabled(row, opera.disabled),
           });
@@ -346,6 +383,8 @@ watch(
       },
       rowConfig: {
         keyField,
+        isCurrent: true,
+        isHover: true,
       },
       sortConfig: {
         defaultSort: { field: 'deviceName', order: 'desc' },
@@ -362,7 +401,7 @@ watch(
       treeConfig: {},
     };
 
-    const options: VxeGridProps = { gridOptions };
+    const options: VaticGridProps = { gridOptions };
 
     if (searchSchema) {
       await parseFormSchema(searchSchema);
@@ -376,7 +415,7 @@ watch(
       };
     }
 
-    [Grid, gridApi] = useVaticVxeGrid(options);
+    [Grid, GridApi] = useVaticVxeGrid(options);
 
     pageInit.value = true;
   },
@@ -387,22 +426,26 @@ const isTreeGrid = () => {
 };
 
 const expandAll = () => {
-  gridApi.grid?.setAllTreeExpand(true);
+  GridApi.grid?.setAllTreeExpand(true);
 };
 
 const collapseAll = () => {
-  gridApi.grid?.setAllTreeExpand(false);
+  GridApi.grid?.setAllTreeExpand(false);
 };
 
 async function refreshGrid() {
-  await gridApi.query();
+  await GridApi.query();
   expandAll();
 }
 </script>
 
 <template>
   <Page v-if="pageInit" auto-content-height>
+    <div
+      class="w-[1000px] w-[1080px] w-[1100px] w-[1200px] w-[1280px] w-[400px] w-[500px] w-[520px] w-[600px] w-[640px] w-[700px] w-[720px] w-[800px] w-[900px] w-[960px]"
+    ></div>
     <FormDrawer @success="refreshGrid" />
+    <TableDrawer :class="`w-[${drawerWidth}]`" />
     <Grid
       :table-title="pageSchema.table.title"
       :table-title-help="pageSchema.table.titleHelp"
