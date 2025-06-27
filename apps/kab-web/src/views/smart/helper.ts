@@ -133,7 +133,8 @@ export const parseFormSchema = async (
 
               // eslint-disable-next-line unicorn/no-useless-spread
               const sum = [...id.slice(0, 17)].reduce(
-                (acc, digit, i) => acc + Number.parseInt(digit) * weights[i],
+                (acc, digit, i) =>
+                  acc + Number.parseInt(digit) * (weights[i] || 0),
                 0,
               );
               return id[17]?.toUpperCase() === checkCodes[sum % 11];
