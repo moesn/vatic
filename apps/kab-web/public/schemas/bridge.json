@@ -94,7 +94,7 @@
         "required": true
       },
       {
-        "title": "部署位置",
+        "title": "位置",
         "field": "location",
         "required": true,
         "type": "ApiTreeSelect",

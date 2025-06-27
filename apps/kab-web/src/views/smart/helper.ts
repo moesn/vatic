@@ -64,8 +64,10 @@ export const parseTableColumns = (columns: any[]) => {
 export const parseFormSchema = async (
   formSchema: any[] | VaticFormSchema[],
   pageName: string = '',
+  isUpdate: boolean = false,
 ) => {
   const labelWidth = calcLabelWidth(formSchema);
+  const formCache: any = {};
 
   for (const formItem of formSchema) {
     const {
@@ -162,12 +164,16 @@ export const parseFormSchema = async (
     }
 
     if (triggerField && triggerValue) {
+      formCache[triggerField] = undefined;
       formItem.dependencies = {
         if: (formData: any) => {
           return triggerValue.split('|').includes(formData[triggerField]);
         },
         trigger: (formData: any) => {
-          formData[field] = null;
+          if (!(isUpdate && formCache[triggerField] === undefined)) {
+            formData[field] = null;
+          }
+          formCache[triggerField] = formData[triggerField];
         },
         triggerFields: [triggerField],
       };
@@ -179,7 +185,6 @@ export const parseFormSchema = async (
           {
             api: () => requestClient.get(api),
             showSearch: true,
-            autoSelect: props?.mode === 'multiple' ? false : 'first',
             labelField: labelField || 'name',
             valueField: valueField || 'id',
           } as unknown as ApiSelectProps,

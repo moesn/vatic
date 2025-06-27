@@ -28,16 +28,16 @@
         "field": "idNo"
       },
       {
+        "title": "联系电话",
+        "field": "phone"
+      },
+      {
         "title": "驾照类型",
         "field": "driveClass"
       },
       {
         "title": "从业资格证号",
         "field": "certNo"
-      },
-      {
-        "title": "联系电话",
-        "field": "phone"
       },
       {
         "title": "所属企业",
@@ -103,6 +103,12 @@
         "required": true
       },
       {
+        "title": "联系电话",
+        "field": "phone",
+        "rules": "phone",
+        "required": true
+      },
+      {
         "title": "驾照类型",
         "field": "driveClass",
         "type": "ApiSelect",
@@ -112,10 +118,6 @@
       {
         "title": "从业资格证号",
         "field": "certNo"
-      },
-      {
-        "title": "联系电话",
-        "field": "phone"
       },
       {
         "title": "所属企业",

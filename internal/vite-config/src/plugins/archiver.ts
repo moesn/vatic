@@ -15,7 +15,7 @@ export const viteArchiverPlugin = (
     apply: 'build',
     closeBundle: {
       handler() {
-        const { name = 'dist', outputDir = '.' } = options;
+        const { name = 'web', outputDir = '.' } = options;
 
         setTimeout(async () => {
           const folderToZip = 'dist';

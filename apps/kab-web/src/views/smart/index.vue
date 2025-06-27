@@ -67,7 +67,7 @@ async function buildFormSchema(formSchema: any, row: any) {
     return item;
   });
 
-  await parseFormSchema(formSchema.items, pageName.value);
+  await parseFormSchema(formSchema.items, pageName.value, !!row[keyField]);
   return { ...formSchema, keyField, pageName: pageName.value };
 }
 

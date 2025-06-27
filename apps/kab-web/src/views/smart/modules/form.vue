@@ -61,6 +61,7 @@ const [Drawer, DrawerApi] = useVaticDrawer({
       })
       .catch(() => {
         DrawerApi.unlock();
+        message.destroy('is-form-submitting');
       });
   },
   onOpenChange(isOpen) {
