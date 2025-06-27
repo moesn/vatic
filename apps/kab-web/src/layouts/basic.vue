@@ -51,7 +51,7 @@ const menus = computed(() => [
 ]);
 
 const avatar = computed(() => {
-  return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
+  return userStore.userInfo?.avatarUrl ?? preferences.app.defaultAvatar;
 });
 
 async function handleLogout() {
@@ -73,7 +73,7 @@ watch(
   async (enable) => {
     if (enable) {
       await updateWatermark({
-        content: `${userStore.userInfo?.username} - ${userStore.userInfo?.realName}`,
+        content: `${userStore.userInfo?.account} - ${userStore.userInfo?.username}`,
       });
     } else {
       destroyWatermark();
@@ -100,9 +100,9 @@ onBeforeMount(() => {
       <UserDropdown
         :avatar
         :menus
-        :text="userStore.userInfo?.realName"
-        description="ann.vatic@gmail.com"
-        tag-text="Pro"
+        :text="userStore.userInfo?.username"
+        :description="userStore.userInfo?.phone"
+        :tag-text="userStore.userInfo?.account"
         trigger="both"
         @logout="handleLogout"
       />

@@ -9,8 +9,7 @@ const defaultPreferences: Preferences = {
     colorWeakMode: false,
     compact: false,
     contentCompact: 'wide',
-    defaultAvatar:
-      'https://unpkg.com/@vaticjs/static-source@0.1.7/source/avatar-v1.webp',
+    defaultAvatar: '/avatar.png',
     defaultHomePath: '/dashboard',
     dynamicTitle: true,
     enableCheckUpdates: true,
