@@ -19,3 +19,7 @@ export const getEventListApi = async (data: any) => {
 export const dispatchApi = async (data: any) => {
   return requestClient.post('/riskevents/dispatch', data);
 };
+
+export const disposeApi = async (data: any) => {
+  return requestClient.post('/riskevents/dispose', data);
+};

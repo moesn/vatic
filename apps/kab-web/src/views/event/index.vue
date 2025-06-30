@@ -13,6 +13,7 @@ import { useVaticForm } from '#/adapter/form';
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import {
   dispatchApi,
+  disposeApi,
   getEventListApi,
   getEventStatsApi,
   getStaffListApi,
@@ -241,14 +242,14 @@ const [TaskGrid, TaskGridApi] = useVaticVxeGrid({
       {
         field: 'imageUrl',
         slots: { default: 'image-url' },
-        title: '图片',
+        title: '事件列表',
         width: 80,
       },
       {
         align: 'left',
         field: 'name',
         slots: { default: 'risk-info' },
-        title: '详情',
+        title: '',
       },
     ],
     height: 'auto',
@@ -317,6 +318,7 @@ watch(
 );
 
 let DispatchForm: any, DispatchFormApi: any;
+let DisposeForm: any, DisposeFormApi: any;
 
 const selectEvents = computed(() =>
   TaskGridApi.grid.getCheckboxRecords().map((d) => ({
@@ -338,7 +340,7 @@ watch(
             duration: 0,
             key: 'is-form-submitting',
           });
-          ModalApi.lock();
+          DispatchModalApi.lock();
           const { taskType, assignedTo } = formData;
           const data = {
             taskType,
@@ -346,7 +348,7 @@ watch(
             riskEventsEntityList: selectEvents.value,
           };
           dispatchApi(data).then((_) => {
-            ModalApi.close();
+            DispatchModalApi.close();
             TaskGridApi.grid.commitProxy('query');
             message.success({
               content: `派发成功`,
@@ -394,6 +396,99 @@ watch(
         ],
         showDefaultActions: false,
       });
+
+      [DisposeForm, DisposeFormApi] = useVaticForm({
+        handleSubmit: (formData: Record<string, any>) => {
+          message.loading({
+            content: '保存中...',
+            duration: 0,
+            key: 'is-form-submitting',
+          });
+          DisposeModalApi.lock();
+          const { disposeMethod, pauseTo, remark } = formData;
+          const data = {
+            status: '未派发',
+            remark: '',
+            pauseTo: Date.now() - 10 * 60 * 1000,
+            riskEventsEntityList: selectEvents.value,
+          };
+
+          if (disposeMethod === '误报') {
+            data.status = '已完成';
+            data.remark = remark || '误报';
+          } else {
+            data.pauseTo = Date.now() + pauseTo * 60 * 1000;
+          }
+
+          disposeApi(data).then((_) => {
+            DisposeModalApi.close();
+            TaskGridApi.grid.commitProxy('query');
+            message.success({
+              content: `保存成功`,
+              duration: 2,
+              key: 'is-form-submitting',
+            });
+          });
+        },
+        schema: [
+          {
+            component: 'Textarea',
+            fieldName: 'eventNameList',
+            componentProps: {
+              rows: 10,
+            },
+            label: '事件列表',
+            labelWidth: 70,
+            disabled: true,
+          },
+          {
+            component: 'RadioGroup',
+            componentProps: {
+              name: 'disposeMethod',
+              options: [
+                { label: '误报', value: '误报' },
+                { label: '暂停', value: '暂停' },
+              ],
+            },
+            fieldName: 'disposeMethod',
+            label: '处置方式',
+            labelWidth: 70,
+            rules: 'required',
+          },
+          {
+            component: 'Input',
+            fieldName: 'remark',
+            label: '误报说明',
+            labelWidth: 70,
+            dependencies: {
+              if: (formData: any) => {
+                return formData.disposeMethod === '误报';
+              },
+              triggerFields: ['disposeMethod'],
+            },
+          },
+          {
+            component: 'InputNumber',
+            fieldName: 'pauseTo',
+            label: '暂停时长',
+            labelWidth: 70,
+            rules: 'required',
+            componentProps: {
+              class: 'w-full',
+              min: 1,
+              step: 1,
+              addonAfter: '分钟',
+            },
+            dependencies: {
+              if: (formData: any) => {
+                return formData.disposeMethod === '暂停';
+              },
+              triggerFields: ['disposeMethod'],
+            },
+          },
+        ],
+        showDefaultActions: false,
+      });
     }
   },
 );
@@ -406,17 +501,17 @@ const collapseAll = () => {
   LocationGridApi.grid?.setAllTreeExpand(false);
 };
 
-const [Modal, ModalApi] = useVaticModal({
+const [DispatchModal, DispatchModalApi] = useVaticModal({
   fullscreenButton: false,
   onCancel() {
-    ModalApi.close();
+    DispatchModalApi.close();
   },
   onConfirm: async () => {
     await DispatchFormApi.validateAndSubmitForm();
   },
   onOpenChange(isOpen: boolean) {
     if (isOpen) {
-      const values = ModalApi.getData<Record<string, any>>();
+      const values = DispatchModalApi.getData<Record<string, any>>();
       if (values) {
         DispatchFormApi.setValues(values);
       }
@@ -425,7 +520,26 @@ const [Modal, ModalApi] = useVaticModal({
   title: `派发`,
 });
 
-function appendToDisposeList(row: any = '', toggle: boolean = false) {
+const [DisposeModal, DisposeModalApi] = useVaticModal({
+  fullscreenButton: false,
+  onCancel() {
+    DisposeModalApi.close();
+  },
+  onConfirm: async () => {
+    await DisposeFormApi.validateAndSubmitForm();
+  },
+  onOpenChange(isOpen: boolean) {
+    if (isOpen) {
+      const values = DisposeModalApi.getData<Record<string, any>>();
+      if (values) {
+        DisposeFormApi.setValues(values);
+      }
+    }
+  },
+  title: `处置`,
+});
+
+function appendToDoList(row: any = '', toggle: boolean = false) {
   if (typeof TaskGridApi.grid.getCheckboxRecords === 'function') {
     const checkedRecords = TaskGridApi.grid.getCheckboxRecords();
 
@@ -504,15 +618,30 @@ onMounted(() => {
                 <Button
                   size="small"
                   type="link"
+                  :disabled="appendToDoList() === 0"
                   @click="
-                    ModalApi.setData({
+                    DisposeModalApi.setData({
                       eventNameList: selectEvents
                         .map((d) => `【${d.eventType}】${d.location}`)
                         .join('\n'),
                     }).open()
                   "
                 >
-                  派发（{{ appendToDisposeList() }}）
+                  处置（{{ appendToDoList() }}）
+                </Button>
+                <Button
+                  size="small"
+                  type="link"
+                  :disabled="appendToDoList() === 0"
+                  @click="
+                    DispatchModalApi.setData({
+                      eventNameList: selectEvents
+                        .map((d) => `【${d.eventType}】${d.location}`)
+                        .join('\n'),
+                    }).open()
+                  "
+                >
+                  派发（{{ appendToDoList() }}）
                 </Button>
               </template>
               <template #image-url="{ row }">
@@ -601,15 +730,15 @@ onMounted(() => {
                   </template>
                   <Tooltip
                     :title="
-                      appendToDisposeList(row)
+                      appendToDoList(row)
                         ? '点击【移出】待派发列表'
                         : '点击【加入】待派发列表'
                     "
-                    :color="appendToDisposeList(row) ? 'red' : 'blue'"
+                    :color="appendToDoList(row) ? 'red' : 'blue'"
                   >
                     <a
                       style="color: #006be6"
-                      @click="appendToDisposeList(row, true)"
+                      @click="appendToDoList(row, true)"
                     >
                       {{ row.eventType }}
                     </a>
@@ -623,9 +752,12 @@ onMounted(() => {
         </div>
       </ColPage>
     </div>
-    <Modal>
+    <DisposeModal>
+      <DisposeForm />
+    </DisposeModal>
+    <DispatchModal>
       <DispatchForm />
-    </Modal>
+    </DispatchModal>
   </div>
 </template>
 <style lang="scss" scoped>
