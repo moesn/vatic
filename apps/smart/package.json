@@ -1,17 +1,16 @@
 {
-  "name": "@vatic/smart",
+  "name": "vatic",
   "version": "1.0.0",
   "homepage": "https://github.com/moesn/vatic",
   "bugs": "https://github.com/moesn/vatic/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/moesn/vatic.git",
-    "directory": "apps/smart"
+    "url": "git+https://github.com/moesn/vatic.git"
   },
   "license": "MIT",
   "type": "module",
   "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
@@ -22,8 +21,9 @@
   },
   "exports": {
     ".": {
-      "types": "./src/types/index.d.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
     }
   },
   "devDependencies": {

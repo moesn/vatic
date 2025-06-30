@@ -11,12 +11,12 @@ import { ref, watch } from 'vue';
 
 import { Page, useVaticDrawer } from '@vatic/common-ui';
 import { Plus } from '@vatic/icons';
-import { getPageSchema } from '@vatic/smart';
 
 import { cloneDeep } from '@vatic-core/shared/utils';
 
 import { Button, message, Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
+import { getPageSchema } from 'vatic';
 
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import { requestClient } from '#/api/request';

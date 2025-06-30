@@ -90,6 +90,7 @@
     "turbo": "catalog:",
     "typescript": "catalog:",
     "unbuild": "catalog:",
+    "vatic": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:",
     "vue": "catalog:",

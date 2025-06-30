@@ -10,12 +10,12 @@ const config = {
     {
       file: 'dist/index.cjs.js',
       format: 'cjs',
-      sourcemap: true,
+      sourcemap: false,
     },
     {
-      file: 'dist/index.esm.js',
+      file: 'dist/index.mjs',
       format: 'esm',
-      sourcemap: true,
+      sourcemap: false,
     },
   ],
   plugins: [
@@ -31,7 +31,7 @@ const config = {
 };
 
 const dtsConfig = {
-  input: 'src/types/index.d.ts',
+  input: 'src/types.ts',
   output: [{ file: 'dist/index.d.ts', format: 'es' }],
   plugins: [dts()],
 };

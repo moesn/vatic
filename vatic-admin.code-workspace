@@ -9,7 +9,7 @@
       "path": "apps/kab-web",
     },
     {
-      "name": "@vatic/smart",
+      "name": "vatic",
       "path": "apps/smart",
     },
     {

@@ -49,7 +49,7 @@
     "@vatic/styles": "workspace:*",
     "@vatic/types": "workspace:*",
     "@vatic/utils": "workspace:*",
-    "@vatic/smart": "workspace:*",
+    "vatic": "catalog:",
     "@vueuse/core": "catalog:",
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "$schema": "../../node_modules/vatic/schema.json",
   "table": {
     "api": "/region/lazy-list",
     "title": "街道管理",

@@ -432,6 +432,9 @@ catalogs:
     unbuild:
       specifier: ^3.5.0
       version: 3.5.0
+    vatic:
+      specifier: ^1.0.0
+      version: 1.0.0
     vee-validate:
       specifier: ^4.15.0
       version: 4.15.0
@@ -589,6 +592,9 @@ importers:
       unbuild:
         specifier: 'catalog:'
         version: 3.5.0(sass@1.88.0)(typescript@5.8.3)(vue-tsc@2.2.10(typescript@5.8.3))(vue@3.5.13(typescript@5.8.3))
+      vatic:
+        specifier: 'catalog:'
+        version: 1.0.0
       vite:
         specifier: 'catalog:'
         version: 6.3.5(@types/node@22.15.18)(jiti@2.4.2)(sass@1.88.0)(terser@5.39.1)(yaml@2.7.1)
@@ -671,9 +677,6 @@ importers:
       '@vatic/request':
         specifier: workspace:*
         version: link:../../packages/effects/request
-      '@vatic/smart':
-        specifier: workspace:*
-        version: link:../smart
       '@vatic/stores':
         specifier: workspace:*
         version: link:../../packages/stores
@@ -698,6 +701,9 @@ importers:
       pinia:
         specifier: ^3.0.2
         version: 3.0.2(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
+      vatic:
+        specifier: 'catalog:'
+        version: 1.0.0
       vue:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.8.3)
@@ -10081,6 +10087,9 @@ packages:
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
+
+  vatic@1.0.0:
+    resolution: {integrity: sha512-ntN6h98kOj6NiaYfHYfzcK0CCm01OkntaLgUZagVASjxR2u2lX15FTiIHabujYrY4cBbhpj8SikvQwdua/K0mw==}
 
   vee-validate@4.15.0:
     resolution: {integrity: sha512-PGJh1QCFwCBjbHu5aN6vB8macYVWrajbDvgo1Y/8fz9n/RVIkLmZCJDpUgu7+mUmCOPMxeyq7vXUOhbwAqdXcA==}
@@ -19875,6 +19884,8 @@ snapshots:
       spdx-expression-parse: 3.0.1
 
   vary@1.1.2: {}
+
+  vatic@1.0.0: {}
 
   vee-validate@4.15.0(vue@3.5.13(typescript@5.8.3)):
     dependencies:

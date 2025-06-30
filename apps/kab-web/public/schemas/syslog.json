@@ -1,5 +1,5 @@
 {
-  "$schema": "../../node_modules/@vatic/smart/schema.json",
+  "$schema": "../../node_modules/vatic/schema.json",
   "table": {
     "api": "/monitor/operlog/list",
     "title": "系统日志",
