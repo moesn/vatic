@@ -53,13 +53,6 @@
         "format": "date"
       }
     ],
-    "search": [
-      {
-        "title": "关键字",
-        "field": "keyword",
-        "type": "Input"
-      }
-    ],
     "delete": "/staff/delStaff"
   },
   "form": {

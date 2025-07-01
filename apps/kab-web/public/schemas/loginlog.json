@@ -16,7 +16,7 @@
         "field": "account"
       },
       {
-        "title": "时间",
+        "title": "操作时间",
         "field": "loginTime",
         "format": "datetime"
       },
@@ -25,45 +25,19 @@
         "field": "ipaddr"
       },
       {
-        "title": "操作",
+        "title": "操作结果",
         "field": "msg",
         "width": "80",
         "type": "Tag",
         "options": [
           {
-            "label": "登入",
-            "value": "登录成功",
-            "color": "processing"
-          },
-          {
-            "label": "登入",
-            "value": "登录失败",
-            "color": "processing"
-          },
-          {
-            "label": "登出",
-            "value": "登出成功"
-          },
-          {
-            "label": "登入",
-            "value": "登出失败"
-          }
-        ]
-      },
-      {
-        "title": "操作结果",
-        "field": "status",
-        "width": "80",
-        "type": "Tag",
-        "options": [
-          {
             "label": "成功",
-            "value": "0",
+            "value": 0,
             "color": "success"
           },
           {
             "label": "失败",
-            "value": "1",
+            "value": 1,
             "color": "error"
           }
         ]

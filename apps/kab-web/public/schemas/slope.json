@@ -79,7 +79,7 @@
     "search": [
       {
         "title": "关键字",
-        "field": "keyword",
+        "field": "keywords",
         "type": "Input"
       }
     ],

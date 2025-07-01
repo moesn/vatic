@@ -1,9 +1,4 @@
-export function transformData(data: any) {
-  data.code = data.code.replace(data.parentCode, '');
-}
-
 export function transformBody(body: any) {
-  body.code = body.districtCode + body.code;
   body.parentCode = body.districtCode;
   body.level = Math.ceil(body.districtCode?.length / 2 + 1);
 }
