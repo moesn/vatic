@@ -1,328 +1,142 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "页面配置",
-  "description": "支持表格、表单、列表、树等，examples里是关键字说明",
-  "examples": [
-    "下面是关键字说明：",
-    "formData：表单数据"
-  ],
+  "title": "Vatic Schema",
   "type": "object",
-  "additionalProperties": false,
   "properties": {
-    "$schema": {
-      "type": "string"
-    },
     "table": {
-      "title": "右侧表格",
-      "$ref": "#table"
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "keyField": {
+          "type": "string"
+        },
+        "nameField": {
+          "type": "string"
+        },
+        "export": {
+          "type": "boolean"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "width": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ]
+          }
+        },
+        "search": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ]
+          }
+        },
+        "delete": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "api",
+        "columns"
+      ]
+    },
+    "form": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "create": {
+          "type": "string"
+        },
+        "update": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "required": {
+                "type": "boolean",
+                "default": false
+              },
+              "type": {
+                "type": "string"
+              },
+              "api": {
+                "type": "string"
+              },
+              "labelField": {
+                "type": "string"
+              },
+              "valueField": {
+                "type": "string"
+              },
+              "afterFetch": {
+                "type": [
+                  "boolean",
+                  "string"
+                ]
+              }
+            },
+            "required": [
+              "field"
+            ]
+          }
+        }
+      },
+      "required": [
+        "items"
+      ]
     }
   },
   "required": [
     "table"
-  ],
-  "definitions": {
-    "table": {
-      "$id": "#table",
-      "title": "表格配置",
-      "type": "object",
-      "required": [
-        "columns"
-      ],
-      "properties": {
-        "columns": {
-          "title": "表格列",
-          "description": "表格每列显示配置",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "type": {
-                "title": "渲染类型",
-                "enum": [
-                  "seq",
-                  "radio",
-                  "checkbox",
-                  "expand",
-                  "html",
-                  null
-                ]
-              },
-              "label": {
-                "title": "表格表头文字",
-                "type": "string"
-              },
-              "key": {
-                "title": "表格数据字段",
-                "type": "string",
-                "minLength": 1
-              },
-              "tip": {
-                "title": "表头说明",
-                "type": "string",
-                "minLength": 1
-              },
-              "tipKey": {
-                "title": "列表项提示字段",
-                "type": "string",
-                "minLength": 1
-              },
-              "width": {
-                "title": "表格宽度",
-                "type": "string",
-                "pattern": "^0|[0-9]+(px|%)$"
-              },
-              "ellipsis": {
-                "title": "超长数据省略显示",
-                "description": "超过最大显示长度时省略显示，鼠标移动上去会显示完整数据",
-                "type": "integer",
-                "default": 20
-              },
-              "show": {
-                "title": "是否显示表格列",
-                "$ref": "#parseBool",
-                "default": true
-              },
-              "switch": {
-                "title": "开关切换",
-                "type": "object",
-                "required": [
-                  "enable",
-                  "disable"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "enable": {
-                    "$ref": "#delete",
-                    "title": "开的接口"
-                  },
-                  "disable": {
-                    "$ref": "#delete",
-                    "title": "关的接口"
-                  },
-                  "on": {
-                    "title": "开的值",
-                    "type": [
-                      "boolean",
-                      "integer",
-                      "string"
-                    ],
-                    "default": true
-                  },
-                  "off": {
-                    "title": "关的值",
-                    "type": [
-                      "boolean",
-                      "integer",
-                      "string"
-                    ],
-                    "default": false
-                  },
-                  "labelOn": {
-                    "title": "开的文字标签",
-                    "type": "string",
-                    "default": "启用"
-                  },
-                  "labelOff": {
-                    "title": "关的文字标签",
-                    "type": "string",
-                    "default": "禁用"
-                  },
-                  "readonly": {
-                    "title": "是否不可以操作",
-                    "$ref": "#parseBool"
-                  }
-                }
-              },
-              "select": {
-                "title": "选择切换",
-                "type": "object",
-                "required": [
-                  "options"
-                ],
-                "additionalProperties": false,
-                "allOf": [
-                  {
-                    "title": "切换接口",
-                    "$ref": "#post"
-                  },
-                  {
-                    "properties": {
-                      "options": {
-                        "title": "切换的选项",
-                        "type": "array",
-                        "uniqueItems": true,
-                        "minItems": 2,
-                        "items": {
-                          "type": "object",
-                          "required": [
-                            "label",
-                            "value"
-                          ],
-                          "additionalProperties": false,
-                          "properties": {
-                            "label": {
-                              "title": "选项显示的标签",
-                              "type": "string"
-                            },
-                            "value": {
-                              "title": "选项提交到后台的值",
-                              "type": [
-                                "boolean",
-                                "string",
-                                "array",
-                                "number"
-                              ]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                ]
-              },
-              "image": {
-                "title": "图片列",
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "upload": {
-                    "title": "是否可上传图片",
-                    "$ref": "#upload"
-                  }
-                }
-              },
-              "action": {
-                "title": "自定义表格操作列",
-                "$ref": "#action"
-              },
-              "format": {
-                "title": "表格数据格式化",
-                "oneOf": [
-                  {
-                    "enum": [
-                      "date",
-                      "time",
-                      "datetime",
-                      "size"
-                    ]
-                  },
-                  {
-                    "$ref": "#format"
-                  }
-                ],
-                "minLength": 1
-              },
-              "search": {
-                "title": "是否可搜索",
-                "description": "当前字段是否支持搜索",
-                "type": "boolean",
-                "default": false
-              },
-              "sort": {
-                "title": "是否可排序",
-                "description": "当前字段是否支持排序",
-                "type": "boolean",
-                "default": false
-              },
-              "filters": {
-                "title": "筛选项设置",
-                "oneOf": [
-                  {
-                    "type": "array",
-                    "uniqueItems": true,
-                    "minItems": 2,
-                    "items": {
-                      "type": "object",
-                      "required": [
-                        "text",
-                        "value"
-                      ],
-                      "additionalProperties": false,
-                      "properties": {
-                        "text": {
-                          "title": "选项显示的文字",
-                          "type": "string"
-                        },
-                        "value": {
-                          "title": "选项提交到后台的值",
-                          "type": "string"
-                        }
-                      }
-                    }
-                  },
-                  {
-                    "type": "object",
-                    "required": [
-                      "textKey",
-                      "valueKey"
-                    ],
-                    "additionalProperties": false,
-                    "allOf": [
-                      {
-                        "title": "查询接口地址",
-                        "$ref": "#post"
-                      },
-                      {
-                        "properties": {
-                          "textKey": {
-                            "title": "选项显示的字段",
-                            "type": "string",
-                            "minLength": 1
-                          },
-                          "valueKey": {
-                            "title": "选项提交到后台的字段",
-                            "type": "string",
-                            "minLength": 1
-                          }
-                        }
-                      }
-                    ]
-                  }
-                ]
-              },
-              "tabIndex": {
-                "$id": "#tabIndex",
-                "title": "标签索引",
-                "description": "标记在哪些标签时显示当前字段，不配置时默认所有字段",
-                "oneOf": [
-                  {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  {
-                    "type": "array",
-                    "minItems": 2,
-                    "items": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
-                  }
-                ]
-              },
-              "icon": {
-                "title": "显示图标",
-                "type": "string"
-              },
-              "color": {
-                "title": "显示颜色",
-                "oneOf": [
-                  {
-                    "$ref": "#color"
-                  },
-                  {
-                    "$ref": "#format"
-                  }
-                ],
-                "default": "default"
-              }
-            },
-            "allOf": [
-            ]
-          }
-        }
-      }
-    }
-  }
+  ]
 }

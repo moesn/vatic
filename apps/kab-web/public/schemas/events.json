@@ -8,6 +8,7 @@
     "cellHeight": 80,
     "columns": [
       {
+        "field": "seq",
         "type": "seq",
         "width": 50
       },

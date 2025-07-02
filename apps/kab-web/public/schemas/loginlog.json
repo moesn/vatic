@@ -8,6 +8,7 @@
     "export": true,
     "columns": [
       {
+        "field": "seq",
         "type": "seq",
         "width": 50
       },
@@ -27,7 +28,7 @@
       {
         "title": "操作结果",
         "field": "msg",
-        "width": "80",
+        "width": 80,
         "type": "Tag",
         "options": [
           {

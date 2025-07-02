@@ -12,6 +12,7 @@
     "nameField": "name",
     "columns": [
       {
+        "field": "seq",
         "type": "seq",
         "width": 50
       },

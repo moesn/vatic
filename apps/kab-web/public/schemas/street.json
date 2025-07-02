@@ -17,13 +17,6 @@
         "treeNode": true
       }
     ],
-    "search": [
-      {
-        "title": "关键字",
-        "field": "keywords",
-        "type": "Input"
-      }
-    ],
     "delete": "/region/remove"
   },
   "form": {

@@ -1,0 +1,67 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/api/user/list",
+    "title": "用户",
+    "keyField": "id",
+    "nameField": "name",
+    "export": true,
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "姓名",
+        "field": "name"
+      },
+      {
+        "title": "生日",
+        "field": "birthday",
+        "format": "date"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keywords",
+        "type": "Input"
+      }
+    ],
+    "delete": "/api/user/delete"
+  },
+  "form": {
+    "title": "新增桥梁&修改桥梁",
+    "detail": "/api/user/detail/$id",
+    "create": "/api/user/create",
+    "update": "/api/user/update",
+    "items": [
+      {
+        "title": "姓名",
+        "field": "name",
+        "required": true
+      },
+      {
+        "title": "城市",
+        "field": "city",
+        "required": true,
+        "type": "ApiTreeSelect",
+        "api": "/city/tree",
+        "labelField": "title",
+        "valueField": "code",
+        "afterFetch": "device"
+      },
+      {
+        "title": "生日",
+        "field": "birthday",
+        "type": "DatePicker"
+      },
+      {
+        "title": "年龄",
+        "field": "age",
+        "type": "InputNumber"
+      }
+    ]
+  }
+}
