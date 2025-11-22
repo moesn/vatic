@@ -1,0 +1,81 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/monitor/logininfor/list",
+    "title": "系统日志",
+    "keyField": "id",
+    "nameField": "operName",
+    "export": true,
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "用户名",
+        "field": "account"
+      },
+      {
+        "title": "时间",
+        "field": "loginTime",
+        "format": "datetime"
+      },
+      {
+        "title": "IP地址",
+        "field": "ipaddr"
+      },
+      {
+        "title": "操作",
+        "field": "msg",
+        "width": 80,
+        "type": "Tag",
+        "options": [
+          {
+            "label": "登入",
+            "value": "登录成功",
+            "color": "processing"
+          },
+          {
+            "label": "登入",
+            "value": "登录失败",
+            "color": "processing"
+          },
+          {
+            "label": "登出",
+            "value": "登出成功"
+          },
+          {
+            "label": "登入",
+            "value": "登出失败"
+          }
+        ]
+      },
+      {
+        "title": "操作结果",
+        "field": "status",
+        "width": 80,
+        "type": "Tag",
+        "options": [
+          {
+            "label": "成功",
+            "value": "0",
+            "color": "success"
+          },
+          {
+            "label": "失败",
+            "value": "1",
+            "color": "error"
+          }
+        ]
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keywords",
+        "type": "Input"
+      }
+    ]
+  }
+}

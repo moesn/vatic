@@ -1,0 +1,126 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/user/pageQueryList",
+    "state": "/user/setState",
+    "delete": "/user/delUser",
+    "disableDelete": "account=admin",
+    "disableUpdate": "account=admin",
+    "title": "用户列表",
+    "keyField": "id",
+    "nameField": "username",
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "用户名",
+        "field": "account"
+      },
+      {
+        "title": "角色",
+        "field": "roles.name",
+        "type": "List"
+      },
+      {
+        "title": "真实姓名",
+        "field": "username"
+      },
+      {
+        "title": "电话号码",
+        "field": "phone"
+      },
+      {
+        "title": "身份证",
+        "field": "idCardNumber"
+      },
+      {
+        "title": "邮箱",
+        "field": "email"
+      },
+      {
+        "title": "备注",
+        "field": "remark"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keywords",
+        "type": "Input"
+      }
+    ]
+  },
+  "form": {
+    "title": "新增用户&修改用户",
+    "detail": "/user/detail/$id",
+    "create": "/user/addUser",
+    "update": "/user/editUser",
+    "items": [
+      {
+        "title": "用户名",
+        "field": "account",
+        "required": true,
+        "disabled": "update"
+      },
+      {
+        "title": "密码",
+        "field": "password",
+        "required": true,
+        "type": "InputPassword",
+        "defaultValue": "Ab.12321",
+        "disabled": "update"
+      },
+      {
+        "title": "角色",
+        "field": "roleIds",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/role/queryList?enable=true",
+        "keyField": "id",
+        "props": {
+          "mode": "multiple"
+        },
+        "disabled": "update"
+      },
+      {
+        "title": "真实姓名",
+        "field": "username",
+        "required": true
+      },
+      {
+        "title": "电话号码",
+        "field": "phone",
+        "rules": "phone",
+        "required": true
+      },
+      {
+        "title": "身份证",
+        "field": "idCardNumber",
+        "rules": "idCard"
+      },
+      {
+        "title": "邮箱",
+        "field": "email",
+        "rules": "email"
+      },
+      {
+        "title": "状态",
+        "field": "enable",
+        "type": "Switch",
+        "defaultValue": true,
+        "props": {
+          "checkedChildren": "启用",
+          "unCheckedChildren": "禁用"
+        }
+      },
+      {
+        "title": "备注",
+        "field": "remark",
+        "type": "Textarea"
+      }
+    ]
+  }
+}

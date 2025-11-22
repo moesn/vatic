@@ -1,0 +1,164 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/company/pageQueryList",
+    "title": "企业列表",
+    "keyField": "id",
+    "nameField": "name",
+    "export": true,
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "企业名称",
+        "field": "name"
+      },
+      {
+        "title": "联络人",
+        "field": "contactPerson"
+      },
+      {
+        "title": "联络人联系电话",
+        "field": "contactPersonPhone"
+      },
+      {
+        "title": "企业简称",
+        "field": "shortName"
+      },
+      {
+        "title": "机构代码(18位社会统一信用代码)",
+        "field": "code"
+      },
+      {
+        "title": "企业联系电话",
+        "field": "phone"
+      },
+      {
+        "title": "经营许可证",
+        "field": "license"
+      },
+      {
+        "title": "经营许可时间",
+        "field": "licenseTime",
+        "format": "datetime"
+      },
+      {
+        "title": "经营许可范围",
+        "field": "scope"
+      },
+      {
+        "title": "管理人员数",
+        "field": "staffCount"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keywords",
+        "type": "Input"
+      }
+    ],
+    "delete": "/company/delCompany"
+  },
+  "form": {
+    "title": "新增企业&修改企业",
+    "detail": "/company/detail/$id",
+    "create": "/company/addCompany",
+    "update": "/company/editCompany",
+    "items": [
+      {
+        "title": "企业名称",
+        "field": "name",
+        "type": "Input",
+        "required": true
+      },
+      {
+        "title": "联络人",
+        "field": "contactPerson",
+        "type": "Input",
+        "required": true
+      },
+      {
+        "title": "联络人联系电话",
+        "field": "contactPersonPhone",
+        "type": "Input",
+        "required": true
+      },
+      {
+        "title": "企业简称",
+        "field": "shortName",
+        "type": "Input"
+      },
+      {
+        "title": "机构代码(18位社会统一信用代码)",
+        "field": "code",
+        "type": "Input",
+        "labelWidth": 110
+      },
+      {
+        "title": "企业联系电话",
+        "field": "phone",
+        "type": "Input"
+      },
+      {
+        "title": "经营许可证",
+        "field": "license",
+        "type": "Input"
+      },
+      {
+        "title": "经营许可时间",
+        "field": "licenseTime",
+        "type": "DatePicker"
+      },
+      {
+        "title": "经营许可范围",
+        "field": "scope",
+        "type": "Input"
+      },
+      {
+        "title": "管理人员数",
+        "field": "staffCount",
+        "type": "Input"
+      }
+    ]
+  },
+  "operations": [
+    {
+      "title": "短信",
+      "form": {
+        "title": "发送短信",
+        "detail": "/company/detail/$id",
+        "update": "/company/sendSms",
+        "items": [
+          {
+            "title": "企业名称",
+            "field": "name",
+            "type": "Input",
+            "disabled": true
+          },
+          {
+            "title": "联络人",
+            "field": "contactPerson",
+            "type": "Input",
+            "disabled": true
+          },
+          {
+            "title": "联络人联系电话",
+            "field": "contactPersonPhone",
+            "type": "Input",
+            "disabled": true
+          },
+          {
+            "title": "短信内容",
+            "field": "content",
+            "type": "Textarea",
+            "required": true
+          }
+        ]
+      }
+    }
+  ]
+}

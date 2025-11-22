@@ -1,0 +1,164 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/bridge/pageQueryList",
+    "title": "桥梁",
+    "keyField": "id",
+    "nameField": "bridgeName",
+    "export": true,
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "桥梁名称",
+        "field": "bridgeName"
+      },
+      {
+        "title": "位置",
+        "field": "location"
+      },
+      {
+        "title": "开通日期",
+        "field": "constructionTime",
+        "format": "date"
+      },
+      {
+        "title": "桥梁类型",
+        "field": "bridgeType"
+      },
+      {
+        "title": "跨径",
+        "field": "span"
+      },
+      {
+        "title": "桥长",
+        "field": "length"
+      },
+      {
+        "title": "桥宽",
+        "field": "width"
+      },
+      {
+        "title": "管理单位名称",
+        "field": "managementUnit"
+      },
+      {
+        "title": "管理单位联系方式",
+        "field": "managementContact"
+      },
+      {
+        "title": "养护单位名称",
+        "field": "maintenanceUnit"
+      },
+      {
+        "title": "养护单位联系方式",
+        "field": "maintenanceContact"
+      },
+      {
+        "title": "监管单位名称",
+        "field": "supervisionUnit"
+      },
+      {
+        "title": "监管单位联系方式",
+        "field": "supervisionContact"
+      },
+      {
+        "title": "施工单位名称",
+        "field": "constructionUnit"
+      },
+      {
+        "title": "施工单位联系方式",
+        "field": "constructionContact"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keywords",
+        "type": "Input"
+      }
+    ],
+    "delete": "/bridge/delBridge"
+  },
+  "form": {
+    "title": "新增桥梁&修改桥梁",
+    "detail": "/bridge/detail/$id",
+    "create": "/bridge/addBridge",
+    "update": "/bridge/editBridge",
+    "items": [
+      {
+        "title": "桥梁名称",
+        "field": "bridgeName",
+        "required": true
+      },
+      {
+        "title": "位置",
+        "field": "location",
+        "required": true,
+        "type": "ApiTreeSelect",
+        "api": "/region/lazy-tree",
+        "labelField": "title",
+        "valueField": "title",
+        "afterFetch": "device"
+      },
+      {
+        "title": "开通日期",
+        "field": "constructionTime",
+        "type": "DatePicker"
+      },
+      {
+        "title": "桥梁类型",
+        "field": "bridgeType"
+      },
+      {
+        "title": "跨径",
+        "field": "span"
+      },
+      {
+        "title": "桥长（米）",
+        "field": "length",
+        "type": "InputNumber"
+      },
+      {
+        "title": "桥宽（米）",
+        "field": "width",
+        "type": "InputNumber"
+      },
+      {
+        "title": "管理单位名称",
+        "field": "managementUnit"
+      },
+      {
+        "title": "管理单位联系方式",
+        "field": "managementContact"
+      },
+      {
+        "title": "养护单位名称",
+        "field": "maintenanceUnit"
+      },
+      {
+        "title": "养护单位联系方式",
+        "field": "maintenanceContact"
+      },
+      {
+        "title": "监管单位名称",
+        "field": "supervisionUnit"
+      },
+      {
+        "title": "监管单位联系方式",
+        "field": "supervisionContact"
+      },
+      {
+        "title": "施工单位名称",
+        "field": "constructionUnit"
+      },
+      {
+        "title": "施工单位联系方式",
+        "field": "constructionContact"
+      }
+    ]
+  }
+}

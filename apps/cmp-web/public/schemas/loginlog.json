@@ -1,0 +1,55 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/monitor/logininfor/list",
+    "title": "系统日志",
+    "keyField": "id",
+    "nameField": "operName",
+    "export": true,
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "用户名",
+        "field": "account"
+      },
+      {
+        "title": "操作时间",
+        "field": "loginTime",
+        "format": "datetime"
+      },
+      {
+        "title": "IP地址",
+        "field": "ipaddr"
+      },
+      {
+        "title": "操作结果",
+        "field": "msg",
+        "width": 80,
+        "type": "Tag",
+        "options": [
+          {
+            "label": "成功",
+            "value": 0,
+            "color": "success"
+          },
+          {
+            "label": "失败",
+            "value": 1,
+            "color": "error"
+          }
+        ]
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keywords",
+        "type": "Input"
+      }
+    ]
+  }
+}

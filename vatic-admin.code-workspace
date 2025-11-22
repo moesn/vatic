@@ -6,6 +6,10 @@
     },
     {
       "name": "@vatic/kab-web",
+      "path": "apps/cmp-web",
+    },
+    {
+      "name": "@vatic/kab-web",
       "path": "apps/kab-web",
     },
     {

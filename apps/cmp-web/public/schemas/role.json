@@ -1,0 +1,75 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/role/pageQueryList",
+    "state": "/role/setState",
+    "delete": "/role/delRole",
+    "disableDelete": "code=SUPER_ADMIN",
+    "disableUpdate": "code=SUPER_ADMIN",
+    "title": "角色列表",
+    "titleHelp": "角色管理",
+    "keyField": "id",
+    "nameField": "name",
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "角色名称",
+        "field": "name"
+      },
+      {
+        "title": "备注",
+        "field": "remark"
+      },
+      {
+        "title": "创建时间",
+        "field": "createdTime",
+        "format": "datetime"
+      }
+    ],
+    "search": [
+      {
+        "title": "角色名称",
+        "field": "name",
+        "type": "Input"
+      }
+    ]
+  },
+  "form": {
+    "title": "新增角色&修改角色",
+    "detail": "/role/detail/$id",
+    "create": "/role/addRole",
+    "update": "/role/editRole",
+    "items": [
+      {
+        "title": "角色名称",
+        "field": "name",
+        "required": true
+      },
+      {
+        "title": "状态",
+        "field": "enable",
+        "type": "Switch",
+        "defaultValue": true,
+        "props": {
+          "checkedChildren": "启用",
+          "unCheckedChildren": "禁用"
+        }
+      },
+      {
+        "title": "菜单权限",
+        "field": "permissionIds",
+        "type": "VaticTree",
+        "api": "/resources/resourcesTree"
+      },
+      {
+        "title": "备注",
+        "field": "remark",
+        "type": "Textarea"
+      }
+    ]
+  }
+}

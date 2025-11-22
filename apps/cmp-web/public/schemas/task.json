@@ -1,0 +1,138 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/task/pageQueryList",
+    "title": "任务处理列表",
+    "keyField": "id",
+    "nameField": "name",
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "任务名称",
+        "field": "name"
+      },
+      {
+        "title": "任务类型",
+        "field": "taskType"
+      },
+      {
+        "title": "事件类型",
+        "field": "eventType"
+      },
+      {
+        "title": "任务生成时间",
+        "field": "createTime",
+        "format": "datetime"
+      },
+      {
+        "title": "任务处理时间",
+        "field": "processTime",
+        "format": "datetime"
+      },
+      {
+        "title": "任务结束时间",
+        "field": "endTime",
+        "format": "datetime"
+      },
+      {
+        "title": "任务处理结果",
+        "field": "result"
+      },
+      {
+        "title": "处理人",
+        "field": "handler"
+      },
+      {
+        "title": "任务状态",
+        "field": "status"
+      }
+    ],
+    "search": [
+      {
+        "title": "任务名称",
+        "field": "name",
+        "type": "Input"
+      },
+      {
+        "title": "任务类型",
+        "field": "eventType",
+        "type": "ApiSelect",
+        "api": "/dict/dictDataQueryList?dictTypeId=15",
+        "valueField": "code",
+        "span": 1
+      },
+      {
+        "title": "任务状态",
+        "field": "status",
+        "type": "ApiSelect",
+        "api": "/dict/dictDataQueryList?dictTypeId=14",
+        "valueField": "code",
+        "span": 1
+      }
+    ]
+  },
+  "operations": [
+    {
+      "title": "详情",
+      "table": {
+        "api": "/task/detail/$id",
+        "title": "详情列表",
+        "width": 960,
+        "dataField": "riskEvents",
+        "cellHeight": "80",
+        "columns": [
+          {
+            "type": "seq",
+            "width": 50
+          },
+          {
+            "title": "抓拍时间",
+            "field": "captureTime",
+            "format": "datetime"
+          },
+          {
+            "title": "抓拍图片",
+            "field": "imageUrl",
+            "type": "Image"
+          }
+        ]
+      }
+    },
+    {
+      "title": "复核",
+      "disabled": "status!=待复核",
+      "form": {
+        "title": "任务复核",
+        "update": "/task/review",
+        "items": [
+          {
+            "title": "复核意见",
+            "field": "status",
+            "required": true,
+            "type": "RadioGroup",
+            "clearValue": true,
+            "options": [
+              {
+                "label": "通过",
+                "value": "已完成"
+              },
+              {
+                "label": "驳回",
+                "value": "处理中"
+              }
+            ]
+          },
+          {
+            "title": "复核意见说明",
+            "field": "result",
+            "type": "Textarea"
+          }
+        ]
+      }
+    }
+  ]
+}

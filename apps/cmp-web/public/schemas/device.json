@@ -1,0 +1,154 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/device/pageQueryList",
+    "title": "监控设备列表",
+    "keyField": "id",
+    "nameField": "deviceName",
+    "export": true,
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "设备名称",
+        "field": "deviceName"
+      },
+      {
+        "title": "部署位置",
+        "field": "location"
+      },
+      {
+        "title": "SIM卡号",
+        "field": "simNo"
+      },
+      {
+        "title": "设备用途",
+        "field": "purposeName"
+      },
+      {
+        "title": "经度",
+        "field": "longitude"
+      },
+      {
+        "title": "纬度",
+        "field": "latitude"
+      },
+      {
+        "title": "设备型号",
+        "field": "model"
+      },
+      {
+        "title": "设备厂商",
+        "field": "vendor"
+      },
+      {
+        "title": "负责人姓名",
+        "field": "manager"
+      },
+      {
+        "title": "负责人电话",
+        "field": "managerPhone"
+      }
+    ],
+    "search": [
+      {
+        "title": "关键字",
+        "field": "keywords",
+        "type": "Input"
+      }
+    ],
+    "delete": "/device/delDevice"
+  },
+  "form": {
+    "title": "新增监控设备&修改监控设备",
+    "detail": "/device/detail/$id",
+    "create": "/device/addDevice",
+    "update": "/device/editDevice",
+    "transformData": true,
+    "transformBody": true,
+    "items": [
+      {
+        "title": "设备名称",
+        "field": "deviceName",
+        "required": true
+      },
+      {
+        "title": "SIM卡号",
+        "field": "simNo",
+        "required": true
+      },
+      {
+        "title": "设备用途",
+        "field": "purpose",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/dict/dictDataQueryList?dictTypeId=13",
+        "valueField": "code"
+      },
+      {
+        "title": "部署位置",
+        "field": "location",
+        "required": true,
+        "type": "ApiTreeSelect",
+        "api": "/region/lazy-tree",
+        "labelField": "title",
+        "valueField": "title",
+        "triggerField": "purpose",
+        "triggerValue": "路面监控|海事监控",
+        "afterFetch": true
+      },
+      {
+        "title": "部署位置",
+        "field": "location",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/bridge/queryList",
+        "labelField": "location",
+        "valueField": "location",
+        "triggerField": "purpose",
+        "triggerValue": "桥梁监控"
+      },
+      {
+        "title": "部署位置",
+        "field": "location",
+        "required": true,
+        "type": "ApiSelect",
+        "api": "/slope/queryList",
+        "labelField": "location",
+        "valueField": "location",
+        "triggerField": "purpose",
+        "triggerValue": "边坡监控"
+      },
+      {
+        "title": "经纬度",
+        "field": "coordinate",
+        "required": true,
+        "type": "CoordinatePicker"
+      },
+      {
+        "title": "视频播放URL",
+        "field": "videoUrl",
+        "required": true
+      },
+      {
+        "title": "设备型号",
+        "field": "model"
+      },
+      {
+        "title": "设备厂商",
+        "field": "vendor"
+      },
+      {
+        "title": "负责人姓名",
+        "field": "manager"
+      },
+      {
+        "title": "负责人电话",
+        "field": "managerPhone"
+      }
+    ]
+  }
+}
