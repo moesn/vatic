@@ -13,43 +13,25 @@
         "width": 50
       },
       {
-        "title": "用户名",
+        "title": "账号",
         "field": "account"
       },
       {
-        "title": "时间",
+        "title": "姓名",
+        "field": "todo"
+      },
+      {
+        "title": "操作时间",
         "field": "loginTime",
         "format": "datetime"
       },
       {
-        "title": "IP地址",
+        "title": "操作IP",
         "field": "ipaddr"
       },
       {
-        "title": "操作",
-        "field": "msg",
-        "width": 80,
-        "type": "Tag",
-        "options": [
-          {
-            "label": "登入",
-            "value": "登录成功",
-            "color": "processing"
-          },
-          {
-            "label": "登入",
-            "value": "登录失败",
-            "color": "processing"
-          },
-          {
-            "label": "登出",
-            "value": "登出成功"
-          },
-          {
-            "label": "登入",
-            "value": "登出失败"
-          }
-        ]
+        "title": "操作内容",
+        "field": "todo"
       },
       {
         "title": "操作结果",
@@ -72,9 +54,18 @@
     ],
     "search": [
       {
-        "title": "关键字",
-        "field": "keywords",
+        "title": "用户账号",
+        "field": "todo",
         "type": "Input"
+      },
+      {
+        "title": "操作时间",
+        "field": "todo",
+        "type": "RangePicker",
+        "rangeFields": [
+          "startTime",
+          "endTime"
+        ]
       }
     ]
   }

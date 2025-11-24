@@ -1,0 +1,85 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/user/pageQueryList",
+    "delete": "/user/delUser",
+    "export": "/user/delUser",
+    "import": "/user/delUser",
+    "template": "/user/delUser",
+    "title": "项目进度管理",
+    "keyField": "id",
+    "nameField": "username",
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "专业名称",
+        "field": "todo"
+      },
+      {
+        "title": "工程名称",
+        "field": "todo",
+        "type": "List"
+      },
+      {
+        "title": "合计(元)",
+        "field": "todo"
+      },
+      {
+        "title": "累计完成(元)",
+        "field": "todo"
+      },
+      {
+        "title": "进度",
+        "field": "todo"
+      }
+    ],
+    "search": [
+      {
+        "title": "专业名称",
+        "field": "todo",
+        "type": "Input"
+      },
+      {
+        "title": "工程名称",
+        "field": "todo",
+        "type": "Input"
+      }
+    ]
+  },
+  "form": {
+    "title": "新增项目&修改项目",
+    "detail": "/user/detail/$id",
+    "create": "/user/addUser",
+    "update": "/user/editUser",
+    "items": [
+      {
+        "title": "专业名称",
+        "field": "todo",
+        "required": true,
+        "disabled": "update"
+      },
+      {
+        "title": "工程名称",
+        "field": "todo",
+        "required": true,
+        "disabled": "update"
+      },
+      {
+        "title": "合计(元)",
+        "field": "todo",
+        "type": "InputNumber",
+        "required": true
+      },
+      {
+        "title": "累计完成(元)",
+        "field": "todo",
+        "type": "InputNumber",
+        "required": true
+      }
+    ]
+  }
+}

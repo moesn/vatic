@@ -2,7 +2,6 @@
   "$schema": "../../node_modules/vatic/schema.json",
   "table": {
     "api": "/user/pageQueryList",
-    "state": "/user/setState",
     "delete": "/user/delUser",
     "disableDelete": "account=admin",
     "disableUpdate": "account=admin",
@@ -16,65 +15,86 @@
         "width": 50
       },
       {
-        "title": "用户名",
+        "title": "账号",
         "field": "account"
       },
       {
-        "title": "角色",
+        "title": "姓名",
+        "field": "username"
+      },
+      {
+        "title": "联系电话",
+        "field": "phone"
+      },
+      {
+        "title": "所属角色",
         "field": "roles.name",
         "type": "List"
       },
       {
-        "title": "真实姓名",
-        "field": "username"
+        "title": "用户状态",
+        "field": "todo"
       },
       {
-        "title": "电话号码",
-        "field": "phone"
+        "title": "创建时间",
+        "field": "todo"
       },
       {
-        "title": "身份证",
-        "field": "idCardNumber"
-      },
-      {
-        "title": "邮箱",
-        "field": "email"
-      },
-      {
-        "title": "备注",
-        "field": "remark"
+        "title": "更新时间",
+        "field": "todo"
       }
     ],
     "search": [
       {
-        "title": "关键字",
-        "field": "keywords",
+        "title": "用户账号",
+        "field": "todo",
         "type": "Input"
+      },
+      {
+        "title": "用户状态",
+        "field": "todo",
+        "type": "Select",
+        "props": {
+          "options": [
+            {
+              "label": "正常",
+              "value": "1"
+            },
+            {
+              "label": "锁定",
+              "value": "2"
+            }
+          ]
+        }
       }
     ]
   },
   "form": {
-    "title": "新增用户&修改用户",
+    "title": "新增&修改",
     "detail": "/user/detail/$id",
     "create": "/user/addUser",
     "update": "/user/editUser",
     "items": [
       {
-        "title": "用户名",
+        "title": "账号",
         "field": "account",
         "required": true,
         "disabled": "update"
       },
       {
-        "title": "密码",
-        "field": "password",
+        "title": "姓名",
+        "field": "todo",
         "required": true,
-        "type": "InputPassword",
-        "defaultValue": "Ab.12321",
         "disabled": "update"
       },
       {
-        "title": "角色",
+        "title": "联系电话",
+        "field": "phone",
+        "rules": "phone",
+        "required": true
+      },
+      {
+        "title": "所属角色",
         "field": "roleIds",
         "required": true,
         "type": "ApiSelect",
@@ -86,40 +106,20 @@
         "disabled": "update"
       },
       {
-        "title": "真实姓名",
-        "field": "username",
-        "required": true
+        "title": "密码",
+        "field": "password",
+        "required": true,
+        "type": "InputPassword",
+        "defaultValue": "Ab.12321",
+        "disabled": "update"
       },
       {
-        "title": "电话号码",
-        "field": "phone",
-        "rules": "phone",
-        "required": true
-      },
-      {
-        "title": "身份证",
-        "field": "idCardNumber",
-        "rules": "idCard"
-      },
-      {
-        "title": "邮箱",
-        "field": "email",
-        "rules": "email"
-      },
-      {
-        "title": "状态",
-        "field": "enable",
-        "type": "Switch",
-        "defaultValue": true,
-        "props": {
-          "checkedChildren": "启用",
-          "unCheckedChildren": "禁用"
-        }
-      },
-      {
-        "title": "备注",
-        "field": "remark",
-        "type": "Textarea"
+        "title": "确认密码",
+        "field": "confirmPassword",
+        "required": true,
+        "type": "InputPassword",
+        "defaultValue": "Ab.12321",
+        "disabled": "update"
       }
     ]
   }

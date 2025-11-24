@@ -2,12 +2,10 @@
   "$schema": "../../node_modules/vatic/schema.json",
   "table": {
     "api": "/role/pageQueryList",
-    "state": "/role/setState",
     "delete": "/role/delRole",
     "disableDelete": "code=SUPER_ADMIN",
     "disableUpdate": "code=SUPER_ADMIN",
     "title": "角色列表",
-    "titleHelp": "角色管理",
     "keyField": "id",
     "nameField": "name",
     "columns": [
@@ -17,11 +15,23 @@
         "width": 50
       },
       {
+        "title": "角色ID",
+        "field": "todo"
+      },
+      {
         "title": "角色名称",
         "field": "name"
       },
       {
-        "title": "备注",
+        "title": "角色类型",
+        "field": "todo"
+      },
+      {
+        "title": "权限信息",
+        "field": "todo"
+      },
+      {
+        "title": "角色描述",
         "field": "remark"
       },
       {
@@ -35,6 +45,23 @@
         "title": "角色名称",
         "field": "name",
         "type": "Input"
+      },
+      {
+        "title": "角色类型",
+        "field": "todo",
+        "type": "Select",
+        "props": {
+          "options": [
+            {
+              "label": "内置",
+              "value": "1"
+            },
+            {
+              "label": "自定义",
+              "value": "2"
+            }
+          ]
+        }
       }
     ]
   },
@@ -50,25 +77,15 @@
         "required": true
       },
       {
-        "title": "状态",
-        "field": "enable",
-        "type": "Switch",
-        "defaultValue": true,
-        "props": {
-          "checkedChildren": "启用",
-          "unCheckedChildren": "禁用"
-        }
+        "title": "角色描述",
+        "field": "todo",
+        "type": "Textarea"
       },
       {
         "title": "菜单权限",
         "field": "permissionIds",
         "type": "VaticTree",
         "api": "/resources/resourcesTree"
-      },
-      {
-        "title": "备注",
-        "field": "remark",
-        "type": "Textarea"
       }
     ]
   }

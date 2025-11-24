@@ -29,7 +29,7 @@ let map: any;
 
 function loadHuaXi() {
   const boundary = new BMapGL.Boundary();
-  boundary.get('花溪区', (rs: any) => {
+  boundary.get('四川', (rs: any) => {
     if (rs.boundaries.length === 0) {
       setTimeout(() => loadHuaXi(), 100);
     } else {
@@ -74,10 +74,9 @@ function loadMap() {
   });
   map.disableDragging();
   map.centerAndZoom(
-    new BMapGL.Point(106.487_904_768_467_09, 26.540_228_171_028_506),
+    new BMapGL.Point(104.072_358_099_155, 30.664_376_459_765_21),
     13,
   );
-
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
 
   setTimeout(() => loadHuaXi(), 100);

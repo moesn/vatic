@@ -1,0 +1,76 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/user/pageQueryList",
+    "delete": "/user/delUser",
+    "template": "/user/delUser",
+    "keyField": "id",
+    "nameField": "username",
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "视频名称",
+        "field": "todo"
+      },
+      {
+        "title": "上传人姓名",
+        "field": "todo"
+      },
+      {
+        "title": "上传时间",
+        "field": "todo"
+      }
+    ],
+    "search": [
+      {
+        "title": "视频名称",
+        "field": "todo",
+        "type": "Input"
+      },
+      {
+        "title": "上传人姓名",
+        "field": "todo",
+        "type": "Input"
+      },
+      {
+        "title": "上传时间",
+        "field": "todo",
+        "type": "RangePicker",
+        "rangeFields": [
+          "startTime",
+          "endTime"
+        ]
+      }
+    ]
+  },
+  "form": {
+    "title": "新增班前讲话&修改班前讲话",
+    "detail": "/user/detail/$id",
+    "create": "/user/addUser",
+    "update": "/user/editUser",
+    "items": [
+      {
+        "title": "文件名称",
+        "field": "todo",
+        "required": true
+      },
+      {
+        "title": "选择文件",
+        "field": "todo",
+        "required": true
+      }
+    ]
+  },
+  "operations": [
+    {
+      "title": "播放"
+    },
+    {
+      "title": "下载"
+    }
+  ]
+}

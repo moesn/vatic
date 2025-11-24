@@ -12,6 +12,7 @@ import { ref, watch } from 'vue';
 import { Page, useVaticDrawer } from '@vatic/common-ui';
 import { Plus } from '@vatic/icons';
 
+import { VaticButtonGroup } from '@vatic-core/shadcn-ui';
 import { cloneDeep } from '@vatic-core/shared/utils';
 
 import { Button, message, Modal } from 'ant-design-vue';
@@ -257,7 +258,6 @@ watch(
           });
         });
       }
-
       if (update) {
         width += 45;
         options.push({
@@ -451,16 +451,25 @@ async function refreshGrid() {
       :table-title-help="pageSchema.table.titleHelp"
     >
       <template #toolbar-tools>
-        <div v-if="isTreeGrid()" class="absolute left-2 top-14 z-10">
-          <Button class="mr-2" size="small" type="link" @click="expandAll">
-            展开
+        <VaticButtonGroup gap="10" class="vatic-check-button-group">
+          <div v-if="isTreeGrid()" class="absolute left-2 top-14 z-10">
+            <Button class="mr-2" size="small" type="link" @click="expandAll">
+              展开
+            </Button>
+            <Button size="small" type="link" @click="collapseAll"> 折叠</Button>
+          </div>
+          <!--          <Button type="link" v-if="pageSchema.table?.template">-->
+          <!--            下载模版-->
+          <!--          </Button>-->
+          <Button
+            type="primary"
+            @click="onCreate"
+            v-if="pageSchema.form?.create"
+          >
+            <Plus class="size-5" />
+            新增
           </Button>
-          <Button size="small" type="link" @click="collapseAll"> 折叠</Button>
-        </div>
-        <Button type="primary" @click="onCreate" v-if="pageSchema.form?.create">
-          <Plus class="size-5" />
-          新增
-        </Button>
+        </VaticButtonGroup>
       </template>
 
       <template #timeline>

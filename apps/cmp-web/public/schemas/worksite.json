@@ -1,0 +1,84 @@
+{
+  "$schema": "../../node_modules/vatic/schema.json",
+  "table": {
+    "api": "/user/pageQueryList",
+    "delete": "/user/delUser",
+    "disableDelete": "account=admin",
+    "disableUpdate": "account=admin",
+    "title": "工点列表",
+    "keyField": "id",
+    "nameField": "username",
+    "columns": [
+      {
+        "field": "seq",
+        "type": "seq",
+        "width": 50
+      },
+      {
+        "title": "工点名称",
+        "field": "todo"
+      },
+      {
+        "title": "工点位置",
+        "field": "todo"
+      },
+      {
+        "title": "经度",
+        "field": "todo"
+      },
+      {
+        "title": "纬度",
+        "field": "todo"
+      },
+      {
+        "title": "负责人",
+        "field": "todo"
+      },
+      {
+        "title": "负责人电话",
+        "field": "todo"
+      }
+    ],
+    "search": [
+      {
+        "title": "工点名称",
+        "field": "todo",
+        "type": "Input"
+      },
+      {
+        "title": "负责人",
+        "field": "todo",
+        "type": "Input"
+      }
+    ]
+  },
+  "form": {
+    "title": "新增&修改",
+    "detail": "/user/detail/$id",
+    "create": "/user/addUser",
+    "update": "/user/editUser",
+    "items": [
+      {
+        "title": "工点名称",
+        "field": "todo",
+        "required": true
+      },
+      {
+        "title": "工点位置",
+        "field": "todo",
+        "required": true,
+        "type": "CoordinatePicker"
+      },
+      {
+        "title": "负责人",
+        "field": "todo",
+        "required": true
+      },
+      {
+        "title": "负责人电话",
+        "field": "todo",
+        "required": true
+      }
+    ]
+  }
+}
