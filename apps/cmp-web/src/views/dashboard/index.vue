@@ -1,14 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue';
 
-import {
-  Button,
-  message,
-  Popover,
-  Select,
-  SelectOption,
-  Switch,
-} from 'ant-design-vue';
+import { message } from 'ant-design-vue';
 
 import {
   getDataStatsApi,
@@ -17,9 +10,7 @@ import {
   getTaskStatsApi,
   getWeatherListApi,
 } from '#/views/dashboard/data';
-import { getEventListApi } from '#/views/event/data';
 
-import box from './box.vue';
 import styleJson from './style.json';
 
 let timer;
@@ -48,14 +39,11 @@ function getStatsData() {
 // endregion
 
 // region 风险
-const riskTotal = ref<number>(100);
 const riskPageSize = ref<number>(0);
 const riskPageNo = ref<number>(1);
-const riskPages = ref<number>(1);
 const eventActive = ref('未派发');
 const eventStates: string[] = ['未派发', '待确认', '处理中', '待复核'];
 const eventStats = ref<any>([]);
-const eventList = ref<any>([]);
 
 function getEventStats() {
   getEventStatsApi().then((res: any) => {
@@ -74,15 +62,6 @@ function getEventStats() {
 function getEventList(status: string, pageNo: number) {
   eventActive.value = status;
   riskPageNo.value = pageNo;
-  getEventListApi({
-    status,
-    pageSize: riskPageSize.value,
-    pageNo,
-  }).then((res: any) => {
-    eventList.value = res.records;
-    riskPages.value = res.pages;
-    riskTotal.value = res.total;
-  });
 }
 
 watch(riskPageSize, (val) => {
@@ -100,11 +79,7 @@ const selectedDevices = ref(
   JSON.parse(localStorage.getItem(deviceStoreKey) || '[]'),
 );
 const settingVisible = ref<boolean>(false);
-const handleChange = (devices: any) => {
-  if (devices.length > 5) {
-    selectedDevices.value = devices.slice(0, 5);
-  }
-};
+
 const storeDevice = () => {
   if (selectedDevices.value.length > 0) {
     localStorage.setItem(deviceStoreKey, JSON.stringify(selectedDevices.value));
@@ -160,11 +135,6 @@ function loadVideo() {
   }
 }
 
-function deviceName(videoUrl: string) {
-  return allDeviceList.value.find((d: any) => d.videoUrl === videoUrl)
-    ?.location;
-}
-
 getDeviceList();
 // endregion
 
@@ -205,7 +175,7 @@ let map: any;
 
 function loadHuaXi() {
   const boundary = new BMapGL.Boundary();
-  boundary.get('花溪区', (rs: any) => {
+  boundary.get('四川', (rs: any) => {
     if (rs.boundaries.length === 0) {
       setTimeout(() => loadHuaXi(), 100);
     } else {
@@ -248,7 +218,7 @@ function loadMap() {
   });
   map.disableDragging();
   map.centerAndZoom(
-    new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
+    new BMapGL.Point(104.072_358_099_155, 30.664_376_459_765_21),
     13,
   );
   map.setMapStyleV2({ styleJson });
@@ -276,35 +246,19 @@ function createMarkersByType(type: string) {
     });
 }
 
-function deleteMarkersByType(type: string) {
-  map.getOverlays().forEach((overlay: any) => {
-    if (overlay._config?.type === type) {
-      map.removeOverlay(overlay);
-    }
-  });
-}
-
-function renderMarkers(show: boolean, type: string) {
-  if (show) {
-    createMarkersByType(type);
-  } else {
-    deleteMarkersByType(type);
-  }
-}
-
 // endregion
 
-// region 养护统计
-let taskChart;
+const charts: any = [];
 const colors = (i: number, a: number) =>
   [`rgba(234,74,87,${a})`, `rgba(25,236,255,${a})`][i];
-const taskTypes: string[] = ['紧急', '普通'];
-const taskStates: string[] = ['待确认', '处理中', '待复核', '已完成'];
+const taskTypes: string[] = ['计划', '实际'];
+const taskStates: string[] = ['1季度', '2季度', '3季度', '4季度'];
 const taskData = ref<any>({});
 
-function renderTaskChart() {
-  taskChart?.dispose();
-  taskChart = echarts.init(document.querySelector('#task-chart'));
+function renderChart(idx: number) {
+  let chart = charts[idx];
+  chart?.dispose();
+  chart = echarts.init(document.querySelector(`#chart${idx}`));
 
   const option = {
     legend: {
@@ -390,12 +344,54 @@ function renderTaskChart() {
       };
     }),
   };
-  taskChart.setOption(option, true);
+  chart.setOption(option, true);
 }
 
 function loadTaskChart(init: boolean = false) {
   if (init) {
     getTaskStatsApi().then((res) => {
+      res = [
+        {
+          taskType: '计划',
+          status: '1季度',
+          count: 12,
+        },
+        {
+          taskType: '计划',
+          status: '2季度',
+          count: 6,
+        },
+        {
+          taskType: '计划',
+          status: '3季度',
+          count: 20,
+        },
+        {
+          taskType: '计划',
+          status: '4季度',
+          count: 2,
+        },
+        {
+          taskType: '实际',
+          status: '1季度',
+          count: 17,
+        },
+        {
+          taskType: '实际',
+          status: '2季度',
+          count: 8,
+        },
+        {
+          taskType: '实际',
+          status: '4季度',
+          count: 5,
+        },
+        {
+          taskType: '实际',
+          status: '3季度',
+          count: 12,
+        },
+      ];
       taskTypes.forEach((type) => {
         taskData.value[type] = taskStates.map((status) => {
           const stat = res.find(
@@ -404,10 +400,13 @@ function loadTaskChart(init: boolean = false) {
           return stat?.count || 0;
         });
       });
-      renderTaskChart();
+      renderChart(1);
+      renderChart(2);
+      renderChart(3);
+      renderChart(4);
     });
   } else {
-    renderTaskChart();
+    renderChart();
   }
 }
 
@@ -441,199 +440,50 @@ onMounted(() => {
         <h1>XXXX管理平台</h1>
         <h2>{{ time }}</h2>
       </div>
-      <div class="left">
-        <div class="box-card left-top">
-          <box />
-          <h2>统计概览</h2>
-          <div class="lt-stats-dash">
-            <h3>路产数量</h3>
-            <h3>风险事件</h3>
-            <h4>{{ `0000${statsData.regionCount || 0}`.slice(-4) }}</h4>
-            <h4>{{ `0000${statsData.riskEventCount || 0}`.slice(-4) }}</h4>
+      <div class="bottom">
+        <div class="box-card">
+          <div>
+            <p>在建项目合同额(万元)</p>
+            <h1>100000</h1>
           </div>
-          <div class="lt-dash">
-            <div>
-              <h3>车辆({{ statsData.carCount }})</h3>
-              <h3>人员({{ statsData.staffCount }})</h3>
-              <h3>桥梁({{ statsData.bridgeCount }})</h3>
-              <h3>边坡({{ statsData.slopeCount }})</h3>
-            </div>
-            <div v-for="item in deviceTypes" :key="item.name">
-              <h3>{{ item.name }}</h3>
-              <h3>
-                {{ statsData[item.online]?.[item.name] || 0 }}/{{
-                  statsData[item.all]?.[item.name] || 0
-                }}
-              </h3>
-              <Switch
-                v-model:checked="item.show"
-                @click="() => renderMarkers(item.show, item.name)"
-              />
-            </div>
+          <div>
+            <p>在建项目开累量(万元)</p>
+            <h1>100000</h1>
+          </div>
+          <div>
+            <p>在建项目储备量(万元)</p>
+            <h1>100000</h1>
+          </div>
+          <div>
+            <p>年度计划(万元)</p>
+            <h1>100000</h1>
+          </div>
+          <div>
+            <p>年度实际(万元)</p>
+            <h1>100000</h1>
           </div>
         </div>
-        <div class="box-card left-bottom">
-          <box />
-          <h2>风险</h2>
-          <div class="paging">
-            <img
-              src="/assets/image/risk/prev.png"
-              @click="
-                riskPageNo > 1
-                  ? getEventList(eventActive, (riskPageNo -= 1))
-                  : ''
-              "
-            />
-            <h3>
-              {{ (riskPageNo - 1) * riskPageSize }} ~
-              {{ Math.min(riskPageNo * riskPageSize, riskTotal) }} /
-              {{ riskTotal }}
-            </h3>
-            <img
-              src="/assets/image/risk/next.png"
-              @click="
-                riskPageNo < riskPages
-                  ? getEventList(eventActive, (riskPageNo += 1))
-                  : ''
-              "
-            />
-          </div>
-          <div class="nav">
-            <h3
-              v-for="event in eventStats"
-              :class="{ active: event.status === eventActive }"
-              :key="event.status"
-              @click="getEventList(event.status, 1)"
-            >
-              {{ event.status }}({{ event.eventCount }})
-            </h3>
-          </div>
-          <div class="risk">
-            <div v-for="event in eventList" :key="event.id">
-              <img src="/avatar.png" alt="" />
-              <div>
-                <h4>{{ event.eventType }}</h4>
-                <h5>{{ event.location }}</h5>
-                <h5>{{ event.captureTime }}</h5>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="right" :style="{ width: `${videoWidth}px` }">
-        <template v-for="(device, index) in selectedDevices" :key="device.id">
-          <Popover
-            placement="left"
-            v-if="index === 0"
-            v-model:open="settingVisible"
-            trigger="click"
-          >
-            <template #content>
-              <Select
-                v-model:value="selectedDevices"
-                mode="multiple"
-                style="width: 300px"
-                placeholder="请选择5个要播放的监控设备"
-                @change="handleChange"
-              >
-                <SelectOption
-                  v-for="item in allDeviceList"
-                  :key="item.id"
-                  :value="item.videoUrl"
-                  :disabled="
-                    (selectedDevices.length >= 5 &&
-                      !selectedDevices.includes(item.videoUrl)) ||
-                    (selectedDevices.length === 1 &&
-                      selectedDevices.includes(item.videoUrl))
-                  "
-                >
-                  {{ item.location }}
-                </SelectOption>
-              </Select>
-              <Button @click="storeDevice()">保存</Button>
-            </template>
-            <img src="/assets/image/setting.png" alt="" />
-          </Popover>
-          <h1>{{ deviceName(device) }}</h1>
-          <video class="videoElement" autoplay muted></video>
-        </template>
-      </div>
-      <div
-        class="bottom"
-        :style="{ width: `calc(100% - ${videoWidth + 480}px)` }"
-      >
-        <div class="box-card bottom-left">
-          <box />
-          <h2>养护任务统计</h2>
-          <div id="task-chart"></div>
-        </div>
-        <div class="box-card bottom-right">
-          <box />
-          <h2>气象监控设备</h2>
-          <div class="weather">
-            <div v-if="weatherList[0]">
-              <div>
-                <h3>{{ weatherList[0].location }}</h3>
-                <span></span>
-              </div>
-              <div>
-                <img src="/assets/image/weather/temperature.png" alt="" />
-                <h3>{{ weatherList[0].temperature }}℃</h3>
-                <h3>温</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/wet.png" alt="" />
-                <h3>{{ weatherList[0].humidity }}%RH</h3>
-                <h3>湿</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/speed.png" alt="" />
-                <h3>{{ weatherList[0].windSpeed }}m/s</h3>
-                <h3>风</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/direction.png" alt="" />
-                <h3>{{ weatherList[0].windDirection }}</h3>
-                <h3>风</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/pressure.png" alt="" />
-                <h3>{{ weatherList[0].airPressure }}Pa</h3>
-                <h3>气</h3>
-              </div>
-            </div>
-            <div v-if="weatherList[1]">
-              <div>
-                <span></span>
-                <h3>{{ weatherList[1].location }}</h3>
-              </div>
-              <div>
-                <h3>度</h3>
-                <h3>{{ weatherList[1].temperature }}℃</h3>
-                <img src="/assets/image/weather/temperature.png" alt="" />
-              </div>
-              <div>
-                <h3>度</h3>
-                <h3>{{ weatherList[1].humidity }}%RH</h3>
-                <img src="/assets/image/weather/wet.png" alt="" />
-              </div>
-              <div>
-                <h3>速</h3>
-                <h3>{{ weatherList[1].windSpeed }}m/s</h3>
-                <img src="/assets/image/weather/speed.png" alt="" />
-              </div>
-              <div>
-                <h3>向</h3>
-                <h3>{{ weatherList[1].windDirection }}</h3>
-                <img src="/assets/image/weather/direction.png" alt="" />
-              </div>
-              <div>
-                <h3>压</h3>
-                <h3>{{ weatherList[1].airPressure }}Pa</h3>
-                <img src="/assets/image/weather/pressure.png" alt="" />
-              </div>
-            </div>
-          </div>
+        <div class="box-dash">
+          <div
+            id="chart1"
+            class="chart"
+            :style="{ width: 'calc(25% - 10px)' }"
+          ></div>
+          <div
+            id="chart2"
+            class="chart"
+            :style="{ width: 'calc(25% - 10px)' }"
+          ></div>
+          <div
+            id="chart3"
+            class="chart"
+            :style="{ width: 'calc(25% - 10px)' }"
+          ></div>
+          <div
+            id="chart4"
+            class="chart"
+            :style="{ width: 'calc(25% - 10px)' }"
+          ></div>
         </div>
       </div>
     </div>

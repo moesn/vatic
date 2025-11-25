@@ -79,7 +79,7 @@ const videos: any[] = chunkArray(
 const [DisposeModal, DisposeModalApi] = useVaticModal({
   fullscreenButton: false,
   onCancel() {
-    DisposeModalApi.close();
+    // DisposeModalApi.close();
   },
   onConfirm: async () => {
     await DisposeFormApi.validateAndSubmitForm();
@@ -92,7 +92,8 @@ const [DisposeModal, DisposeModalApi] = useVaticModal({
       }
     }
   },
-  title: `添加视频流（TODO）`,
+  title: `添加视频流`,
+  cancelText: '联通性测试',
 });
 
 const [DisposeForm, DisposeFormApi] = useVaticForm({
@@ -132,6 +133,32 @@ const [DisposeForm, DisposeFormApi] = useVaticForm({
       component: 'Input',
       fieldName: 'todo',
       label: '摄像头点位',
+      labelWidth: 80,
+      rules: 'required',
+    },
+    {
+      component: 'Select',
+      fieldName: 'todo',
+      label: '摄像头分组',
+      labelWidth: 80,
+      controlClass: 'w-full',
+      rules: 'required',
+      componentProps: {
+        mode: 'tags',
+        placeholder: '请选择或输入新的组',
+      },
+    },
+    {
+      component: 'Input',
+      fieldName: 'todo',
+      label: '账号',
+      labelWidth: 80,
+      rules: 'required',
+    },
+    {
+      component: 'InputPassword',
+      fieldName: 'todo',
+      label: '密码',
       labelWidth: 80,
       rules: 'required',
     },
@@ -198,8 +225,8 @@ onMounted(() => {
             :title="video.name"
           >
             <div class="float-right -mt-10 flex w-14 justify-between">
-              <SquarePen class="size-5" />
-              <Trash2 class="size-5" />
+              <SquarePen class="z-50 size-5 cursor-pointer text-blue-500" />
+              <Trash2 class="z-50 size-5 cursor-pointer text-red-500" />
             </div>
             <div class="mb-1 flex">
               <MapPin class="size-4" />
