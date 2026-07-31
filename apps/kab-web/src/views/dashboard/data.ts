@@ -12,7 +12,7 @@ export const getDeviceListApi = async () => {
 };
 
 export const getWeatherListApi = async () => {
-  return requestClient.get('/home/queryWeatherList');
+  return requestClient.get('/home/queryOnlineWeather');
 };
 
 export const getTaskStatsApi = async () => {

@@ -573,7 +573,7 @@ onMounted(() => {
           <div class="weather">
             <div v-if="weatherList[0]">
               <div>
-                <h3>{{ weatherList[0].location }}</h3>
+                <h3>{{ weatherList[0].station_name }}</h3>
                 <span></span>
               </div>
               <div>
@@ -588,7 +588,7 @@ onMounted(() => {
               </div>
               <div>
                 <img src="/assets/image/weather/speed.png" alt="" />
-                <h3>{{ weatherList[0].windSpeed }}m/s</h3>
+                <h3>{{ weatherList[0].wind_speed }}m/s</h3>
                 <h3>风</h3>
               </div>
               <div>
@@ -605,7 +605,7 @@ onMounted(() => {
             <div v-if="weatherList[1]">
               <div>
                 <span></span>
-                <h3>{{ weatherList[1].location }}</h3>
+                <h3>{{ weatherList[1].station_name }}</h3>
               </div>
               <div>
                 <h3>度</h3>
@@ -619,7 +619,7 @@ onMounted(() => {
               </div>
               <div>
                 <h3>速</h3>
-                <h3>{{ weatherList[1].windSpeed }}m/s</h3>
+                <h3>{{ weatherList[1].wind_speed }}m/s</h3>
                 <img src="/assets/image/weather/speed.png" alt="" />
               </div>
               <div>
