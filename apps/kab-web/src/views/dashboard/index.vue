@@ -593,12 +593,12 @@ onMounted(() => {
               </div>
               <div>
                 <img src="/assets/image/weather/direction.png" alt="" />
-                <h3>{{ weatherList[0].windDirection }}</h3>
+                <h3>{{ weatherList[0].wind_direction }}</h3>
                 <h3>风</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/pressure.png" alt="" />
-                <h3>{{ weatherList[0].airPressure }}Pa</h3>
+                <h3>{{ weatherList[0].pressure }}Pa</h3>
                 <h3>气</h3>
               </div>
             </div>
@@ -624,12 +624,12 @@ onMounted(() => {
               </div>
               <div>
                 <h3>向</h3>
-                <h3>{{ weatherList[1].windDirection }}</h3>
+                <h3>{{ weatherList[1].wind_direction }}</h3>
                 <img src="/assets/image/weather/direction.png" alt="" />
               </div>
               <div>
                 <h3>压</h3>
-                <h3>{{ weatherList[1].airPressure }}Pa</h3>
+                <h3>{{ weatherList[1].pressure }}Pa</h3>
                 <img src="/assets/image/weather/pressure.png" alt="" />
               </div>
             </div>
