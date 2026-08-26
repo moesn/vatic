@@ -23,7 +23,6 @@ import {
   Button,
   DatePicker,
   Image,
-  Input,
   message,
   Modal,
   Table,
@@ -31,11 +30,11 @@ import {
 import dayjs from 'dayjs';
 
 import {
-  equipAuth,
   getCamerasApi,
   getDeviceTreeApi,
   getVehiclePassListApi,
   getWeatherListApi,
+  loadEquipConfig,
   resolveStreamUrl,
   searchRecordingsApi,
   startPlaybackApi,
@@ -102,30 +101,16 @@ async function loadDeviceTree() {
 }
 // endregion
 
-// region 访问令牌（数安硬件数据中台）
-const tokenVisible = ref(false);
-const tokenInput = ref('');
-
-function openTokenModal() {
-  tokenInput.value = equipAuth.get();
-  tokenVisible.value = true;
-}
-
-function saveToken() {
-  equipAuth.set(tokenInput.value);
-  // 令牌变更后重新拉取相机列表
-  camerasCache = null;
-  tokenVisible.value = false;
-  message.success('访问令牌已保存');
-}
-
-/** 中台接口统一错误处理（401 清除令牌并提示重新配置） */
+// region 中台接口统一错误处理
+/**
+ * 中台接口统一错误处理
+ * 401 时 equipRequest 内部已自动刷新令牌并重试一次，
+ * 仍失败说明令牌彻底失效，提示联系管理员
+ */
 function handleEquipError(error: any) {
   const status = error?.status;
   if (status === 401) {
-    equipAuth.clear();
-    message.error('视频平台访问令牌无效或已过期，请重新配置');
-    openTokenModal();
+    message.error('访问令牌无效或已过期，请联系管理员重新分配');
   } else if (status === 503) {
     message.error('认证服务暂时不可用，请稍后重试');
   } else {
@@ -309,11 +294,6 @@ async function queryPlayback() {
     playbackTip.value = '开始时间不能大于或等于结束时间';
     return;
   }
-  if (!equipAuth.get()) {
-    message.warning('请先配置视频平台访问令牌');
-    openTokenModal();
-    return;
-  }
 
   playbackLoading.value = true;
   destroyPlaybackPlayer();
@@ -397,6 +377,13 @@ const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
   return 'none';
 });
 
+/** 气象设备仅有数据详情页签 */
+const visibleTabs = computed(() =>
+  detailKind.value === 'weather'
+    ? tabs.filter((tab) => tab.key === 'data')
+    : tabs,
+);
+
 const vehicleColumns = [
   { title: '车辆号', dataIndex: 'carNumber', key: 'carNumber' },
   { title: '车辆颜色', dataIndex: 'vehicleColorName', key: 'vehicleColorName' },
@@ -452,11 +439,6 @@ const weatherDisplayRecords = computed(() =>
 async function loadDataDetails(pageNo = 1) {
   const device = selectedDevice.value;
   if (!device || detailKind.value === 'none') return;
-  if (!equipAuth.get()) {
-    message.warning('请先配置视频平台访问令牌');
-    openTokenModal();
-    return;
-  }
 
   detailLoading.value = true;
   try {
@@ -523,7 +505,15 @@ function selectDevice(device: DeviceTreeItem) {
   vehiclePage.pageNo = 1;
   weatherRecords.value = [];
 
-  if (activeTab.value === 'real') {
+  if (detailKind.value === 'weather') {
+    // 气象设备仅有数据详情页签，自动切换并加载
+    const wasDataTab = activeTab.value === 'data';
+    activeTab.value = 'data';
+    // 页签未变化时 watch 不会触发，需手动加载
+    if (wasDataTab) {
+      loadDataDetails(1);
+    }
+  } else if (activeTab.value === 'real') {
     playLive();
   } else if (activeTab.value === 'data') {
     loadDataDetails(1);
@@ -549,6 +539,10 @@ watch(activeTab, (tab) => {
 
 onMounted(() => {
   loadDeviceTree();
+  // 预加载中台联调地址与令牌，失败会在后续接口调用时自动重试
+  loadEquipConfig().catch(() => {
+    // 错误提示由全局响应拦截器统一处理
+  });
 });
 
 onBeforeUnmount(() => {
@@ -559,7 +553,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex h-full w-full overflow-hidden bg-gray-100">
+  <div class="flex h-full w-full overflow-hidden bg-gray-100 p-4">
     <!-- 左侧设备分类区域 -->
     <div class="flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm">
       <div class="border-b border-gray-200 p-4">
@@ -663,10 +657,6 @@ onBeforeUnmount(() => {
             {{ selectedDevice.online ? '在线' : '离线' }}
           </span>
         </div>
-        <Button size="small" @click="openTokenModal">
-          <IconifyIcon class="mr-1" icon="mdi:key-variant" />
-          访问令牌
-        </Button>
       </div>
 
       <div class="flex-1 overflow-auto p-4">
@@ -674,7 +664,7 @@ onBeforeUnmount(() => {
           <!-- 视频tab区域 -->
           <div class="flex border-b border-gray-200">
             <div
-              v-for="tab in tabs"
+              v-for="tab in visibleTabs"
               :key="tab.key"
               class="cursor-pointer border-b-2 px-5 py-3 font-medium"
               :class="
@@ -843,23 +833,6 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
-    </Modal>
-
-    <!-- 访问令牌弹窗 -->
-    <Modal
-      v-model:open="tokenVisible"
-      cancel-text="取消"
-      ok-text="保存"
-      title="视频平台访问令牌"
-      @ok="saveToken"
-    >
-      <p class="mb-3 text-sm text-gray-500">
-        令牌由后端管理员分配，仅保存在当前浏览器会话（sessionStorage）中，不会写入代码或日志，页面关闭后自动失效。
-      </p>
-      <Input.Password
-        v-model:value="tokenInput"
-        placeholder="请输入 hx_live_ 开头的访问令牌"
-      />
     </Modal>
   </div>
 </template>

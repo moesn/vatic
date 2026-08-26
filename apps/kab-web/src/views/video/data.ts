@@ -2,48 +2,80 @@
  * 设备查看页面接口
  *
  * - 设备分类树走本系统 requestClient（经 /api 代理，result 信封）
- * - 其余中台接口（视频平台、过车、气象）直接调用 kab-equip 服务地址，
- *   携带人工分配的 Opaque Access Token（hx_live_ 开头），按对接文档
- *   约束令牌仅保存于 sessionStorage，不写入 URL、源码或日志
+ * - 其余中台接口（视频平台、过车、气象）先调用 /device/deviceToken
+ *   获取联调地址与访问令牌，然后直连该地址调用，令牌由后端接口
+ *   下发，按对接文档约束不写入 URL、源码或日志
  */
 import { requestClient } from '#/api/request';
 
+// region 中台联调配置（地址 + 令牌）
+
+/** /device/deviceToken 返回结构（字段名以后端实际返回为准，此处做兼容解析） */
+interface EquipTokenResult {
+  accessToken?: string;
+  address?: string;
+  baseUrl?: string;
+  serverUrl?: string;
+  token?: string;
+  url?: string;
+}
+
+const equipConfig = { baseUrl: '', token: '' };
+let equipConfigPromise: null | Promise<void> = null;
+
 /**
- * 数安硬件数据中台服务地址，除设备分类树（/api/device/queryTree）外，
- * 其余接口（视频平台、过车、气象等）均直接调用该服务
+ * 获取中台联调地址与访问令牌（带缓存）
+ *
+ * @param forceRefresh 强制刷新，用于令牌失效（401）后重新获取
  */
-const EQUIP_API_BASE = 'https://kab-equip.sazn-ai.com:8070';
+export function loadEquipConfig(forceRefresh = false): Promise<void> {
+  if (forceRefresh || !equipConfigPromise) {
+    equipConfigPromise = requestClient
+      .get<EquipTokenResult>('/device/deviceToken')
+      .then((result) => {
+        equipConfig.baseUrl = String(
+          result?.baseUrl ??
+            result?.serverUrl ??
+            result?.url ??
+            result?.address ??
+            '',
+        ).replace(/\/+$/, '');
+        equipConfig.token = String(result?.accessToken ?? result?.token ?? '');
+      })
+      .catch((error) => {
+        // 失败后清除缓存，允许后续接口调用时重新获取
+        equipConfigPromise = null;
+        throw error;
+      });
+  }
+  return equipConfigPromise;
+}
 
-/** 中台访问令牌存储键（sessionStorage，页面关闭自动失效） */
-const EQUIP_TOKEN_KEY = 'kab-equip-access-token';
-
-/** 中台访问令牌管理 */
-export const equipAuth = {
-  clear() {
-    sessionStorage.removeItem(EQUIP_TOKEN_KEY);
-  },
-  get(): string {
-    return sessionStorage.getItem(EQUIP_TOKEN_KEY) ?? '';
-  },
-  set(token: string) {
-    sessionStorage.setItem(EQUIP_TOKEN_KEY, token.trim());
-  },
-};
+// endregion
 
 /** 中台接口请求封装（参考对接文档第 9 章），错误对象附带 HTTP status */
 async function equipRequest<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const token = equipAuth.get();
-  const response = await fetch(`${EQUIP_API_BASE}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init.headers as Record<string, string>),
-    },
-  });
+  await loadEquipConfig();
+
+  const doFetch = () =>
+    fetch(`${equipConfig.baseUrl}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${equipConfig.token}`,
+        ...(init.headers as Record<string, string>),
+      },
+    });
+
+  let response = await doFetch();
+  // 令牌过期（401）时刷新联调配置并重试一次
+  if (response.status === 401) {
+    await loadEquipConfig(true);
+    response = await doFetch();
+  }
 
   const payload: any = await response.json().catch(() => undefined);
 
@@ -206,12 +238,12 @@ export function getWeatherListApi(params: {
   );
 }
 
-/** 播放地址处理：相对地址补全中台前缀 */
+/** 播放地址处理：相对地址补全中台联调地址前缀 */
 export function resolveStreamUrl(streamUrl: string): string {
   if (/^https?:\/\//.test(streamUrl)) {
     return streamUrl;
   }
-  return `${EQUIP_API_BASE}${streamUrl}`;
+  return `${equipConfig.baseUrl}${streamUrl}`;
 }
 
 /** 查询录像 */

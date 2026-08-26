@@ -520,44 +520,44 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <div class="right" :style="{ width: `${videoWidth}px` }">
-        <template v-for="(device, index) in selectedDevices" :key="device.id">
-          <Popover
-            placement="left"
-            v-if="index === 0"
-            v-model:open="settingVisible"
-            trigger="click"
-          >
-            <template #content>
-              <Select
-                v-model:value="selectedDevices"
-                mode="multiple"
-                style="width: 300px"
-                placeholder="请选择5个要播放的监控设备"
-                @change="handleChange"
-              >
-                <SelectOption
-                  v-for="item in allDeviceList"
-                  :key="item.id"
-                  :value="item.videoUrl"
-                  :disabled="
-                    (selectedDevices.length >= 5 &&
-                      !selectedDevices.includes(item.videoUrl)) ||
-                    (selectedDevices.length === 1 &&
-                      selectedDevices.includes(item.videoUrl))
-                  "
-                >
-                  {{ item.location }}
-                </SelectOption>
-              </Select>
-              <Button @click="storeDevice()">保存</Button>
-            </template>
-            <img src="/assets/image/setting.png" alt="" />
-          </Popover>
-          <h1>{{ deviceName(device) }}</h1>
-          <video class="videoElement" autoplay muted></video>
-        </template>
-      </div>
+<!--      <div class="right" :style="{ width: `${videoWidth}px` }">-->
+<!--        <template v-for="(device, index) in selectedDevices" :key="device.id">-->
+<!--          <Popover-->
+<!--            placement="left"-->
+<!--            v-if="index === 0"-->
+<!--            v-model:open="settingVisible"-->
+<!--            trigger="click"-->
+<!--          >-->
+<!--            <template #content>-->
+<!--              <Select-->
+<!--                v-model:value="selectedDevices"-->
+<!--                mode="multiple"-->
+<!--                style="width: 300px"-->
+<!--                placeholder="请选择5个要播放的监控设备"-->
+<!--                @change="handleChange"-->
+<!--              >-->
+<!--                <SelectOption-->
+<!--                  v-for="item in allDeviceList"-->
+<!--                  :key="item.id"-->
+<!--                  :value="item.videoUrl"-->
+<!--                  :disabled="-->
+<!--                    (selectedDevices.length >= 5 &&-->
+<!--                      !selectedDevices.includes(item.videoUrl)) ||-->
+<!--                    (selectedDevices.length === 1 &&-->
+<!--                      selectedDevices.includes(item.videoUrl))-->
+<!--                  "-->
+<!--                >-->
+<!--                  {{ item.location }}-->
+<!--                </SelectOption>-->
+<!--              </Select>-->
+<!--              <Button @click="storeDevice()">保存</Button>-->
+<!--            </template>-->
+<!--            <img src="/assets/image/setting.png" alt="" />-->
+<!--          </Popover>-->
+<!--          <h1>{{ deviceName(device) }}</h1>-->
+<!--          <video class="videoElement" autoplay muted></video>-->
+<!--        </template>-->
+<!--      </div>-->
       <div
         class="bottom"
         :style="{ width: `calc(100% - ${videoWidth + 480}px)` }"
