@@ -219,7 +219,20 @@ export function getVehiclePassListApi(params: {
   );
 }
 
-/** 气象数据 */
+/** 气象站监测数据（字段以后端实际推送为准） */
+export interface WeatherStationRecord {
+  station_id?: string;
+  station_name?: string;
+  temperature?: number;
+  humidity?: number;
+  wind_speed?: number;
+  weather?: string;
+  pressure?: number;
+  wind_direction?: number | string;
+  snapshot_time?: string;
+}
+
+/** 气象数据：data 直接为数组，按需取第一条展示 */
 export function getWeatherListApi(params: {
   clientId?: string;
   endTime?: string;
@@ -227,7 +240,7 @@ export function getWeatherListApi(params: {
   pageSize?: number;
   startTime?: string;
 }) {
-  return equipRequest<PageResult<Record<string, any>>>(
+  return equipRequest<WeatherStationRecord[]>(
     `/api/weather/list?${toQuery(params)}`,
   );
 }

@@ -5,6 +5,7 @@ import type {
   PlatformCamera,
   RecordingSegment,
   VehiclePassRecord,
+  WeatherStationRecord,
 } from './data';
 
 import {
@@ -22,9 +23,12 @@ import { IconifyIcon } from '@vatic/icons';
 import {
   Button,
   DatePicker,
+  Descriptions,
+  DescriptionsItem,
   Image,
   message,
   Modal,
+  Spin,
   Table,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
@@ -377,7 +381,7 @@ const detailLoading = ref(false);
 const vehicleRecords = ref<VehiclePassRecord[]>([]);
 const vehicleTotal = ref(0);
 const vehiclePage = reactive({ pageNo: 1, pageSize: 10 });
-const weatherRecords = ref<Array<Record<string, any>>>([]);
+const weatherRecord = ref<WeatherStationRecord | null>(null);
 
 const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
   const purpose = selectedDevice.value?.purpose ?? '';
@@ -414,40 +418,52 @@ const vehiclePagination = computed(() => ({
   total: vehicleTotal.value,
 }));
 
-const weatherFieldLabels: Record<string, string> = {
-  createTime: '入库时间',
-  detectedTime: '检测时间',
-  humidity: '湿度(%RH)',
-  pressure: '气压(Pa)',
-  rainfall: '雨量(mm)',
-  temperature: '温度(℃)',
-  visibility: '能见度(m)',
-  wind_direction: '风向',
-  windDirection: '风向',
-  wind_speed: '风速(m/s)',
-  windSpeed: '风速(m/s)',
-};
+/** 风向角度转中文方位 */
+function windDirectionText(value?: null | number | string): string {
+  if (value === null || value === undefined || value === '') return '-';
+  const angle = Number(value);
+  if (Number.isNaN(angle)) return String(value);
+  const directions = [
+    '北',
+    '东北偏北',
+    '东北',
+    '东北偏东',
+    '东',
+    '东南偏东',
+    '东南',
+    '东南偏南',
+    '南',
+    '西南偏南',
+    '西南',
+    '西南偏西',
+    '西',
+    '西北偏西',
+    '西北',
+    '西北偏北',
+  ];
+  return `${directions[Math.round((angle % 360) / 22.5) % 16]}（${angle}°）`;
+}
 
-/** 气象站推送字段动态展平，列以首条记录的字段为准 */
-const weatherColumns = computed(() => {
-  const first = weatherRecords.value[0];
-  if (!first) return [];
-  return Object.keys(first)
-    .filter((key) => !['clientId', 'id'].includes(key))
-    .map((key) => ({
-      dataIndex: key,
-      key,
-      title: weatherFieldLabels[key] ?? key,
-    }));
+/** 气象数据详情项（取返回列表第一条） */
+const weatherItems = computed(() => {
+  const record = weatherRecord.value;
+  if (!record) return [];
+  return [
+    { label: '站点名称', value: record.station_name },
+    { label: '温度', value: formatValue(record.temperature, '℃') },
+    { label: '湿度', value: formatValue(record.humidity, '%RH') },
+    { label: '风速', value: formatValue(record.wind_speed, 'm/s') },
+    { label: '风向', value: windDirectionText(record.wind_direction) },
+    { label: '气压', value: formatValue(record.pressure, 'Pa') },
+    { label: '天气', value: record.weather || '-' },
+    { label: '快照时间', value: formatTime(record.snapshot_time) },
+  ];
 });
 
-const weatherDisplayRecords = computed(() =>
-  weatherRecords.value.map((record) => ({
-    ...record,
-    createTime: formatTime(record.createTime),
-    detectedTime: formatTime(record.detectedTime),
-  })),
-);
+function formatValue(value: null | number | undefined, unit: string): string {
+  if (value === null || value === undefined || value === '') return '-';
+  return `${value} ${unit}`;
+}
 
 async function loadDataDetails(pageNo = 1) {
   const device = selectedDevice.value;
@@ -468,9 +484,10 @@ async function loadDataDetails(pageNo = 1) {
       const data = await getWeatherListApi({
         clientId: device.simNo,
         pageNo: 1,
-        pageSize: 100,
+        pageSize: 10,
       });
-      weatherRecords.value = data?.records ?? [];
+      // 取第一条展示详情
+      weatherRecord.value = data?.[0] ?? null;
     }
   } catch (error: any) {
     handleEquipError(error);
@@ -521,7 +538,7 @@ function selectDevice(device: DeviceTreeItem) {
   vehicleRecords.value = [];
   vehicleTotal.value = 0;
   vehiclePage.pageNo = 1;
-  weatherRecords.value = [];
+  weatherRecord.value = null;
 
   if (detailKind.value === 'weather') {
     // 气象设备仅有数据详情页签，自动切换并加载
@@ -549,7 +566,7 @@ watch(activeTab, (tab) => {
     selectedDevice.value &&
     detailKind.value !== 'none' &&
     vehicleRecords.value.length === 0 &&
-    weatherRecords.value.length === 0
+    !weatherRecord.value
   ) {
     loadDataDetails(1);
   }
@@ -574,14 +591,14 @@ onBeforeUnmount(() => {
   <div class="flex h-full w-full overflow-hidden bg-gray-100 p-4">
     <!-- 左侧设备分类区域 -->
     <div class="flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm">
-      <div class="border-b border-gray-200 p-4">
-        <h2 class="flex items-center text-lg font-bold text-gray-800">
+      <div class="border-b border-gray-200 py-3 px-5">
+        <span class="flex items-center font-bold text-gray-800">
           <IconifyIcon
             class="text-primary mr-2"
             icon="mdi:format-list-bulleted"
           />
           设备分类
-        </h2>
+        </span>
       </div>
       <div class="scrollbar-hide flex-1 overflow-y-auto p-3">
         <div
@@ -808,15 +825,35 @@ onBeforeUnmount(() => {
                   </template>
                 </template>
               </Table>
-              <Table
-                v-else-if="detailKind === 'weather'"
-                :columns="weatherColumns"
-                :data-source="weatherDisplayRecords"
-                :loading="detailLoading"
-                :pagination="false"
-                row-key="id"
-                size="middle"
-              />
+              <div v-else-if="detailKind === 'weather'">
+                <Spin :spinning="detailLoading">
+                  <Descriptions
+                    v-if="weatherRecord"
+                    :column="2"
+                    bordered
+                    size="middle"
+                    title="气象监测数据"
+                  >
+                    <DescriptionsItem
+                      v-for="item in weatherItems"
+                      :key="item.label"
+                      :label="item.label"
+                    >
+                      {{ item.value }}
+                    </DescriptionsItem>
+                  </Descriptions>
+                  <div
+                    v-else-if="!detailLoading"
+                    class="py-10 text-center text-gray-400"
+                  >
+                    <IconifyIcon
+                      class="mb-2 text-2xl"
+                      icon="mdi:weather-partly-cloudy"
+                    />
+                    <p>暂无气象监测数据</p>
+                  </div>
+                </Spin>
+              </div>
               <div v-else class="py-10 text-center text-gray-400">
                 <IconifyIcon
                   class="mb-2 text-2xl"
