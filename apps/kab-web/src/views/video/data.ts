@@ -6,7 +6,7 @@
  *   获取联调地址与访问令牌，然后直连该地址调用，令牌由后端接口
  *   下发，按对接文档约束不写入 URL、源码或日志
  */
-import { requestClient } from '#/api/request';
+import {requestClient} from '#/api/request';
 
 // region 中台联调配置（地址 + 令牌）
 
@@ -33,14 +33,8 @@ export function loadEquipConfig(forceRefresh = false): Promise<void> {
     equipConfigPromise = requestClient
       .get<EquipTokenResult>('/device/deviceToken')
       .then((result) => {
-        equipConfig.baseUrl = String(
-          result?.baseUrl ??
-            result?.serverUrl ??
-            result?.url ??
-            result?.address ??
-            '',
-        ).replace(/\/+$/, '');
-        equipConfig.token = String(result?.accessToken ?? result?.token ?? '');
+        equipConfig.baseUrl = String(result?.baseUrl).replace(/\/+$/, '');
+        equipConfig.token = String(result?.token);
       })
       .catch((error) => {
         // 失败后清除缓存，允许后续接口调用时重新获取
@@ -246,6 +240,28 @@ export function resolveStreamUrl(streamUrl: string): string {
   return `${equipConfig.baseUrl}${streamUrl}`;
 }
 
+/**
+ * 资源地址处理（抓拍图片等）：
+ * data:/blob:/绝对地址原样返回，相对地址补全中台联调地址前缀
+ */
+export function resolveEquipUrl(url?: null | string): string {
+  if (!url) return '';
+  if (/^(https?:|data:|blob:)/i.test(url)) {
+    return url;
+  }
+  const base = equipConfig.baseUrl;
+  if (!base) return url;
+  return url.startsWith('/') ? `${base}${url}` : `${base}/${url}`;
+}
+
+/** 开始实况：返回带短期签名的 HLS 播放地址（streamUrl） */
+export function startLiveApi(data: CameraKeyParams) {
+  return equipRequest<StreamResult>('/api/video-platform/live/start', {
+    body: JSON.stringify(data),
+    method: 'POST',
+  });
+}
+
 /** 查询录像 */
 export function searchRecordingsApi(
   data: CameraKeyParams & { end_time: string; start_time: string },
@@ -261,6 +277,14 @@ export function startPlaybackApi(
   data: CameraKeyParams & { end_time: string; start_time: string },
 ) {
   return equipRequest<StreamResult>('/api/video-platform/playback/start', {
+    body: JSON.stringify(data),
+    method: 'POST',
+  });
+}
+
+/** 停止实况：尽力调用，即使失败也必须清理本地播放器状态 */
+export function stopLiveApi(data: CameraKeyParams) {
+  return equipRequest<unknown>('/api/video-platform/live/stop', {
     body: JSON.stringify(data),
     method: 'POST',
   });

@@ -35,9 +35,12 @@ import {
   getVehiclePassListApi,
   getWeatherListApi,
   loadEquipConfig,
+  resolveEquipUrl,
   resolveStreamUrl,
   searchRecordingsApi,
+  startLiveApi,
   startPlaybackApi,
+  stopLiveApi,
 } from './data';
 
 const { RangePicker } = DatePicker;
@@ -193,52 +196,62 @@ async function attachStream(
 // region 实时视频
 const liveVideoRef = ref<HTMLVideoElement>();
 const liveTip = ref('');
-let livePlayer: any = null;
+const liveLoading = ref(false);
+let liveCleanup: (() => void) | null = null;
+let liveCamera: null | PlatformCamera = null;
 
+/**
+ * 销毁实况播放器：先清理本地播放器状态，
+ * 再尽力调用停止实况接口通知上游（失败不影响本地清理）
+ */
 function destroyLivePlayer() {
-  if (!livePlayer) return;
-  try {
-    livePlayer.pause();
-    livePlayer.unload();
-    livePlayer.detachMediaElement();
-    livePlayer.destroy();
-  } catch (error) {
-    console.warn('销毁实时视频播放器失败', error);
+  liveCleanup?.();
+  liveCleanup = null;
+  const camera = liveCamera;
+  liveCamera = null;
+  if (camera) {
+    stopLiveApi({
+      camera_code: camera.camera_code,
+      camera_serial: camera.camera_serial,
+      equipment_no: camera.equipment_no,
+    }).catch(() => {});
   }
-  livePlayer = null;
 }
 
-function playLive() {
+async function playLive() {
   destroyLivePlayer();
   liveTip.value = '';
   const device = selectedDevice.value;
   if (!device) return;
 
-  const flvjs = (window as any).flvjs;
-  if (!device.videoUrl) {
-    liveTip.value = `【${device.deviceName}】未配置视频流地址`;
-    return;
-  }
-  if (!flvjs?.isSupported?.()) {
-    liveTip.value = '当前浏览器不支持 FLV 视频播放';
-    return;
-  }
-
-  nextTick(() => {
+  liveLoading.value = true;
+  try {
+    const camera = await findCamera(device);
+    liveCamera = camera;
+    if (!camera) {
+      liveTip.value = `【${device.deviceName}】未接入视频平台，暂无实时视频`;
+      return;
+    }
+    const data = await startLiveApi({
+      camera_code: camera.camera_code,
+      camera_serial: camera.camera_serial,
+      equipment_no: camera.equipment_no,
+    });
+    const streamUrl = data?.streamUrl;
+    if (!streamUrl) {
+      liveTip.value = `【${device.deviceName}】未获取到实时视频流地址`;
+      return;
+    }
+    await nextTick();
     const video = liveVideoRef.value;
     if (!video) return;
-    livePlayer = flvjs.createPlayer(
-      { isLive: false, type: 'flv', url: device.videoUrl },
-      { lazyLoadMaxDuration: 600, stashInitialSize: 128 },
-    );
-    livePlayer.attachMediaElement(video);
-    livePlayer.load();
-    livePlayer.play();
-    livePlayer.on(flvjs.Events.ERROR, () => {
-      liveTip.value = `【${device.deviceName}】实时视频流加载失败`;
-      destroyLivePlayer();
-    });
-  });
+    liveCleanup = await attachStream(video, resolveStreamUrl(streamUrl));
+  } catch (error: any) {
+    handleEquipError(error);
+    liveTip.value = `【${device.deviceName}】实时视频加载失败`;
+  } finally {
+    liveLoading.value = false;
+  }
 }
 // endregion
 
@@ -475,6 +488,11 @@ function handleVehicleTableChange(pagination: any) {
 const carImageVisible = ref(false);
 const currentVehicle = ref<null | VehiclePassRecord>(null);
 
+/** 抓拍图片地址：相对路径补全中台联调地址前缀 */
+const currentVehicleImageUrl = computed(() =>
+  resolveEquipUrl(currentVehicle.value?.imgUrl),
+);
+
 function showVehicleImage(record: VehiclePassRecord) {
   currentVehicle.value = record;
   carImageVisible.value = true;
@@ -666,13 +684,14 @@ onBeforeUnmount(() => {
             <div
               v-for="tab in visibleTabs"
               :key="tab.key"
-              class="cursor-pointer border-b-2 px-5 py-3 font-medium"
-              :class="
-                activeTab === tab.key
+              class="border-b-2 px-5 py-3 font-medium"
+              :class="[
+                selectedDevice ? 'cursor-pointer' : 'cursor-not-allowed',
+                activeTab === tab.key && selectedDevice
                   ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-600'
-              "
-              @click="activeTab = tab.key"
+                  : 'border-transparent text-gray-400',
+              ]"
+              @click="selectedDevice && (activeTab = tab.key)"
             >
               {{ tab.label }}
             </div>
@@ -685,7 +704,7 @@ onBeforeUnmount(() => {
                 class="relative flex h-[360px] items-center justify-center rounded bg-black text-gray-400"
               >
                 <video
-                  v-show="selectedDevice && !liveTip"
+                  v-show="selectedDevice && !liveTip && !liveLoading"
                   ref="liveVideoRef"
                   autoplay
                   class="h-full w-full object-contain"
@@ -693,6 +712,7 @@ onBeforeUnmount(() => {
                   muted
                 ></video>
                 <div v-if="!selectedDevice">请选择左侧设备查看实时视频</div>
+                <div v-else-if="liveLoading">正在加载实时视频...</div>
                 <div v-else-if="liveTip">{{ liveTip }}</div>
               </div>
             </div>
@@ -819,8 +839,8 @@ onBeforeUnmount(() => {
     >
       <div class="flex justify-center p-2">
         <Image
-          v-if="currentVehicle?.imgUrl"
-          :src="currentVehicle.imgUrl"
+          v-if="currentVehicleImageUrl"
+          :src="currentVehicleImageUrl"
           class="w-full rounded object-contain"
         />
         <div
