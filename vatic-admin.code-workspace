@@ -5,7 +5,7 @@
       "path": "apps/backend-mock",
     },
     {
-      "name": "@vatic/kab-web",
+      "name": "@vatic/cmp-web",
       "path": "apps/cmp-web",
     },
     {
