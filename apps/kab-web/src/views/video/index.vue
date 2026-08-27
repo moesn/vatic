@@ -100,6 +100,10 @@ async function loadDeviceTree() {
   deviceLoading.value = true;
   try {
     deviceGroups.value = (await getDeviceTreeApi()) ?? [];
+    // 设备分类默认全展开
+    expandedPurposes.value = deviceGroups.value.map(
+      (group) => group.purpose,
+    );
   } catch {
     // 错误提示由全局响应拦截器统一处理
   } finally {
@@ -394,12 +398,8 @@ const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
   return 'none';
 });
 
-/** 气象设备仅有数据详情页签 */
-const visibleTabs = computed(() =>
-  detailKind.value === 'weather'
-    ? tabs.filter((tab) => tab.key === 'data')
-    : tabs,
-);
+/** 气象设备不显示页签，直接展示数据详情 */
+const isWeatherDevice = computed(() => detailKind.value === 'weather');
 
 const vehicleColumns = [
   { title: '车辆号', dataIndex: 'carNumber', key: 'carNumber' },
@@ -541,13 +541,8 @@ function selectDevice(device: DeviceTreeItem) {
   weatherRecord.value = null;
 
   if (detailKind.value === 'weather') {
-    // 气象设备仅有数据详情页签，自动切换并加载
-    const wasDataTab = activeTab.value === 'data';
-    activeTab.value = 'data';
-    // 页签未变化时 watch 不会触发，需手动加载
-    if (wasDataTab) {
-      loadDataDetails(1);
-    }
+    // 气象设备不显示页签，直接加载数据详情
+    loadDataDetails(1);
   } else if (activeTab.value === 'real') {
     playLive();
   } else if (activeTab.value === 'data') {
@@ -565,8 +560,7 @@ watch(activeTab, (tab) => {
     tab === 'data' &&
     selectedDevice.value &&
     detailKind.value !== 'none' &&
-    vehicleRecords.value.length === 0 &&
-    !weatherRecord.value
+    vehicleRecords.value.length === 0
   ) {
     loadDataDetails(1);
   }
@@ -591,7 +585,7 @@ onBeforeUnmount(() => {
   <div class="flex h-full w-full overflow-hidden bg-gray-100 p-4">
     <!-- 左侧设备分类区域 -->
     <div class="flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm">
-      <div class="border-b border-gray-200 py-3 px-5">
+      <div class="border-b border-gray-200 px-5 py-3">
         <span class="flex items-center font-bold text-gray-800">
           <IconifyIcon
             class="text-primary mr-2"
@@ -696,27 +690,60 @@ onBeforeUnmount(() => {
 
       <div class="flex-1 overflow-auto p-4">
         <div class="mb-4 rounded-lg bg-white shadow-sm">
-          <!-- 视频tab区域 -->
-          <div class="flex border-b border-gray-200">
-            <div
-              v-for="tab in visibleTabs"
-              :key="tab.key"
-              class="border-b-2 px-5 py-3 font-medium"
-              :class="[
-                selectedDevice ? 'cursor-pointer' : 'cursor-not-allowed',
-                activeTab === tab.key && selectedDevice
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-400',
-              ]"
-              @click="selectedDevice && (activeTab = tab.key)"
-            >
-              {{ tab.label }}
+          <!-- 视频tab区域：气象设备不显示页签 -->
+          <template v-if="!isWeatherDevice">
+            <div class="flex border-b border-gray-200">
+              <div
+                v-for="tab in tabs"
+                :key="tab.key"
+                class="border-b-2 px-5 py-3 font-medium"
+                :class="[
+                  selectedDevice ? 'cursor-pointer' : 'cursor-not-allowed',
+                  activeTab === tab.key && selectedDevice
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-400',
+                ]"
+                @click="selectedDevice && (activeTab = tab.key)"
+              >
+                {{ tab.label }}
+              </div>
             </div>
-          </div>
+          </template>
 
           <div class="p-4">
+            <!-- 气象设备：不显示页签，直接展示数据详情 -->
+            <div v-if="isWeatherDevice">
+              <Spin :spinning="detailLoading">
+                <Descriptions
+                  v-if="weatherRecord"
+                  :column="2"
+                  bordered
+                  size="middle"
+                  title="气象监测数据"
+                >
+                  <DescriptionsItem
+                    v-for="item in weatherItems"
+                    :key="item.label"
+                    :label="item.label"
+                  >
+                    {{ item.value }}
+                  </DescriptionsItem>
+                </Descriptions>
+                <div
+                  v-else-if="!detailLoading"
+                  class="py-10 text-center text-gray-400"
+                >
+                  <IconifyIcon
+                    class="mb-2 text-2xl"
+                    icon="mdi:weather-partly-cloudy"
+                  />
+                  <p>暂无气象监测数据</p>
+                </div>
+              </Spin>
+            </div>
+
             <!-- 实时视频 -->
-            <div v-show="activeTab === 'real'">
+            <div v-show="!isWeatherDevice && activeTab === 'real'">
               <div
                 class="relative flex h-[360px] items-center justify-center rounded bg-black text-gray-400"
               >
@@ -735,7 +762,7 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- 回放视频 -->
-            <div v-show="activeTab === 'playback'">
+            <div v-show="!isWeatherDevice && activeTab === 'playback'">
               <div class="mb-4 flex flex-wrap items-center gap-3">
                 <span class="text-sm text-gray-600">回放时间段：</span>
                 <RangePicker
@@ -797,7 +824,7 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- 数据详情 -->
-            <div v-show="activeTab === 'data'">
+            <div v-show="!isWeatherDevice && activeTab === 'data'">
               <Table
                 v-if="detailKind === 'vehicle'"
                 :columns="vehicleColumns"
@@ -825,35 +852,6 @@ onBeforeUnmount(() => {
                   </template>
                 </template>
               </Table>
-              <div v-else-if="detailKind === 'weather'">
-                <Spin :spinning="detailLoading">
-                  <Descriptions
-                    v-if="weatherRecord"
-                    :column="2"
-                    bordered
-                    size="middle"
-                    title="气象监测数据"
-                  >
-                    <DescriptionsItem
-                      v-for="item in weatherItems"
-                      :key="item.label"
-                      :label="item.label"
-                    >
-                      {{ item.value }}
-                    </DescriptionsItem>
-                  </Descriptions>
-                  <div
-                    v-else-if="!detailLoading"
-                    class="py-10 text-center text-gray-400"
-                  >
-                    <IconifyIcon
-                      class="mb-2 text-2xl"
-                      icon="mdi:weather-partly-cloudy"
-                    />
-                    <p>暂无气象监测数据</p>
-                  </div>
-                </Spin>
-              </div>
               <div v-else class="py-10 text-center text-gray-400">
                 <IconifyIcon
                   class="mb-2 text-2xl"
