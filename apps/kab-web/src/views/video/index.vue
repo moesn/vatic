@@ -54,8 +54,8 @@ const { RangePicker } = DatePicker;
 type TabKey = 'data' | 'playback' | 'real';
 
 /**
- * 页签列表：海康（路面等）设备只有实时/回放，
- * 仅弯道预警设备在二者之外额外提供数据详情页签
+ * 页签列表（仅气象/海康之外的设备显示页签栏）：
+ * 仅弯道预警设备在实时/回放之外额外提供数据详情页签
  */
 const visibleTabs = computed<Array<{ key: TabKey; label: string }>>(() => {
   if (detailKind.value === 'vehicle') {
@@ -67,7 +67,6 @@ const visibleTabs = computed<Array<{ key: TabKey; label: string }>>(() => {
   }
   return [
     { key: 'real', label: '实时视频' },
-    { key: 'playback', label: '回放视频' },
   ];
 });
 const activeTab = ref<TabKey>('real');
@@ -283,9 +282,8 @@ async function playLive() {
 }
 // endregion
 
-// region 回放视频
+// region 回放视频（仅其它厂商，海康设备不提供回放）
 const playbackVideoRef = ref<HTMLVideoElement>();
-const playbackContainerRef = ref<HTMLElement>();
 const playbackRange = ref<[string, string] | null>(null);
 const playbackLoading = ref(false);
 const playbackTip = ref('');
@@ -294,15 +292,6 @@ const playbackStreamReady = ref(false);
 const recordings = ref<RecordingSegment[]>([]);
 const activeRecording = ref<null | RecordingSegment>(null);
 let playbackCleanup: (() => void) | null = null;
-
-/** 海康回放播放器：禁用自动预览（插件单实例，由实况实例独占自动预览），仅按时间段手动播放 */
-const hikPlayback = useHikiotPlayer({
-  autoPreview: false,
-  containerRef: playbackContainerRef,
-  deviceSerial: computed(() =>
-    isHikvision.value ? hikiotDeviceSerial.value : undefined,
-  ),
-});
 
 const playbackPlaceholder = computed(() =>
   selectedDevice.value
@@ -313,19 +302,7 @@ const playbackPlaceholder = computed(() =>
 function destroyPlaybackPlayer() {
   playbackCleanup?.();
   playbackCleanup = null;
-  hikPlayback.stop();
   playbackStreamReady.value = false;
-}
-
-/** 海康威视回放：无录像检索步骤，按时间段直接播放 */
-function playHikiotPlayback() {
-  const serial = hikiotDeviceSerial.value;
-  if (!serial || !playbackRange.value?.[0] || !playbackRange.value?.[1]) return;
-  hikPlayback.playPlayback(
-    serial,
-    playbackRange.value[0],
-    playbackRange.value[1],
-  );
 }
 
 async function queryPlayback() {
@@ -342,13 +319,6 @@ async function queryPlayback() {
   const [startTime, endTime] = playbackRange.value;
   if (!dayjs(startTime).isBefore(dayjs(endTime))) {
     playbackTip.value = '开始时间不能大于或等于结束时间';
-    return;
-  }
-
-  // 海康设备：本地插件按时间段直接播放，无需检索片段
-  if (isHikvision.value) {
-    playbackStatus.value = `正在播放【${device.deviceName}】回放录像...`;
-    playHikiotPlayback();
     return;
   }
 
@@ -429,6 +399,11 @@ const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
 
 /** 气象设备不显示页签，直接展示数据详情 */
 const isWeatherDevice = computed(() => detailKind.value === 'weather');
+
+/**
+ * 是否显示页签栏：气象设备直接展示数据详情、海康设备直接展示实时视频，均不显示页签
+ */
+const showTabs = computed(() => !isWeatherDevice.value && !isHikvision.value);
 
 /** 设备是否在线：设备树以 status === '1' 表示在线，无 online 字段 */
 const isDeviceOnline = (device?: DeviceTreeItem | null) =>
@@ -579,8 +554,11 @@ function selectDevice(device: DeviceTreeItem) {
     // 气象设备不显示页签，直接加载数据详情
     loadDataDetails(1);
   } else {
-    // 海康等设备仅实时/回放；若当前停留在不存在的页签，回退到实时
-    if (!visibleTabs.value.some((tab) => tab.key === activeTab.value)) {
+    // 海康设备不显示页签且只有实时视频；若当前停留在不存在的页签，回退到实时
+    if (
+      isHikvision.value ||
+      !visibleTabs.value.some((tab) => tab.key === activeTab.value)
+    ) {
       activeTab.value = 'real';
     }
     if (activeTab.value === 'real') {
@@ -603,9 +581,6 @@ watch(activeTab, (tab) => {
     if (!isHikvision.value) {
       playLive();
     }
-  } else if (tab === 'playback' && isHikvision.value && playbackRange.value) {
-    // 海康回放：若已选时间段则直接续播
-    playHikiotPlayback();
   } else if (
     tab === 'data' &&
     selectedDevice.value &&
@@ -742,8 +717,8 @@ onBeforeUnmount(() => {
 
       <div class="flex-1 overflow-auto p-4">
         <div class="mb-4 rounded-lg bg-white shadow-sm">
-          <!-- 视频tab区域：气象设备不显示页签 -->
-          <template v-if="!isWeatherDevice">
+          <!-- 页签栏：气象/海康设备不显示页签，直接展示对应内容 -->
+          <template v-if="showTabs">
             <div class="flex border-b border-gray-200">
               <div
                 v-for="tab in visibleTabs"
@@ -800,8 +775,10 @@ onBeforeUnmount(() => {
               </Spin>
             </div>
 
-            <!-- 实时视频 -->
-            <div v-show="!isWeatherDevice && activeTab === 'real'">
+            <!-- 实时视频：海康设备无页签直接展示；其它厂商跟随 real 页签 -->
+            <div
+              v-show="!isWeatherDevice && (isHikvision || activeTab === 'real')"
+            >
               <!-- 海康威视：本地 WEB 插件窗口（原生窗口覆盖在容器内） -->
               <div
                 v-if="isHikvision"
@@ -840,8 +817,12 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
-            <!-- 回放视频 -->
-            <div v-show="!isWeatherDevice && activeTab === 'playback'">
+            <!-- 回放视频（海康设备不提供回放） -->
+            <div
+              v-show="
+                !isWeatherDevice && !isHikvision && activeTab === 'playback'
+              "
+            >
               <div class="mb-4 flex flex-wrap items-center gap-3">
                 <span class="text-sm text-gray-600">回放时间段：</span>
                 <RangePicker
@@ -856,78 +837,52 @@ onBeforeUnmount(() => {
                   @click="queryPlayback"
                 >
                   <IconifyIcon class="mr-1" icon="mdi:magnify" />
-                  {{ isHikvision ? '播放回放' : '查询回放' }}
+                  查询回放
                 </Button>
                 <div v-if="playbackTip" class="text-xs text-orange-500">
                   {{ playbackTip }}
                 </div>
               </div>
 
-              <!-- 海康威视：本地 WEB 插件窗口 -->
-              <template v-if="isHikvision">
-                <div
-                  class="relative flex h-[320px] items-center justify-center rounded bg-black text-gray-400"
-                >
+              <!-- 录像检索 + flv/hls 流 -->
+              <div
+                class="relative flex h-[320px] items-center justify-center rounded bg-black text-gray-400"
+              >
+                <video
+                  v-show="playbackStreamReady"
+                  ref="playbackVideoRef"
+                  autoplay
+                  class="h-full w-full object-contain"
+                  controls
+                  muted
+                ></video>
+                <div v-if="!playbackStreamReady">
+                  {{ playbackStatus || playbackPlaceholder }}
+                </div>
+              </div>
+              <div v-if="recordings.length > 0" class="mt-4">
+                <div class="mb-2 text-sm font-medium text-gray-700">
+                  回放片段（{{ recordings.length }}）
+                </div>
+                <div class="flex flex-wrap gap-2">
                   <div
-                    ref="playbackContainerRef"
-                    class="absolute inset-0"
-                  ></div>
-                  <div v-if="hikPlayback.loading" class="relative z-10">
-                    正在加载海康回放视频...
-                  </div>
-                  <div
-                    v-else-if="hikPlayback.error"
-                    class="relative z-10 text-orange-400"
+                    v-for="(recording, index) in recordings"
+                    :key="index"
+                    class="cursor-pointer rounded border px-3 py-1.5 text-xs"
+                    :class="
+                      activeRecording === recording
+                        ? 'border-primary text-primary bg-blue-50'
+                        : 'border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600'
+                    "
+                    @click="playRecording(recording)"
                   >
-                    {{ hikPlayback.error }}
-                  </div>
-                  <div v-else-if="!playbackRange" class="relative z-10">
-                    {{ playbackPlaceholder }}
-                  </div>
-                </div>
-              </template>
-
-              <!-- 其它厂商：录像检索 + flv/hls 流 -->
-              <template v-else>
-                <div
-                  class="relative flex h-[320px] items-center justify-center rounded bg-black text-gray-400"
-                >
-                  <video
-                    v-show="playbackStreamReady"
-                    ref="playbackVideoRef"
-                    autoplay
-                    class="h-full w-full object-contain"
-                    controls
-                    muted
-                  ></video>
-                  <div v-if="!playbackStreamReady">
-                    {{ playbackStatus || playbackPlaceholder }}
+                    {{ recording.name || `片段${index + 1}` }}（{{
+                      formatTime(recording.start_time)
+                    }}
+                    ~ {{ formatTime(recording.end_time) }}）
                   </div>
                 </div>
-                <div v-if="recordings.length > 0" class="mt-4">
-                  <div class="mb-2 text-sm font-medium text-gray-700">
-                    回放片段（{{ recordings.length }}）
-                  </div>
-                  <div class="flex flex-wrap gap-2">
-                    <div
-                      v-for="(recording, index) in recordings"
-                      :key="index"
-                      class="cursor-pointer rounded border px-3 py-1.5 text-xs"
-                      :class="
-                        activeRecording === recording
-                          ? 'border-primary text-primary bg-blue-50'
-                          : 'border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600'
-                      "
-                      @click="playRecording(recording)"
-                    >
-                      {{ recording.name || `片段${index + 1}` }}（{{
-                        formatTime(recording.start_time)
-                      }}
-                      ~ {{ formatTime(recording.end_time) }}）
-                    </div>
-                  </div>
-                </div>
-              </template>
+              </div>
             </div>
 
             <!-- 数据详情 -->
