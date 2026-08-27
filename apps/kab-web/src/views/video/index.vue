@@ -80,9 +80,19 @@ const selectedDevice = ref<DeviceTreeItem | null>(null);
 
 /**
  * 海康威视设备：实时/回放改用 hikiot 本地 WEB 插件而非 flv/hls 流
- * 以 vendor 字段判定（设备树实际返回如 "大华"、"海康威视"）
+ * 以 vendor 字段判定（兼容 "海康"/"海康威视"/"hikvision" 等变体，大小写无关），
+ * 命中时严禁调用大华的 /api/video-platform/* 接口
  */
-const isHikvision = computed(() => selectedDevice.value?.vendor === '海康威视');
+const isHikvision = computed(() => {
+  const dev = selectedDevice.value;
+  if (!dev) return false;
+
+  const isVendorMatch = /海康|hikvision/i.test(dev.vendor ?? '');
+  const isRoadMonitor = dev.purpose === '路面监控';
+  const isGvSim = dev.simNo?.startsWith('GV');
+
+  return isVendorMatch || isRoadMonitor || isGvSim;
+});
 
 /** 海康设备的序列号取自设备树 simNo */
 const hikiotDeviceSerial = computed(() => selectedDevice.value?.simNo);
@@ -226,7 +236,7 @@ const liveContainerRef = ref<HTMLElement>();
 const liveTip = ref('');
 const liveLoading = ref(false);
 let liveCleanup: (() => void) | null = null;
-let liveCameraParams: null | CameraKeyParams = null;
+let liveCameraParams: CameraKeyParams | null = null;
 
 /** 海康实况播放器（仅在海康设备下启用，且仅在实时页签自动预览） */
 const hikLive = useHikiotPlayer({
