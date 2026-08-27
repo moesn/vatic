@@ -26,6 +26,7 @@ import {
   Descriptions,
   DescriptionsItem,
   Image,
+  Input,
   message,
   Modal,
   Spin,
@@ -72,7 +73,7 @@ const visibleTabs = computed<Array<{ key: TabKey; label: string }>>(() => {
 const activeTab = ref<TabKey>('real');
 // endregion
 
-// region 左侧设备分类
+// region 左侧设备查看
 const deviceLoading = ref(false);
 const deviceGroups = ref<DeviceTreeGroup[]>([]);
 const expandedPurposes = ref<string[]>([]);
@@ -131,7 +132,7 @@ async function loadDeviceTree() {
   deviceLoading.value = true;
   try {
     deviceGroups.value = (await getDeviceTreeApi()) ?? [];
-    // 设备分类默认全展开
+    // 设备查看默认全展开
     expandedPurposes.value = deviceGroups.value.map((group) => group.purpose);
   } catch {
     // 错误提示由全局响应拦截器统一处理
@@ -299,6 +300,32 @@ const playbackPlaceholder = computed(() =>
     : '选择设备，填写回放时间段后查询回放视频',
 );
 
+/** 回放时间不可晚于当前时刻：禁用今天之后的日期与今天已过的时/分/秒 */
+const playbackDisabledDate = (current: any) =>
+  current && current.isAfter(dayjs().endOf('day'));
+
+function playbackDisabledTime(current: any) {
+  if (!current || !current.isSame(dayjs(), 'day')) return {};
+  const now = dayjs();
+  const isCurrentHour = current.hour() === now.hour();
+  return {
+    disabledHours: () =>
+      Array.from({ length: now.hour() }, (_, i) => i).concat(
+        Array.from({ length: 23 - now.hour() }, (_, i) => now.hour() + 1 + i),
+      ),
+    disabledMinutes: (selectedHour: number) =>
+      selectedHour === now.hour()
+        ? Array.from({ length: now.minute() }, (_, i) => i).concat(
+            Array.from({ length: 59 - now.minute() }, (_, i) => now.minute() + 1 + i),
+          )
+        : [],
+    disabledSeconds: (_selectedHour: number, selectedMinute: number) =>
+      isCurrentHour && selectedMinute === now.minute()
+        ? Array.from({ length: 59 - now.second() }, (_, i) => now.second() + 1 + i)
+        : [],
+  };
+}
+
 function destroyPlaybackPlayer() {
   playbackCleanup?.();
   playbackCleanup = null;
@@ -384,6 +411,8 @@ const detailLoading = ref(false);
 const vehicleRecords = ref<VehiclePassRecord[]>([]);
 const vehicleTotal = ref(0);
 const vehiclePage = reactive({ pageNo: 1, pageSize: 10 });
+/** 车辆号查询（弯道预警过车记录） */
+const vehicleCarNumber = ref('');
 const weatherRecord = ref<null | WeatherStationRecord>(null);
 
 const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
@@ -485,6 +514,7 @@ async function loadDataDetails(pageNo = 1) {
     if (detailKind.value === 'vehicle') {
       vehiclePage.pageNo = pageNo;
       const data = await getVehiclePassListApi({
+        carNumber: vehicleCarNumber.value || undefined,
         equipmentNo: device.simNo,
         pageNo,
         pageSize: vehiclePage.pageSize,
@@ -509,6 +539,11 @@ async function loadDataDetails(pageNo = 1) {
 
 function handleVehicleTableChange(pagination: any) {
   loadDataDetails(pagination.current);
+}
+
+/** 车辆号查询：重置到第 1 页 */
+function handleVehicleSearch() {
+  loadDataDetails(1);
 }
 // endregion
 
@@ -548,6 +583,7 @@ function selectDevice(device: DeviceTreeItem) {
   vehicleRecords.value = [];
   vehicleTotal.value = 0;
   vehiclePage.pageNo = 1;
+  vehicleCarNumber.value = '';
   weatherRecord.value = null;
 
   if (detailKind.value === 'weather') {
@@ -608,7 +644,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex h-full w-full overflow-hidden bg-gray-100 p-4">
-    <!-- 左侧设备分类区域 -->
+    <!-- 左侧设备查看区域 -->
     <div class="flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm">
       <div class="border-b border-gray-200 px-5 py-3">
         <span class="flex items-center font-bold text-gray-800">
@@ -616,7 +652,7 @@ onBeforeUnmount(() => {
             class="text-primary mr-2"
             icon="mdi:format-list-bulleted"
           />
-          设备分类
+          设备查看
         </span>
       </div>
       <div class="scrollbar-hide flex-1 overflow-y-auto p-3">
@@ -829,6 +865,8 @@ onBeforeUnmount(() => {
                   v-model:value="playbackRange"
                   show-time
                   value-format="YYYY-MM-DD HH:mm:ss"
+                  :disabled-date="playbackDisabledDate"
+                  :disabled-time="playbackDisabledTime"
                   :placeholder="['开始时间', '结束时间']"
                 />
                 <Button
@@ -887,33 +925,53 @@ onBeforeUnmount(() => {
 
             <!-- 数据详情 -->
             <div v-show="!isWeatherDevice && activeTab === 'data'">
-              <Table
-                v-if="detailKind === 'vehicle'"
-                :columns="vehicleColumns"
-                :data-source="vehicleRecords"
-                :loading="detailLoading"
-                :pagination="vehiclePagination"
-                row-key="id"
-                size="middle"
-                @change="handleVehicleTableChange"
-              >
-                <template #bodyCell="{ column, record }">
-                  <template v-if="column.key === 'location'">
-                    {{ selectedDevice?.location }}
+              <template v-if="detailKind === 'vehicle'">
+                <!-- 车辆号查询 -->
+                <div class="mb-4 flex items-center gap-3">
+                  <span class="text-sm text-gray-600">车辆号：</span>
+                  <Input
+                    v-model:value="vehicleCarNumber"
+                    allow-clear
+                    class="w-52"
+                    placeholder="请输入车辆号"
+                    @press-enter="handleVehicleSearch"
+                  />
+                  <Button
+                    :loading="detailLoading"
+                    type="primary"
+                    @click="handleVehicleSearch"
+                  >
+                    <IconifyIcon class="mr-1" icon="mdi:magnify" />
+                    查询
+                  </Button>
+                </div>
+                <Table
+                  :columns="vehicleColumns"
+                  :data-source="vehicleRecords"
+                  :loading="detailLoading"
+                  :pagination="vehiclePagination"
+                  row-key="id"
+                  size="middle"
+                  @change="handleVehicleTableChange"
+                >
+                  <template #bodyCell="{ column, record }">
+                    <template v-if="column.key === 'location'">
+                      {{ selectedDevice?.location }}
+                    </template>
+                    <template v-else-if="column.key === 'shotTime'">
+                      {{ formatTime(record.shotTime) }}
+                    </template>
+                    <template v-else-if="column.key === 'action'">
+                      <a
+                        class="text-primary cursor-pointer"
+                        @click="showVehicleImage(record)"
+                      >
+                        详情
+                      </a>
+                    </template>
                   </template>
-                  <template v-else-if="column.key === 'shotTime'">
-                    {{ formatTime(record.shotTime) }}
-                  </template>
-                  <template v-else-if="column.key === 'action'">
-                    <a
-                      class="text-primary cursor-pointer"
-                      @click="showVehicleImage(record)"
-                    >
-                      详情
-                    </a>
-                  </template>
-                </template>
-              </Table>
+                </Table>
+              </template>
               <div v-else class="py-10 text-center text-gray-400">
                 <IconifyIcon
                   class="mb-2 text-2xl"

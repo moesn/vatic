@@ -1,7 +1,7 @@
 /**
  * 设备查看页面接口
  *
- * - 设备分类树走本系统 requestClient（经 /api 代理，result 信封）
+ * - 设备查看树走本系统 requestClient（经 /api 代理，result 信封）
  * - 其余中台接口（视频平台、过车、气象）先调用 /device/deviceToken
  *   获取联调地址与访问令牌，然后直连该地址调用，令牌由后端接口
  *   下发，按对接文档约束不写入 URL、源码或日志
@@ -98,7 +98,7 @@ function toQuery(params: Record<string, any>): string {
   return search.toString();
 }
 
-// region 设备分类树（本系统接口）
+// region 设备查看树（本系统接口）
 
 export interface DeviceTreeItem {
   id: number;
@@ -202,7 +202,7 @@ export function getCamerasApi() {
   );
 }
 
-/** 设备分类树 */
+/** 设备查看树 */
 export function getDeviceTreeApi() {
   return requestClient.get<DeviceTreeGroup[]>('/device/queryTree');
 }
