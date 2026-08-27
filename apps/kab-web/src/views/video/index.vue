@@ -779,10 +779,10 @@ onBeforeUnmount(() => {
             <div
               v-show="!isWeatherDevice && (isHikvision || activeTab === 'real')"
             >
-              <!-- 海康威视：本地 WEB 插件窗口（原生窗口覆盖在容器内） -->
+              <!-- 海康威视：本地 WEB 插件窗口（原生窗口覆盖在容器内，16:9 自适应宽度） -->
               <div
                 v-if="isHikvision"
-                class="relative flex h-[360px] items-center justify-center rounded bg-black text-gray-400"
+                class="relative mx-auto flex aspect-video w-full items-center justify-center rounded bg-black text-gray-400"
               >
                 <div ref="liveContainerRef" class="absolute inset-0"></div>
                 <div v-if="!selectedDevice" class="relative z-10">
@@ -798,10 +798,10 @@ onBeforeUnmount(() => {
                   {{ hikLive.error }}
                 </div>
               </div>
-              <!-- 其它厂商：flv/hls 流 -->
+              <!-- 其它厂商：flv/hls 流（16:9 自适应宽度） -->
               <div
                 v-else
-                class="relative flex h-[360px] items-center justify-center rounded bg-black text-gray-400"
+                class="relative mx-auto flex aspect-video w-full items-center justify-center rounded bg-black text-gray-400"
               >
                 <video
                   v-show="selectedDevice && !liveTip && !liveLoading"
@@ -844,9 +844,9 @@ onBeforeUnmount(() => {
                 </div>
               </div>
 
-              <!-- 录像检索 + flv/hls 流 -->
+              <!-- 录像检索 + flv/hls 流（16:9 自适应宽度） -->
               <div
-                class="relative flex h-[320px] items-center justify-center rounded bg-black text-gray-400"
+                class="relative mx-auto flex aspect-video w-full items-center justify-center rounded bg-black text-gray-400"
               >
                 <video
                   v-show="playbackStreamReady"
