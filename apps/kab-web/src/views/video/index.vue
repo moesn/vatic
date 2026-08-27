@@ -79,10 +79,16 @@ const deviceGroups = ref<DeviceTreeGroup[]>([]);
 const expandedPurposes = ref<string[]>([]);
 const selectedDevice = ref<DeviceTreeItem | null>(null);
 
-/** 海康威视设备：实时/回放改用 hikiot 本地 WEB 插件而非 flv/hls 流 */
-const isHikvision = computed(
-  () => selectedDevice.value?.vendor === '海康威视',
-);
+/**
+ * 海康威视设备：实时/回放改用 hikiot 本地 WEB 插件而非 flv/hls 流
+ * 设备树无 vendor 字段时，以 purpose（路面摄像机）作为海康设备的判定依据
+ */
+const isHikvision = computed(() => {
+  const device = selectedDevice.value;
+  if (!device) return false;
+  if (device.vendor) return device.vendor.includes('海康');
+  return (device.purpose ?? '').includes('路面');
+});
 
 /** 海康设备的序列号取自设备树 simNo */
 const hikiotDeviceSerial = computed(() => selectedDevice.value?.simNo);
@@ -122,9 +128,7 @@ async function loadDeviceTree() {
   try {
     deviceGroups.value = (await getDeviceTreeApi()) ?? [];
     // 设备分类默认全展开
-    expandedPurposes.value = deviceGroups.value.map(
-      (group) => group.purpose,
-    );
+    expandedPurposes.value = deviceGroups.value.map((group) => group.purpose);
   } catch {
     // 错误提示由全局响应拦截器统一处理
   } finally {
@@ -262,6 +266,8 @@ async function playLive() {
   liveTip.value = '';
   const device = selectedDevice.value;
   if (!device) return;
+  // 海康威视走 hikiot 插件，不调用 /api/video-platform/cameras
+  if (isHikvision.value) return;
 
   liveLoading.value = true;
   try {
@@ -444,7 +450,7 @@ const detailLoading = ref(false);
 const vehicleRecords = ref<VehiclePassRecord[]>([]);
 const vehicleTotal = ref(0);
 const vehiclePage = reactive({ pageNo: 1, pageSize: 10 });
-const weatherRecord = ref<WeatherStationRecord | null>(null);
+const weatherRecord = ref<null | WeatherStationRecord>(null);
 
 const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
   const purpose = selectedDevice.value?.purpose ?? '';
@@ -459,6 +465,13 @@ const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
 
 /** 气象设备不显示页签，直接展示数据详情 */
 const isWeatherDevice = computed(() => detailKind.value === 'weather');
+
+/** 设备是否在线：设备树以 status === '1' 表示在线，无 online 字段 */
+const isDeviceOnline = (device?: DeviceTreeItem | null) =>
+  device?.status === '1';
+const selectedDeviceOnline = computed(() =>
+  isDeviceOnline(selectedDevice.value),
+);
 
 const vehicleColumns = [
   { title: '车辆号', dataIndex: 'carNumber', key: 'carNumber' },
@@ -608,11 +621,9 @@ function selectDevice(device: DeviceTreeItem) {
       activeTab.value = 'real';
     }
     if (activeTab.value === 'real') {
-      if (isHikvision.value) {
-        hikLive.playPreview(hikiotDeviceSerial.value!);
-      } else {
-        playLive();
-      }
+      // 海康设备由 useHikiotPlayer 监听 deviceSerial 变化自动实况播放
+      // （不走 /api/video-platform/cameras，直接按 hikiot 文档播放）
+      playLive();
     } else if (activeTab.value === 'data') {
       loadDataDetails(1);
     }
@@ -728,7 +739,9 @@ onBeforeUnmount(() => {
               >
                 <span
                   class="mr-2 inline-block h-2 w-2 flex-none rounded-full"
-                  :class="device.online ? 'bg-green-500' : 'bg-gray-300'"
+                  :class="
+                    isDeviceOnline(device) ? 'bg-green-500' : 'bg-gray-300'
+                  "
                 ></span>
                 <span class="truncate">{{ device.deviceName }}</span>
               </div>
@@ -757,9 +770,9 @@ onBeforeUnmount(() => {
           <span
             v-if="selectedDevice"
             class="ml-2 text-xs"
-            :class="selectedDevice.online ? 'text-green-600' : 'text-gray-400'"
+            :class="selectedDeviceOnline ? 'text-green-600' : 'text-gray-400'"
           >
-            {{ selectedDevice.online ? '在线' : '离线' }}
+            {{ selectedDeviceOnline ? '在线' : '离线' }}
           </span>
         </div>
       </div>
@@ -774,12 +787,18 @@ onBeforeUnmount(() => {
                 :key="tab.key"
                 class="border-b-2 px-5 py-3 font-medium"
                 :class="[
-                  selectedDevice ? 'cursor-pointer' : 'cursor-not-allowed',
+                  selectedDevice && (tab.key !== 'real' || selectedDeviceOnline)
+                    ? 'cursor-pointer'
+                    : 'cursor-not-allowed',
                   activeTab === tab.key && selectedDevice
                     ? 'border-primary text-primary'
                     : 'border-transparent text-gray-400',
                 ]"
-                @click="selectedDevice && (activeTab = tab.key)"
+                @click="
+                  selectedDevice &&
+                  (tab.key !== 'real' || selectedDeviceOnline) &&
+                  (activeTab = tab.key)
+                "
               >
                 {{ tab.label }}
               </div>
@@ -886,7 +905,10 @@ onBeforeUnmount(() => {
                 <div
                   class="relative flex h-[320px] items-center justify-center rounded bg-black text-gray-400"
                 >
-                  <div ref="playbackContainerRef" class="absolute inset-0"></div>
+                  <div
+                    ref="playbackContainerRef"
+                    class="absolute inset-0"
+                  ></div>
                   <div v-if="hikPlayback.loading" class="relative z-10">
                     正在加载海康回放视频...
                   </div>
