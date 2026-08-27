@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type {
+  CameraKeyParams,
   DeviceTreeGroup,
   DeviceTreeItem,
-  PlatformCamera,
   RecordingSegment,
   VehiclePassRecord,
   WeatherStationRecord,
@@ -34,7 +34,6 @@ import {
 import dayjs from 'dayjs';
 
 import {
-  getCamerasApi,
   getDeviceTreeApi,
   getVehiclePassListApi,
   getWeatherListApi,
@@ -81,14 +80,9 @@ const selectedDevice = ref<DeviceTreeItem | null>(null);
 
 /**
  * 海康威视设备：实时/回放改用 hikiot 本地 WEB 插件而非 flv/hls 流
- * 设备树无 vendor 字段时，以 purpose（路面摄像机）作为海康设备的判定依据
+ * 以 vendor 字段判定（设备树实际返回如 "大华"、"海康威视"）
  */
-const isHikvision = computed(() => {
-  const device = selectedDevice.value;
-  if (!device) return false;
-  if (device.vendor) return device.vendor.includes('海康');
-  return (device.purpose ?? '').includes('路面');
-});
+const isHikvision = computed(() => selectedDevice.value?.vendor === '海康威视');
 
 /** 海康设备的序列号取自设备树 simNo */
 const hikiotDeviceSerial = computed(() => selectedDevice.value?.simNo);
@@ -232,7 +226,7 @@ const liveContainerRef = ref<HTMLElement>();
 const liveTip = ref('');
 const liveLoading = ref(false);
 let liveCleanup: (() => void) | null = null;
-let liveCamera: null | PlatformCamera = null;
+let liveCameraParams: null | CameraKeyParams = null;
 
 /** 海康实况播放器（仅在海康设备下启用） */
 const hikLive = useHikiotPlayer({
@@ -242,6 +236,15 @@ const hikLive = useHikiotPlayer({
   ),
 });
 
+/** 由设备树数据直接构造视频平台相机参数（无需再查 /api/video-platform/cameras） */
+function buildCameraParams(device: DeviceTreeItem): CameraKeyParams {
+  return {
+    camera_code: device.simNo,
+    camera_serial: device.cameraSerial,
+    equipment_no: device.cameraCode,
+  };
+}
+
 /**
  * 销毁实况播放器：先清理本地播放器状态，
  * 再尽力调用停止实况接口通知上游（失败不影响本地清理）
@@ -250,14 +253,10 @@ function destroyLivePlayer() {
   liveCleanup?.();
   liveCleanup = null;
   hikLive.stop();
-  const camera = liveCamera;
-  liveCamera = null;
-  if (camera) {
-    stopLiveApi({
-      camera_code: camera.camera_code,
-      camera_serial: camera.camera_serial,
-      equipment_no: camera.equipment_no,
-    }).catch(() => {});
+  const params = liveCameraParams;
+  liveCameraParams = null;
+  if (params) {
+    stopLiveApi(params).catch(() => {});
   }
 }
 
@@ -271,17 +270,9 @@ async function playLive() {
 
   liveLoading.value = true;
   try {
-    const camera = await findCamera(device);
-    liveCamera = camera;
-    if (!camera) {
-      liveTip.value = `【${device.deviceName}】未接入视频平台，暂无实时视频`;
-      return;
-    }
-    const data = await startLiveApi({
-      camera_code: camera.camera_code,
-      camera_serial: camera.camera_serial,
-      equipment_no: camera.equipment_no,
-    });
+    const params = buildCameraParams(device);
+    liveCameraParams = params;
+    const data = await startLiveApi(params);
     const streamUrl = data?.streamUrl;
     if (!streamUrl) {
       liveTip.value = `【${device.deviceName}】未获取到实时视频流地址`;
@@ -311,8 +302,6 @@ const playbackStreamReady = ref(false);
 const recordings = ref<RecordingSegment[]>([]);
 const activeRecording = ref<null | RecordingSegment>(null);
 let playbackCleanup: (() => void) | null = null;
-let camerasCache: null | PlatformCamera[] = null;
-let currentCamera: null | PlatformCamera = null;
 
 /** 海康回放播放器（仅在海康设备下启用） */
 const hikPlayback = useHikiotPlayer({
@@ -333,17 +322,6 @@ function destroyPlaybackPlayer() {
   playbackCleanup = null;
   hikPlayback.stop();
   playbackStreamReady.value = false;
-}
-
-/** 通过设备序列号（simNo）匹配视频平台相机 */
-async function findCamera(device: DeviceTreeItem) {
-  if (!camerasCache) {
-    const data = await getCamerasApi();
-    camerasCache = Array.isArray(data) ? data : [];
-  }
-  return (
-    camerasCache.find((camera) => camera.equipment_no === device.simNo) ?? null
-  );
 }
 
 /** 海康威视回放：无录像检索步骤，按时间段直接播放 */
@@ -387,17 +365,10 @@ async function queryPlayback() {
   activeRecording.value = null;
   playbackStatus.value = `正在查询【${device.deviceName}】回放录像...`;
   try {
-    const camera = await findCamera(device);
-    currentCamera = camera;
-    if (!camera) {
-      playbackStatus.value = `【${device.deviceName}】未接入视频平台，暂无回放`;
-      return;
-    }
+    const params = buildCameraParams(device);
     const data = await searchRecordingsApi({
-      camera_code: camera.camera_code,
-      camera_serial: camera.camera_serial,
+      ...params,
       end_time: endTime,
-      equipment_no: camera.equipment_no,
       start_time: startTime,
     });
     recordings.value = data?.recordList ?? [];
@@ -414,18 +385,18 @@ async function queryPlayback() {
 }
 
 async function playRecording(recording: RecordingSegment) {
-  if (!currentCamera) return;
+  const device = selectedDevice.value;
+  if (!device) return;
   activeRecording.value = recording;
   destroyPlaybackPlayer();
   playbackStatus.value = `正在加载回放：${formatTime(recording.start_time)} ~ ${formatTime(
     recording.end_time,
   )}`;
   try {
+    const params = buildCameraParams(device);
     const data = await startPlaybackApi({
-      camera_code: currentCamera.camera_code,
-      camera_serial: currentCamera.camera_serial,
+      ...params,
       end_time: recording.end_time,
-      equipment_no: currentCamera.equipment_no,
       start_time: recording.start_time,
     });
     const streamUrl = data?.streamUrl;
@@ -604,7 +575,6 @@ function selectDevice(device: DeviceTreeItem) {
   destroyPlaybackPlayer();
   recordings.value = [];
   activeRecording.value = null;
-  currentCamera = null;
   playbackTip.value = '';
   playbackStatus.value = '';
   vehicleRecords.value = [];

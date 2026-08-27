@@ -115,6 +115,10 @@ export interface DeviceTreeItem {
   latitude?: number;
   /** FLV 视频流地址（实时视频播放使用） */
   videoUrl?: string;
+  /** 视频平台相机序列号（实时/回放接口使用） */
+  cameraSerial?: string;
+  /** 视频平台相机编码（实时/回放接口使用） */
+  cameraCode?: string;
   online?: boolean;
 }
 
