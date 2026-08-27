@@ -19,12 +19,18 @@ import { message } from 'ant-design-vue';
 
 import { getHikiotPlayInit } from './data';
 
-type WindowMode = 'playback' | 'preview';
-
 interface HikiotPlayerOptions {
   containerRef: Ref<HTMLElement | undefined>;
   /** 当 deviceSerial 变化时，自动重建当前模式的播放 */
   deviceSerial: Ref<string | undefined>;
+  /**
+   * deviceSerial 变化时是否自动实况预览。
+   * 插件为单实例：页面存在多个播放器实例时（如实况 + 回放），
+   * 仅允许一个实例自动预览，否则会重复 initResource/startPreview
+   * 且隐藏容器（display:none）的全 0 几何会把插件窗口挤成 0×0。
+   * 回放实例请传 false，由外部按时间段调用 playPlayback。
+   */
+  autoPreview?: boolean | Ref<boolean>;
   channelNo?: number;
 }
 
@@ -60,11 +66,14 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
 
   let client: any = null;
   let connected = false;
-  let mode: WindowMode = 'preview';
   let rafId = 0;
   let readyTimer: null | ReturnType<typeof setTimeout> = null;
   let cleanupFns: Array<() => void> = [];
-  let currentInit: HikiotPlayInit | null = null;
+
+  const autoPreviewRef: Ref<boolean> =
+    typeof options.autoPreview === 'object'
+      ? options.autoPreview
+      : ref(options.autoPreview ?? true);
 
   function bindGeometry() {
     cancelAnimationFrame(rafId);
@@ -171,14 +180,12 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
   }
 
   async function playPreview(serial: string) {
-    mode = 'preview';
     loading.value = true;
     ready.value = false;
     error.value = '';
     try {
-      // 4.3 播放初始化：获取聚合数据
+      // 4.3 播放初始化：获取聚合数据（服务端短缓存，可放心重试）
       const init = await getHikiotPlayInit(serial, channelNo);
-      currentInit = init;
       // 第 5 章：初始化插件并预览
       await initPlugin(init);
       const c = client!;
@@ -192,7 +199,11 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
       // 确认画面就绪事件（cameraPlayStats.playStats === 1）
       waitForReady();
     } catch (error_: any) {
-      error.value = error_?.message ?? '海康实况加载失败';
+      // 业务层 code:401 表示未完成海康用户授权（文档第 3 章）
+      error.value =
+        error_?.payload?.code === 401
+          ? '设备未完成海康用户授权，请联系管理员授权后重试'
+          : (error_?.message ?? '海康实况加载失败');
       message.error(error.value);
     } finally {
       loading.value = false;
@@ -204,22 +215,24 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     startTime: string,
     endTime: string,
   ) {
-    mode = 'playback';
     loading.value = true;
     ready.value = false;
     error.value = '';
     try {
-      // 回放复用实况返回的聚合数据；首次进入或切换设备时补齐初始化
-      if (!currentInit) {
-        currentInit = await getHikiotPlayInit(serial, channelNo);
-      }
-      await initPlugin(currentInit);
+      // 4.3 播放初始化：每次播放前都重新获取当前设备聚合数据
+      // （切换设备后旧数据属于上一台设备，直接复用会导致播放错乱；
+      //   服务端有 8 秒短缓存，重复调用不产生上游请求，可放心重试）
+      const init = await getHikiotPlayInit(serial, channelNo);
+      await initPlugin(init);
       const c = client!;
       c.setPlayWindowType({ windowMode: 'playback' });
       c.startPlayback(serial, channelNo, startTime, endTime, 1);
       waitForReady();
     } catch (error_: any) {
-      error.value = error_?.message ?? '海康回放加载失败';
+      error.value =
+        error_?.payload?.code === 401
+          ? '设备未完成海康用户授权，请联系管理员授权后重试'
+          : (error_?.message ?? '海康回放加载失败');
       message.error(error.value);
     } finally {
       loading.value = false;
@@ -254,15 +267,10 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     cancelAnimationFrame(rafId);
   }
 
-  // deviceSerial 变化时，若已就绪则重建当前模式播放
-  watch(deviceSerial, (serial) => {
-    if (serial) {
-      if (mode === 'playback') {
-        // 回放需外部重新指定时间段，此处仅停止
-        stop();
-      } else {
-        playPreview(serial);
-      }
+  // deviceSerial / autoPreview 变化时自动重建预览；不在预览范围（非本页签/回放实例）时停止
+  watch([deviceSerial, autoPreviewRef], ([serial, auto]) => {
+    if (serial && auto) {
+      playPreview(serial);
     } else {
       stop();
     }

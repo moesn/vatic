@@ -228,8 +228,9 @@ const liveLoading = ref(false);
 let liveCleanup: (() => void) | null = null;
 let liveCameraParams: null | CameraKeyParams = null;
 
-/** 海康实况播放器（仅在海康设备下启用） */
+/** 海康实况播放器（仅在海康设备下启用，且仅在实时页签自动预览） */
 const hikLive = useHikiotPlayer({
+  autoPreview: computed(() => activeTab.value === 'real'),
   containerRef: liveContainerRef,
   deviceSerial: computed(() =>
     isHikvision.value ? hikiotDeviceSerial.value : undefined,
@@ -303,8 +304,9 @@ const recordings = ref<RecordingSegment[]>([]);
 const activeRecording = ref<null | RecordingSegment>(null);
 let playbackCleanup: (() => void) | null = null;
 
-/** 海康回放播放器（仅在海康设备下启用） */
+/** 海康回放播放器：禁用自动预览（插件单实例，由实况实例独占自动预览），仅按时间段手动播放 */
 const hikPlayback = useHikiotPlayer({
+  autoPreview: false,
   containerRef: playbackContainerRef,
   deviceSerial: computed(() =>
     isHikvision.value ? hikiotDeviceSerial.value : undefined,
@@ -605,9 +607,9 @@ watch(activeTab, (tab) => {
   destroyLivePlayer();
   destroyPlaybackPlayer();
   if (tab === 'real') {
-    if (isHikvision.value) {
-      hikLive.playPreview(hikiotDeviceSerial.value!);
-    } else {
+    // 海康设备由 hikLive 的 autoPreview（activeTab === 'real'）自动实况播放，
+    // 此处不手动调用，避免与 watch 自动触发重叠导致插件重复初始化
+    if (!isHikvision.value) {
       playLive();
     }
   } else if (tab === 'playback' && isHikvision.value && playbackRange.value) {
