@@ -6,10 +6,16 @@ import type { HikiotPlayInit } from './data';
  * 海康威视 WEB 插件（Hikiot / HikOpenVideoSDK）播放器封装
  *
  * 依赖本地安装的浏览器插件（仅 Windows + Chrome/Edge），全局对象 window.WebSocketClient。
- * 参考 hikiot-frontend-api.md：
- *  - 实况：setSecretConfigInfo -> initWndParam -> setParentWnd -> setWndGeometry
- *           -> showWnd -> setPlayWindowType('preview') -> initResource -> startPreview
- *  - 回放：setPlayWindowType('playback') -> startPlayback(serial, channel, start, end, 1)
+ * 参考 hikiot-frontend-api.md 第 5 章调用链（文档为简写，SDK 实际签名为单对象参数，
+ * 见 public/lib/HikOpenVideoSDK-1.0.1.min.js）：
+ *  - 实况：setSecretConfigInfo({bSecret,openAppkey,openAppSecret})
+ *           -> initWndParam({ezAccessData,appAccessToken,userAccessToken,windowMode})
+ *           -> setParentWnd({webTitle}) -> setWndGeometry({rect})
+ *           -> showWnd -> setPlayWindowType({windowMode:'preview'})
+ *           -> initResource({resourcesData,tokensData,capacitysData})
+ *           -> startPreview(窗口索引, {deviceSerial,channelNo})
+ *  - 回放：setPlayWindowType({windowMode:'playback'})
+ *           -> startPlayback(窗口索引, {deviceSerial,channelNo,startTime,endTime,searchType:1})
  *
  * 因插件为单例且页面同一时刻仅播放一路，本模块以单例方式管理 client 与窗口。
  */
@@ -61,6 +67,8 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
 
   /** 固定 webTitle：插件单实例，同一 webTitle 复用同一窗口 */
   const WEB_TITLE = 'kab-video-hikiot';
+  /** 单路播放固定使用第一个窗口（窗口索引从 0 开始） */
+  const WND_INDEX = 0;
   /** 画面就绪确认超时（ms）：超时未收到 cameraPlayStats.playStats===1 视为未确认 */
   const READY_TIMEOUT = 5000;
 
@@ -79,7 +87,8 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(() => {
       if (!client || !containerRef.value) return;
-      client.setWndGeometry(computeGeometry(containerRef.value));
+      // SDK 签名：setWndGeometry({ rect })，内部按 devicePixelRatio 换算
+      client.setWndGeometry({ rect: computeGeometry(containerRef.value) });
     });
   }
 
@@ -96,11 +105,24 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     }
     if (!connected) {
       client = new Ctor();
-      client.connect();
+      // connect() 返回 Promise：非 Windows(888)/浏览器不符(999)/插件服务未启动(WS 连接失败)时 reject
+      try {
+        await client.connect();
+      } catch (error_: any) {
+        connected = false;
+        client = null;
+        throw new Error(
+          error_?.message ??
+            '无法连接本地海康插件服务（ws://127.0.0.1:18002）：请确认已在 Windows 电脑安装并启动 HikOpenVideoSDK 插件（≥ v1.2.0，仅支持 Windows + Chrome/Edge）',
+        );
+      }
       connected = true;
 
-      client.on?.('websocket-message', onMessage);
-      client.on?.('disconnect', onDisconnect);
+      // SDK 无 on 方法：消息通过 window 的 'websocket-message' CustomEvent 广播
+      window.addEventListener('websocket-message', onPluginEvent);
+      cleanupFns.push(() => {
+        window.removeEventListener('websocket-message', onPluginEvent);
+      });
 
       window.addEventListener('resize', onGeometryEvent);
       window.addEventListener('scroll', onGeometryEvent, true);
@@ -129,12 +151,21 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     }, READY_TIMEOUT);
   }
 
-  function onMessage(payload: any) {
-    const data = payload?.data ?? payload;
-    const funcName = data?.funcName;
+  /**
+   * window 'websocket-message' CustomEvent 处理：
+   * detail 为插件消息（cmd/funcName 区分类型），断连时 detail.cmd === 'disconnect'
+   */
+  function onPluginEvent(event: Event) {
+    const detail = (event as CustomEvent).detail ?? {};
+    if (detail.cmd === 'disconnect') {
+      ready.value = false;
+      connected = false;
+      return;
+    }
+    const funcName = detail.funcName ?? detail.cmd;
     if (
       funcName === 'cameraPlayStats' && // playStats === 1 表示画面已就绪
-      Number(data.playStats) === 1
+      Number(detail.playStats) === 1
     ) {
       clearReadyTimer();
       ready.value = true;
@@ -142,39 +173,37 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     }
   }
 
-  function onDisconnect() {
-    ready.value = false;
-    connected = false;
-  }
-
   /**
-   * 按文档第 5 章调用链初始化插件（play/init 拿到聚合数据后）
+   * 按文档第 5 章调用链初始化插件（play/init 拿到聚合数据后）。
+   * SDK 实际签名为单对象参数（文档调用链为简写）
    */
   async function initPlugin(init: HikiotPlayInit) {
     const c = await ensureConnected();
-    // 1. 配置密钥
-    c.setSecretConfigInfo(
-      init.bSecret ?? '',
-      init.openAppkey ?? '',
-      init.openAppSecret ?? '',
-    );
-    // 2. 初始化窗口参数
-    c.initWndParam(
-      init.ezAccessData ?? '',
-      init.appAccessToken ?? '',
-      init.userAccessToken ?? '',
-      init.windowMode ?? 1,
-      init.ezvizAddr ?? '',
-      init.authAddr ?? '',
-      init.openAddr ?? '',
-    );
+    // 1. 配置密钥：setSecretConfigInfo({ bSecret, openAppkey, openAppSecret })
+    c.setSecretConfigInfo({
+      bSecret: init.bSecret ?? '',
+      openAppkey: init.openAppkey ?? '',
+      openAppSecret: init.openAppSecret ?? '',
+    });
+    // 2. 初始化窗口参数：initWndParam 单对象展开（地址字段缺省时 SDK 用内置默认值）
+    //    勿传 bEmbed:false：实测旧版 exe 上会导致 playStats=0 取流直接失败
+    const wndParam: Record<string, any> = {
+      appAccessToken: init.appAccessToken ?? '',
+      ezAccessData: init.ezAccessData ?? '',
+      userAccessToken: init.userAccessToken ?? '',
+      windowMode: init.windowMode ?? 1,
+    };
+    if (init.ezvizAddr) wndParam.ezvizAddr = init.ezvizAddr;
+    if (init.authAddr) wndParam.authAddr = init.authAddr;
+    if (init.openAddr) wndParam.openAddr = init.openAddr;
+    c.initWndParam(wndParam);
     if (!containerRef.value) {
       throw new Error('播放容器未就绪');
     }
     // 3. 绑定父窗口（固定 webTitle 复用单实例）
     c.setParentWnd({ webTitle: WEB_TITLE });
-    // 4. 同步容器几何位置
-    c.setWndGeometry(computeGeometry(containerRef.value));
+    // 4. 同步容器几何位置：setWndGeometry({ rect })，视口原值勿叠加滚动偏移
+    c.setWndGeometry({ rect: computeGeometry(containerRef.value) });
     // 5. 显示插件窗口
     c.showWnd();
   }
@@ -190,12 +219,17 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
       await initPlugin(init);
       const c = client!;
       c.setPlayWindowType({ windowMode: 'preview' });
-      c.initResource(
-        init.resourcesData ?? '',
-        init.tokensData ?? '',
-        init.capacitysData ?? '',
-      );
-      c.startPreview(serial, channelNo);
+      // SDK 签名：initResource 单对象（三个整包数据作为字段透传）
+      c.initResource({
+        capacitysData: init.capacitysData ?? '',
+        resourcesData: init.resourcesData ?? '',
+        tokensData: init.tokensData ?? '',
+      });
+      // SDK 签名：startPreview(窗口索引, { deviceSerial, channelNo })
+      c.startPreview(WND_INDEX, {
+        channelNo,
+        deviceSerial: serial,
+      });
       // 确认画面就绪事件（cameraPlayStats.playStats === 1）
       waitForReady();
     } catch (error_: any) {
@@ -226,7 +260,14 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
       await initPlugin(init);
       const c = client!;
       c.setPlayWindowType({ windowMode: 'playback' });
-      c.startPlayback(serial, channelNo, startTime, endTime, 1);
+      // SDK 签名：startPlayback(窗口索引, { deviceSerial, channelNo, startTime, endTime, searchType })
+      c.startPlayback(WND_INDEX, {
+        channelNo,
+        deviceSerial: serial,
+        endTime,
+        searchType: 1,
+        startTime,
+      });
       waitForReady();
     } catch (error_: any) {
       error.value =

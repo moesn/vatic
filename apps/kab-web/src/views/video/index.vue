@@ -32,6 +32,7 @@ import {
   Table,
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
+import Hls from 'hls.js';
 
 import {
   getDeviceTreeApi,
@@ -160,37 +161,17 @@ function handleEquipError(error: any) {
 // endregion
 
 // region 流播放工具
-let hlsPromise: null | Promise<any> = null;
-
-/** 按需从 CDN 加载 hls.js（仅 HLS 流需要） */
-function loadHls(): Promise<any> {
-  const w = window as any;
-  if (w.Hls) {
-    return Promise.resolve(w.Hls);
-  }
-  hlsPromise ??= new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
-    script.addEventListener('load', () => resolve((window as any).Hls));
-    script.onerror = () => {
-      hlsPromise = null;
-      reject(new Error('hls.js 播放器加载失败'));
-    };
-    document.head.append(script);
-  });
-  return hlsPromise;
-}
 
 /**
  * 将视频流挂载到 video 元素，返回清理函数
- * HLS 流（.m3u8）使用 hls.js，FLV 流使用全局 flvjs
+ * HLS 流（.m3u8）使用 hls.js（npm 依赖，随构建打包，不依赖 CDN），
+ * FLV 流使用全局 flvjs
  */
 async function attachStream(
   video: HTMLVideoElement,
   url: string,
 ): Promise<() => void> {
   if (url.includes('.m3u8')) {
-    const Hls = await loadHls();
     if (Hls?.isSupported?.()) {
       const hls = new Hls();
       hls.loadSource(url);
@@ -250,9 +231,9 @@ const hikLive = useHikiotPlayer({
 /** 由设备树数据直接构造视频平台相机参数（无需再查 /api/video-platform/cameras） */
 function buildCameraParams(device: DeviceTreeItem): CameraKeyParams {
   return {
-    camera_code: device.simNo,
+    camera_code: device.cameraCode,
     camera_serial: device.cameraSerial,
-    equipment_no: device.cameraCode,
+    equipment_no: device.simNo,
   };
 }
 
