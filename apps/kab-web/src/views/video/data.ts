@@ -302,3 +302,48 @@ export function stopLiveApi(data: CameraKeyParams) {
     method: 'POST',
   });
 }
+
+// endregion
+
+// region 海康威视（Hikiot）接口
+
+/** play/init / batch-init 返回的设备接入聚合数据 */
+export interface HikiotPlayInit {
+  bSecret?: string;
+  openAppkey?: string;
+  openAppSecret?: string;
+  appAccessToken?: string;
+  userAccessToken?: string;
+  windowMode?: number;
+  ezAccessData?: string;
+  resourcesData?: string;
+  tokensData?: string;
+  capacitysData?: string;
+  ezvizAddr?: string;
+  authAddr?: string;
+  openAddr?: string;
+}
+
+export interface HikiotChannel {
+  channelNo: number;
+  status: null | number | string;
+}
+
+/** 海康实况初始化：返回本地 WEB 插件绘制所需聚合数据 */
+export function getHikiotPlayInit(
+  deviceSerial: string,
+  channelNo = 1,
+) {
+  return equipRequest<HikiotPlayInit>(
+    `/api/hikiot/play/init?${toQuery({ deviceSerial, channelNo })}`,
+  );
+}
+
+/** 海康通道列表 */
+export function getHikiotChannels(deviceSerial: string) {
+  return equipRequest<{ channelList?: HikiotChannel[] }>(
+    `/api/hikiot/channels?${toQuery({ deviceSerial })}`,
+  );
+}
+
+// endregion
