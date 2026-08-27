@@ -52,11 +52,23 @@ const { RangePicker } = DatePicker;
 // region 页签
 type TabKey = 'data' | 'playback' | 'real';
 
-const tabs: Array<{ key: TabKey; label: string }> = [
-  { key: 'real', label: '实时视频' },
-  { key: 'playback', label: '回放视频' },
-  { key: 'data', label: '数据详情' },
-];
+/**
+ * 页签列表：海康（路面等）设备只有实时/回放，
+ * 仅弯道预警设备在二者之外额外提供数据详情页签
+ */
+const visibleTabs = computed<Array<{ key: TabKey; label: string }>>(() => {
+  if (detailKind.value === 'vehicle') {
+    return [
+      { key: 'real', label: '实时视频' },
+      { key: 'playback', label: '回放视频' },
+      { key: 'data', label: '数据详情' },
+    ];
+  }
+  return [
+    { key: 'real', label: '实时视频' },
+    { key: 'playback', label: '回放视频' },
+  ];
+});
 const activeTab = ref<TabKey>('real');
 // endregion
 
@@ -543,10 +555,16 @@ function selectDevice(device: DeviceTreeItem) {
   if (detailKind.value === 'weather') {
     // 气象设备不显示页签，直接加载数据详情
     loadDataDetails(1);
-  } else if (activeTab.value === 'real') {
-    playLive();
-  } else if (activeTab.value === 'data') {
-    loadDataDetails(1);
+  } else {
+    // 海康等设备仅实时/回放；若当前停留在不存在的页签，回退到实时
+    if (!visibleTabs.value.some((tab) => tab.key === activeTab.value)) {
+      activeTab.value = 'real';
+    }
+    if (activeTab.value === 'real') {
+      playLive();
+    } else if (activeTab.value === 'data') {
+      loadDataDetails(1);
+    }
   }
 }
 
@@ -694,7 +712,7 @@ onBeforeUnmount(() => {
           <template v-if="!isWeatherDevice">
             <div class="flex border-b border-gray-200">
               <div
-                v-for="tab in tabs"
+                v-for="tab in visibleTabs"
                 :key="tab.key"
                 class="border-b-2 px-5 py-3 font-medium"
                 :class="[
