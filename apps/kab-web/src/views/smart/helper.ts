@@ -53,6 +53,11 @@ export const parseTableColumns = (columns: any[]) => {
         };
         break;
       }
+      case 'Slot': {
+        // 自定义插槽列：插槽名取自 slot，未指定则回退为字段名
+        item.slots = { default: item.slot || item.field };
+        break;
+      }
       case 'Tag': {
         item.cellRender = { name: 'CellTag', options };
         break;

@@ -14,7 +14,7 @@ import { Plus } from '@vatic/icons';
 
 import { cloneDeep } from '@vatic-core/shared/utils';
 
-import { Button, message, Modal } from 'ant-design-vue';
+import { Button, Input, message, Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { getPageSchema } from 'vatic';
 
@@ -197,6 +197,12 @@ function updateDisabled(row: any) {
 
 function deleteDisabled(row: any) {
   const condition = pageSchema.value.table.disableDelete;
+  return computeDisabled(condition, row);
+}
+
+/** 重置密码禁用条件（schema 中 table.disableResetPassword，如 account === 'admin'） */
+function resetPasswordDisabled(row: any) {
+  const condition = pageSchema.value.table.disableResetPassword;
   return computeDisabled(condition, row);
 }
 
@@ -437,6 +443,54 @@ async function refreshGrid() {
   await GridApi.query();
   expandAll();
 }
+
+// region 重置密码（自定义插槽列：管理员操作）
+const resetPasswordVisible = ref(false);
+const resetPasswordSubmitting = ref(false);
+const resetPasswordValue = ref('');
+const resetPasswordConfirmValue = ref('');
+const resetPasswordRow = ref<null | Recordable>(null);
+/** 密码是否明文显示 */
+const resetPasswordShow = ref(false);
+
+/** 打开重置密码弹窗 */
+function openResetPassword(row: Recordable) {
+  resetPasswordRow.value = row;
+  resetPasswordValue.value = '';
+  resetPasswordConfirmValue.value = '';
+  resetPasswordShow.value = false;
+  resetPasswordVisible.value = true;
+}
+
+/** 提交重置密码：PATCH /api/user/resetPassword */
+async function submitResetPassword() {
+  const row = resetPasswordRow.value;
+  const password = resetPasswordValue.value;
+  const confirmPassword = resetPasswordConfirmValue.value;
+  if (!row) return;
+  if (!password || password.length < 6) {
+    message.warning('请输入至少 6 位的新密码');
+    return;
+  }
+  if (password !== confirmPassword) {
+    message.warning('两次输入的密码不一致');
+    return;
+  }
+  resetPasswordSubmitting.value = true;
+  try {
+    await requestClient.patch('/user/resetPassword', {
+      id: row.id,
+      password,
+    });
+    message.success('密码重置成功');
+    resetPasswordVisible.value = false;
+  } catch {
+    message.error('密码重置失败');
+  } finally {
+    resetPasswordSubmitting.value = false;
+  }
+}
+// endregion
 </script>
 
 <template>
@@ -463,9 +517,68 @@ async function refreshGrid() {
         </Button>
       </template>
 
+      <!-- 自定义插槽：重置密码（admin 账号不可重置） -->
+      <template #resetPassword="{ row }">
+        <Button
+          v-if="!resetPasswordDisabled(row)"
+          size="small"
+          type="link"
+          @click="openResetPassword(row)"
+        >
+          重置密码
+        </Button>
+        <span v-else class="text-xs text-gray-300">—</span>
+      </template>
+
       <template #timeline>
         <TimeLine />
       </template>
     </Grid>
+
+    <!-- 重置密码弹窗 -->
+    <Modal
+      v-model:open="resetPasswordVisible"
+      :confirm-loading="resetPasswordSubmitting"
+      centered
+      title="重置密码"
+      @ok="submitResetPassword"
+    >
+      <div class="py-2">
+        <div class="mb-3 text-sm text-gray-500">
+          正在重置用户「{{ resetPasswordRow?.username }}」的密码
+        </div>
+        <Input
+          v-model:value="resetPasswordValue"
+          :type="resetPasswordShow ? 'text' : 'password'"
+          class="mb-3"
+          placeholder="请输入新密码（至少 6 位）"
+        >
+          <template #suffix>
+            <Button
+              size="small"
+              type="text"
+              @click="resetPasswordShow = !resetPasswordShow"
+            >
+              {{ resetPasswordShow ? '隐藏' : '显示' }}
+            </Button>
+          </template>
+        </Input>
+        <Input
+          v-model:value="resetPasswordConfirmValue"
+          :type="resetPasswordShow ? 'text' : 'password'"
+          placeholder="请再次输入新密码"
+        >
+          <template #suffix>
+            <Button
+              size="small"
+              type="text"
+              @click="resetPasswordShow = !resetPasswordShow"
+            >
+              {{ resetPasswordShow ? '隐藏' : '显示' }}
+            </Button>
+          </template>
+        </Input>
+      </div>
+    </Modal>
   </Page>
 </template>

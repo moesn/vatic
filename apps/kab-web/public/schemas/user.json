@@ -6,6 +6,7 @@
     "delete": "/user/delUser",
     "disableDelete": "account=admin",
     "disableUpdate": "account=admin",
+    "disableResetPassword": "account=admin",
     "title": "用户列表",
     "keyField": "id",
     "nameField": "username",
@@ -43,6 +44,14 @@
       {
         "title": "备注",
         "field": "remark"
+      },
+      {
+        "title": "重置密码",
+        "field": "resetPassword",
+        "type": "Slot",
+        "slot": "resetPassword",
+        "width": 100,
+        "fixed": "right"
       }
     ],
     "search": [
