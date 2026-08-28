@@ -6,7 +6,7 @@ import type { AnyFunction } from '@vatic/types';
 import { computed, useTemplateRef, watch } from 'vue';
 
 import { useHoverToggle } from '@vatic/hooks';
-import { LockKeyhole, LogOut } from '@vatic/icons';
+import { KeyRound, LockKeyhole, LogOut } from '@vatic/icons';
 import { $t } from '@vatic/locales';
 import { preferences, usePreferences } from '@vatic/preferences';
 import { useAccessStore } from '@vatic/stores';
@@ -29,6 +29,8 @@ import {
 import { useMagicKeys, whenever } from '@vueuse/core';
 
 import { LockScreenModal } from '../lock-screen';
+
+import ChangePasswordModal from './change-password-modal.vue';
 
 interface Props {
   /**
@@ -78,7 +80,10 @@ const props = withDefaults(defineProps<Props>(), {
   hoverDelay: 500,
 });
 
-const emit = defineEmits<{ logout: [] }>();
+const emit = defineEmits<{
+  changePassword: [{ newPassword: string; oldPassword: string }];
+  logout: [];
+}>();
 
 const { globalLockScreenShortcutKey, globalLogoutShortcutKey } =
   usePreferences();
@@ -90,6 +95,10 @@ const [LogoutModal, logoutModalApi] = useVaticModal({
   onConfirm() {
     handleSubmitLogout();
   },
+});
+
+const [ChangePasswordVaticModal, changePasswordModalApi] = useVaticModal({
+  connectedComponent: ChangePasswordModal,
 });
 
 const refTrigger = useTemplateRef('refTrigger');
@@ -147,6 +156,27 @@ function handleSubmitLogout() {
   logoutModalApi.close();
 }
 
+function handleOpenChangePassword() {
+  changePasswordModalApi.open();
+  openPopover.value = false;
+}
+
+/**
+ * 修改密码：仅转发给宿主应用处理（接口调用与提示由应用层完成），
+ * 布局层保持与 UI 库、请求库解耦
+ */
+function handleSubmitChangePassword(payload: {
+  newPassword: string;
+  oldPassword: string;
+}) {
+  if (!payload.newPassword) {
+    // 两次新密码不一致，保持弹窗打开
+    return;
+  }
+  emit('changePassword', payload);
+  changePasswordModalApi.close();
+}
+
 if (enableShortcutKey.value) {
   const keys = useMagicKeys();
   whenever(keys['Alt+KeyQ']!, () => {
@@ -183,6 +213,8 @@ if (enableShortcutKey.value) {
   >
     {{ $t('ui.widgets.logoutTip') }}
   </LogoutModal>
+
+  <ChangePasswordVaticModal @submit="handleSubmitChangePassword" />
 
   <DropdownMenu v-model:open="openPopover">
     <DropdownMenuTrigger ref="refTrigger" :disabled="props.trigger === 'hover'">
@@ -228,6 +260,14 @@ if (enableShortcutKey.value) {
         >
           <VaticIcon :icon="menu.icon" class="mr-2 size-4" />
           {{ menu.text }}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          class="mx-1 flex cursor-pointer items-center rounded-sm py-1 leading-8"
+          @click="handleOpenChangePassword"
+        >
+          <KeyRound class="mr-2 size-4" />
+          修改密码
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

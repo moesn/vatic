@@ -15,6 +15,9 @@ import {
 import { preferences } from '@vatic/preferences';
 import { useAccessStore, useTabbarStore, useUserStore } from '@vatic/stores';
 
+import { message } from 'ant-design-vue';
+
+import { requestClient } from '#/api/request';
 import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
@@ -56,6 +59,23 @@ const avatar = computed(() => {
 
 async function handleLogout() {
   await authStore.logout(false);
+}
+
+/** 修改密码：由布局层转发，接口调用与提示在应用层完成 */
+async function handleChangePassword(payload: {
+  newPassword: string;
+  oldPassword: string;
+}) {
+  try {
+    await requestClient.patch('/api/user/changePassword', {
+      id: Number(userStore.userInfo?.userId),
+      newPassword: payload.newPassword,
+      oldPassword: payload.oldPassword,
+    });
+    message.success('密码修改成功');
+  } catch {
+    message.error('密码修改失败');
+  }
 }
 
 function handleNoticeClear() {
@@ -104,6 +124,7 @@ onBeforeMount(() => {
         :description="userStore.userInfo?.phone"
         :tag-text="userStore.userInfo?.account"
         trigger="both"
+        @change-password="handleChangePassword"
         @logout="handleLogout"
       />
     </template>

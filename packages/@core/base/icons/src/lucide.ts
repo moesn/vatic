@@ -40,6 +40,7 @@ export {
   LocationEdit,
   LockKeyhole,
   LogOut,
+  KeyRound,
   MailCheck,
   MapPin,
   Maximize,

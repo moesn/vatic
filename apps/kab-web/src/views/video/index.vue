@@ -11,7 +11,9 @@ import type {
 import {
   computed,
   nextTick,
+  onActivated,
   onBeforeUnmount,
+  onDeactivated,
   onMounted,
   reactive,
   ref,
@@ -569,6 +571,13 @@ function formatTime(value?: null | string) {
 }
 
 // region 设备选择与生命周期
+/** 切换页签：未选设备禁用；实时页签需设备在线（status === '1'） */
+function handleTabClick(key: TabKey) {
+  if (!selectedDevice.value) return;
+  if (key === 'real' && !selectedDeviceOnline.value) return;
+  activeTab.value = key;
+}
+
 function selectDevice(device: DeviceTreeItem) {
   if (selectedDevice.value?.id === device.id) return;
   selectedDevice.value = device;
@@ -633,6 +642,22 @@ onMounted(() => {
   loadEquipConfig().catch(() => {
     // 错误提示由全局响应拦截器统一处理
   });
+});
+
+/**
+ * 页面被布局 KeepAlive 缓存：切换菜单时不触发 unmount，
+ * 必须在 deactivated 停止全部播放（海康插件窗口 / 大华流 / 回放流）
+ */
+onDeactivated(() => {
+  destroyLivePlayer();
+  destroyPlaybackPlayer();
+});
+
+/** 返回本页时若有选中设备，恢复实时播放（与 tabbar 缓存行为对齐） */
+onActivated(() => {
+  if (selectedDevice.value && activeTab.value === 'real') {
+    playLive();
+  }
 });
 
 onBeforeUnmount(() => {
@@ -768,11 +793,7 @@ onBeforeUnmount(() => {
                     ? 'border-primary text-primary'
                     : 'border-transparent text-gray-400',
                 ]"
-                @click="
-                  selectedDevice &&
-                  (tab.key !== 'real' || selectedDeviceOnline) &&
-                  (activeTab = tab.key)
-                "
+                @click="handleTabClick(tab.key)"
               >
                 {{ tab.label }}
               </div>
