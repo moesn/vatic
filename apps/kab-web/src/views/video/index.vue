@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type {
+  AlertRecord,
   CameraKeyParams,
   DeviceTreeGroup,
   DeviceTreeItem,
@@ -31,6 +32,7 @@ import {
   Input,
   message,
   Modal,
+  Select,
   Spin,
   Table,
 } from 'ant-design-vue';
@@ -38,6 +40,7 @@ import dayjs from 'dayjs';
 import Hls from 'hls.js';
 
 import {
+  getAlertListApi,
   getDeviceTreeApi,
   getVehiclePassListApi,
   getWeatherListApi,
@@ -54,11 +57,11 @@ import { useHikiotPlayer } from './useHikiotPlayer';
 const { RangePicker } = DatePicker;
 
 // region 页签
-type TabKey = 'data' | 'playback' | 'real';
+type TabKey = 'alert' | 'data' | 'playback' | 'real';
 
 /**
  * 页签列表（仅气象/海康之外的设备显示页签栏）：
- * 仅弯道预警设备在实时/回放之外额外提供数据详情页签
+ * 仅弯道预警设备在实时/回放之外额外提供数据详情、预警记录页签
  */
 const visibleTabs = computed<Array<{ key: TabKey; label: string }>>(() => {
   if (detailKind.value === 'vehicle') {
@@ -66,11 +69,10 @@ const visibleTabs = computed<Array<{ key: TabKey; label: string }>>(() => {
       { key: 'real', label: '实时视频' },
       { key: 'playback', label: '回放视频' },
       { key: 'data', label: '数据详情' },
+      { key: 'alert', label: '预警记录' },
     ];
   }
-  return [
-    { key: 'real', label: '实时视频' },
-  ];
+  return [{ key: 'real', label: '实时视频' }];
 });
 const activeTab = ref<TabKey>('real');
 // endregion
@@ -318,12 +320,18 @@ function playbackDisabledTime(current: any) {
     disabledMinutes: (selectedHour: number) =>
       selectedHour === now.hour()
         ? Array.from({ length: now.minute() }, (_, i) => i).concat(
-            Array.from({ length: 59 - now.minute() }, (_, i) => now.minute() + 1 + i),
+            Array.from(
+              { length: 59 - now.minute() },
+              (_, i) => now.minute() + 1 + i,
+            ),
           )
         : [],
     disabledSeconds: (_selectedHour: number, selectedMinute: number) =>
       isCurrentHour && selectedMinute === now.minute()
-        ? Array.from({ length: 59 - now.second() }, (_, i) => now.second() + 1 + i)
+        ? Array.from(
+            { length: 59 - now.second() },
+            (_, i) => now.second() + 1 + i,
+          )
         : [],
   };
 }
@@ -549,6 +557,120 @@ function handleVehicleSearch() {
 }
 // endregion
 
+// region 预警记录（仅弯道预警设备，文档 7.4 /api/alert/list）
+const alertLoading = ref(false);
+const alertRecords = ref<AlertRecord[]>([]);
+const alertTotal = ref(0);
+const alertPage = reactive({ pageNo: 1, pageSize: 10 });
+/** 搜索条件：设备（弯道设备下拉）、车牌、告警类型、时间范围 */
+const alertEquipmentNo = ref<string | undefined>();
+const alertCarNumber = ref('');
+const alertParamType = ref<string | undefined>();
+const alertRange = ref<[string, string] | null>(null);
+
+/** 设备名称搜索下拉选项：来自弯道监控分组下的设备 */
+const curveDeviceOptions = computed(() => {
+  const options: Array<{ label: string; value: string }> = [];
+  for (const group of deviceGroups.value) {
+    if (!group.purpose?.includes('弯道')) continue;
+    for (const device of group.children ?? []) {
+      if (device.simNo) {
+        options.push({ label: device.deviceName, value: device.simNo });
+      }
+    }
+  }
+  return options;
+});
+
+const alertTypeOptions = [
+  { label: '超速预警', value: 'overspeed' },
+  { label: '压线预警', value: 'crimping' },
+  { label: '逆行预警', value: 'noDirection' },
+];
+
+/** 告警级别配色（对齐参考页 level-1/2/3） */
+function alarmLevelClass(level?: string): string {
+  if (level === '1') return 'font-bold text-red-500';
+  if (level === '2') return 'font-bold text-orange-500';
+  if (level === '3') return 'font-bold text-blue-500';
+  return '';
+}
+
+const alertColumns = [
+  { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
+  { title: '设备名称', dataIndex: 'equipmentNo', key: 'equipmentNo' },
+  { title: '告警类型', dataIndex: 'paramTypeName', key: 'paramTypeName' },
+  { title: '告警信息', dataIndex: 'alarmMessage', key: 'alarmMessage' },
+  { title: '车牌', dataIndex: 'carNumber', key: 'carNumber' },
+  { title: '告警级别', key: 'alarmLevel', width: 90 },
+  { title: '创建时间', key: 'createTime', width: 170 },
+  { title: '图片', key: 'action', width: 90 },
+];
+
+const alertPagination = computed(() => ({
+  current: alertPage.pageNo,
+  pageSize: alertPage.pageSize,
+  showSizeChanger: false,
+  showTotal: (total: number) => `共 ${total} 条`,
+  total: alertTotal.value,
+}));
+
+async function loadAlertRecords(pageNo = 1) {
+  alertLoading.value = true;
+  try {
+    alertPage.pageNo = pageNo;
+    const [startTime, endTime] = alertRange.value ?? [];
+    const data = await getAlertListApi({
+      carNumber: alertCarNumber.value || undefined,
+      endTime: endTime || undefined,
+      equipmentNo: alertEquipmentNo.value || undefined,
+      pageNo,
+      pageSize: alertPage.pageSize,
+      paramType: alertParamType.value || undefined,
+      startTime: startTime || undefined,
+    });
+    alertRecords.value = data?.records ?? [];
+    alertTotal.value = data?.total ?? 0;
+  } catch (error: any) {
+    handleEquipError(error);
+  } finally {
+    alertLoading.value = false;
+  }
+}
+
+function handleAlertSearch() {
+  loadAlertRecords(1);
+}
+
+/** 重置搜索条件（设备恢复为当前选中设备） */
+function resetAlertSearch() {
+  alertEquipmentNo.value = selectedDevice.value?.simNo;
+  alertCarNumber.value = '';
+  alertParamType.value = undefined;
+  alertRange.value = null;
+  loadAlertRecords(1);
+}
+
+function handleAlertTableChange(pagination: any) {
+  loadAlertRecords(pagination.current);
+}
+// endregion
+
+// region 预警图片弹窗
+const alertImageVisible = ref(false);
+const currentAlert = ref<AlertRecord | null>(null);
+
+/** 告警图片地址：相对路径补全中台联调地址前缀 */
+const currentAlertImageUrl = computed(() =>
+  resolveEquipUrl(currentAlert.value?.imgUrl),
+);
+
+function showAlertImage(record: any) {
+  currentAlert.value = record;
+  alertImageVisible.value = true;
+}
+// endregion
+
 // region 车辆抓拍图片弹窗
 const carImageVisible = ref(false);
 const currentVehicle = ref<null | VehiclePassRecord>(null);
@@ -594,6 +716,14 @@ function selectDevice(device: DeviceTreeItem) {
   vehiclePage.pageNo = 1;
   vehicleCarNumber.value = '';
   weatherRecord.value = null;
+  // 预警记录：重置搜索条件，设备默认选中当前设备
+  alertRecords.value = [];
+  alertTotal.value = 0;
+  alertPage.pageNo = 1;
+  alertEquipmentNo.value = device.simNo;
+  alertCarNumber.value = '';
+  alertParamType.value = undefined;
+  alertRange.value = null;
 
   if (detailKind.value === 'weather') {
     // 气象设备不显示页签，直接加载数据详情
@@ -606,12 +736,25 @@ function selectDevice(device: DeviceTreeItem) {
     ) {
       activeTab.value = 'real';
     }
-    if (activeTab.value === 'real') {
-      // 海康设备由 useHikiotPlayer 监听 deviceSerial 变化自动实况播放
-      // （不走 /api/video-platform/cameras，直接按 hikiot 文档播放）
-      playLive();
-    } else if (activeTab.value === 'data') {
-      loadDataDetails(1);
+    switch (activeTab.value) {
+      case 'alert': {
+        loadAlertRecords(1);
+
+        break;
+      }
+      case 'data': {
+        loadDataDetails(1);
+
+        break;
+      }
+      case 'real': {
+        // 海康设备由 useHikiotPlayer 监听 deviceSerial 变化自动实况播放
+        // （不走 /api/video-platform/cameras，直接按 hikiot 文档播放）
+        playLive();
+
+        break;
+      }
+      // No default
     }
   }
 }
@@ -633,6 +776,12 @@ watch(activeTab, (tab) => {
     vehicleRecords.value.length === 0
   ) {
     loadDataDetails(1);
+  } else if (
+    tab === 'alert' &&
+    selectedDevice.value &&
+    alertRecords.value.length === 0
+  ) {
+    loadAlertRecords(1);
   }
 });
 
@@ -1001,10 +1150,112 @@ onBeforeUnmount(() => {
                 <p>当前设备无数据详情（仅弯道预警、气象设备存在数据）</p>
               </div>
             </div>
+
+            <!-- 预警记录（仅弯道预警设备） -->
+            <div v-show="!isWeatherDevice && activeTab === 'alert'">
+              <!-- 搜索栏：设备名称（弯道设备下拉）、车牌号码、告警类型、时间段 -->
+              <div class="mb-4 flex flex-wrap items-center gap-3">
+                <span class="text-sm text-gray-600">设备名称：</span>
+                <Select
+                  v-model:value="alertEquipmentNo"
+                  allow-clear
+                  class="w-52"
+                  :options="curveDeviceOptions"
+                  option-filter-prop="label"
+                  placeholder="请选择设备"
+                  show-search
+                />
+                <span class="text-sm text-gray-600">车牌号码：</span>
+                <Input
+                  v-model:value="alertCarNumber"
+                  allow-clear
+                  class="w-40"
+                  placeholder="请输入车牌号码"
+                  @press-enter="handleAlertSearch"
+                />
+                <span class="text-sm text-gray-600">告警类型：</span>
+                <Select
+                  v-model:value="alertParamType"
+                  allow-clear
+                  class="w-36"
+                  :options="alertTypeOptions"
+                  placeholder="全部告警类型"
+                />
+                <span class="text-sm text-gray-600">时间段：</span>
+                <RangePicker
+                  v-model:value="alertRange"
+                  show-time
+                  value-format="YYYY-MM-DD HH:mm:ss"
+                  :placeholder="['开始时间', '结束时间']"
+                />
+                <Button
+                  :loading="alertLoading"
+                  type="primary"
+                  @click="handleAlertSearch"
+                >
+                  <IconifyIcon class="mr-1" icon="mdi:magnify" />
+                  查询
+                </Button>
+                <Button @click="resetAlertSearch">重置</Button>
+              </div>
+              <Table
+                :columns="alertColumns"
+                :data-source="alertRecords"
+                :loading="alertLoading"
+                :pagination="alertPagination"
+                row-key="id"
+                size="middle"
+                @change="handleAlertTableChange"
+              >
+                <template #bodyCell="{ column, record }">
+                  <template v-if="column.key === 'alarmLevel'">
+                    <span :class="alarmLevelClass(record.alarmLevel)">
+                      {{ record.alarmLevel ? `${record.alarmLevel}级` : '-' }}
+                    </span>
+                  </template>
+                  <template v-else-if="column.key === 'createTime'">
+                    {{ formatTime(record.createTime) }}
+                  </template>
+                  <template v-else-if="column.key === 'action'">
+                    <a
+                      class="text-primary cursor-pointer"
+                      @click="showAlertImage(record)"
+                    >
+                      查看图片
+                    </a>
+                  </template>
+                </template>
+              </Table>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 预警图片弹窗 -->
+    <Modal
+      v-model:open="alertImageVisible"
+      :footer="null"
+      title="告警图片"
+      :width="520"
+    >
+      <div class="flex justify-center p-2">
+        <Image
+          v-if="currentAlertImageUrl"
+          :src="currentAlertImageUrl"
+          class="w-full rounded object-contain"
+        />
+        <div
+          v-else
+          class="flex h-72 w-full items-center justify-center rounded bg-gray-100 text-gray-500"
+        >
+          <div class="text-center">
+            <IconifyIcon class="mb-2 text-4xl" icon="mdi:camera" />
+            <p>暂无告警图片</p>
+          </div>
+        </div>
+      </div>
+    </Modal>
 
     <!-- 车辆图片弹窗 -->
     <Modal

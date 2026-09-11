@@ -6,7 +6,7 @@
  *   获取联调地址与访问令牌，然后直连该地址调用，令牌由后端接口
  *   下发，按对接文档约束不写入 URL、源码或日志
  */
-import {requestClient} from '#/api/request';
+import { requestClient } from '#/api/request';
 
 // region 中台联调配置（地址 + 令牌）
 
@@ -223,6 +223,38 @@ export function getVehiclePassListApi(params: {
   );
 }
 
+/** 预警记录（文档 7.4 /api/alert/list） */
+export interface AlertRecord {
+  id: number;
+  equipmentNo?: string;
+  paramType?: string;
+  paramTypeName?: string;
+  alarmMessage?: string;
+  carNumber?: string;
+  alarmLevel?: string;
+  alarmValue?: string;
+  /** 告警图片（base64 data URL，可能为 null） */
+  imgUrl?: null | string;
+  addTime?: string;
+  createTime?: string;
+}
+
+/** 预警记录列表 */
+export function getAlertListApi(params: {
+  alarmLevel?: string;
+  carNumber?: string;
+  endTime?: string;
+  equipmentNo?: string;
+  pageNo?: number;
+  pageSize?: number;
+  paramType?: string;
+  startTime?: string;
+}) {
+  return equipRequest<PageResult<AlertRecord>>(
+    `/api/alert/list?${toQuery(params)}`,
+  );
+}
+
 /** 气象站监测数据（字段以后端实际推送为准） */
 export interface WeatherStationRecord {
   station_id?: string;
@@ -334,10 +366,7 @@ export interface HikiotChannel {
 }
 
 /** 海康实况初始化：返回本地 WEB 插件绘制所需聚合数据 */
-export function getHikiotPlayInit(
-  deviceSerial: string,
-  channelNo = 1,
-) {
+export function getHikiotPlayInit(deviceSerial: string, channelNo = 1) {
   return equipRequest<HikiotPlayInit>(
     `/api/hikiot/play/init?${toQuery({ deviceSerial, channelNo })}`,
   );
