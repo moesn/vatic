@@ -64,6 +64,7 @@ async function onSubmit(params: Recordable<any>) {
     ref="loginRef"
     :form-schema="formSchema"
     :loading="authStore.loginLoading"
+    title="农村公路安全监测预警系统"
     @submit="onSubmit"
   />
 </template>

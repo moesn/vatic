@@ -8,6 +8,19 @@ import type {
   VehiclePassRecord,
   WeatherStationRecord,
 } from './data';
+import {
+  getAlertListApi,
+  getDeviceTreeApi,
+  getVehiclePassListApi,
+  getWeatherListApi,
+  loadEquipConfig,
+  resolveEquipUrl,
+  resolveStreamUrl,
+  searchRecordingsApi,
+  startLiveApi,
+  startPlaybackApi,
+  stopLiveApi,
+} from './data';
 
 import {
   computed,
@@ -21,7 +34,7 @@ import {
   watch,
 } from 'vue';
 
-import { IconifyIcon } from '@vatic/icons';
+import {IconifyIcon} from '@vatic/icons';
 
 import {
   Button,
@@ -38,21 +51,7 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import Hls from 'hls.js';
-
-import {
-  getAlertListApi,
-  getDeviceTreeApi,
-  getVehiclePassListApi,
-  getWeatherListApi,
-  loadEquipConfig,
-  resolveEquipUrl,
-  resolveStreamUrl,
-  searchRecordingsApi,
-  startLiveApi,
-  startPlaybackApi,
-  stopLiveApi,
-} from './data';
-import { useHikiotPlayer } from './useHikiotPlayer';
+import {useHikiotPlayer} from './useHikiotPlayer';
 
 const { RangePicker } = DatePicker;
 
@@ -562,10 +561,11 @@ const alertLoading = ref(false);
 const alertRecords = ref<AlertRecord[]>([]);
 const alertTotal = ref(0);
 const alertPage = reactive({ pageNo: 1, pageSize: 10 });
-/** 搜索条件：设备（弯道设备下拉）、车牌、告警类型、时间范围 */
+/** 搜索条件：设备（弯道设备下拉）、车牌、告警类型、告警级别、时间范围 */
 const alertEquipmentNo = ref<string | undefined>();
 const alertCarNumber = ref('');
 const alertParamType = ref<string | undefined>();
+const alertLevel = ref<string | undefined>();
 const alertRange = ref<[string, string] | null>(null);
 
 /** 设备名称搜索下拉选项：来自弯道监控分组下的设备 */
@@ -583,9 +583,15 @@ const curveDeviceOptions = computed(() => {
 });
 
 const alertTypeOptions = [
-  { label: '超速预警', value: 'overspeed' },
-  { label: '压线预警', value: 'crimping' },
-  { label: '逆行预警', value: 'noDirection' },
+  {label: '超速', value: 'overspeed'},
+  {label: '压线', value: 'crimping'},
+  {label: '逆行', value: 'noDirection'},
+];
+
+const alertLevelOptions = [
+  {label: '1级', value: '1'},
+  {label: '2级', value: '2'},
+  {label: '3级', value: '3'},
 ];
 
 /** 告警级别配色（对齐参考页 level-1/2/3） */
@@ -597,14 +603,13 @@ function alarmLevelClass(level?: string): string {
 }
 
 const alertColumns = [
-  { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-  { title: '设备名称', dataIndex: 'equipmentNo', key: 'equipmentNo' },
-  { title: '告警类型', dataIndex: 'paramTypeName', key: 'paramTypeName' },
-  { title: '告警信息', dataIndex: 'alarmMessage', key: 'alarmMessage' },
-  { title: '车牌', dataIndex: 'carNumber', key: 'carNumber' },
-  { title: '告警级别', key: 'alarmLevel', width: 90 },
-  { title: '创建时间', key: 'createTime', width: 170 },
-  { title: '图片', key: 'action', width: 90 },
+  {title: '设备名称', dataIndex: 'equipmentNo', key: 'equipmentNo', align: 'center'},
+  {title: '告警类型', dataIndex: 'paramTypeName', key: 'paramTypeName', align: 'center'},
+  {title: '告警信息', dataIndex: 'alarmMessage', key: 'alarmMessage', align: 'center'},
+  {title: '车牌', dataIndex: 'carNumber', key: 'carNumber', align: 'center'},
+  {title: '告警级别', key: 'alarmLevel', width: 90, align: 'center'},
+  {title: '创建时间', key: 'createTime', width: 170, align: 'center'},
+  {title: '图片', key: 'action', width: 70, align: 'center'},
 ];
 
 const alertPagination = computed(() => ({
@@ -621,6 +626,7 @@ async function loadAlertRecords(pageNo = 1) {
     alertPage.pageNo = pageNo;
     const [startTime, endTime] = alertRange.value ?? [];
     const data = await getAlertListApi({
+      alarmLevel: alertLevel.value || undefined,
       carNumber: alertCarNumber.value || undefined,
       endTime: endTime || undefined,
       equipmentNo: alertEquipmentNo.value || undefined,
@@ -644,9 +650,10 @@ function handleAlertSearch() {
 
 /** 重置搜索条件（设备恢复为当前选中设备） */
 function resetAlertSearch() {
-  alertEquipmentNo.value = selectedDevice.value?.simNo;
+  alertEquipmentNo.value = '';
   alertCarNumber.value = '';
   alertParamType.value = undefined;
+  alertLevel.value = undefined;
   alertRange.value = null;
   loadAlertRecords(1);
 }
@@ -723,6 +730,7 @@ function selectDevice(device: DeviceTreeItem) {
   alertEquipmentNo.value = device.simNo;
   alertCarNumber.value = '';
   alertParamType.value = undefined;
+  alertLevel.value = undefined;
   alertRange.value = null;
 
   if (detailKind.value === 'weather') {
@@ -1181,6 +1189,14 @@ onBeforeUnmount(() => {
                   :options="alertTypeOptions"
                   placeholder="全部告警类型"
                 />
+                <span class="text-sm text-gray-600">告警级别：</span>
+                <Select
+                  v-model:value="alertLevel"
+                  allow-clear
+                  class="w-28"
+                  :options="alertLevelOptions"
+                  placeholder="全部级别"
+                />
                 <span class="text-sm text-gray-600">时间段：</span>
                 <RangePicker
                   v-model:value="alertRange"
@@ -1221,7 +1237,7 @@ onBeforeUnmount(() => {
                       class="text-primary cursor-pointer"
                       @click="showAlertImage(record)"
                     >
-                      查看图片
+                      查看
                     </a>
                   </template>
                 </template>

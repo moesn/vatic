@@ -8,6 +8,10 @@ import { defineOverridesPreferences } from '@vatic/preferences';
 export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
-    name: import.meta.env.VITE_APP_TITLE,
+    name: '农村公路安全监测预警系统',
+  },
+  logo: {
+    enable: false,
+    source: '',
   },
 });
