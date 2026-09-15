@@ -128,117 +128,58 @@ table {
 }
 
 .left {
+  display: flex;
+  flex-direction: column;
   width: 400px;
   height: calc(100% - 120px);
   margin: 80px 20px;
 }
 
 .right {
-  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  width: 400px;
-  height: calc(100% - 132px);
+  width: 480px;
+  height: calc(100% - 120px);
   margin: 80px 20px;
-  text-align: right;
-
-  h1 {
-    width: 100%;
-  }
-
-  img {
-    position: absolute;
-    top: -10px;
-    left: 0;
-    z-index: 99;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-  }
 }
 
 .left-top {
+  flex-shrink: 0;
   width: 100%;
-  height: 30%;
-  min-height: 300px;
-
-  .lt-stats-dash {
-    width: 380px;
-    height: 88px;
-    margin-bottom: 20px;
-    margin-left: 10px;
-    background-image: url('/assets/image/lt-stats-dash.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100% 100%;
-
-    h3 {
-      float: left;
-      width: 50%;
-      height: 30px;
-      font-size: 14px;
-      font-weight: bold;
-      line-height: 30px;
-      color: #6ff;
-
-      &:nth-child(1) {
-        padding-right: 65px;
-        text-align: right;
-      }
-
-      &:nth-child(2) {
-        padding-left: 65px;
-      }
-    }
-
-    h4 {
-      float: left;
-      width: 50%;
-      font-family: DIGITAL-Regular, monospace;
-      font-size: 30px;
-      letter-spacing: 20px;
-
-      &:nth-child(3) {
-        padding-left: 25px;
-      }
-
-      &:nth-child(4) {
-        padding-left: 44px;
-      }
-    }
-  }
+  height: 170px;
 
   .lt-dash {
+    display: flex;
     width: 350px;
-    height: calc(100% - 170px);
-    margin-left: 25px;
-    background-image: url('/assets/image/dash.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100% 100%;
+    margin: 10px auto 0;
 
+    // 4 个监控一行排列
     > div {
-      float: left;
       display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 12px;
       align-items: center;
-      justify-content: space-around;
-      width: 100%;
-      height: 25%;
-      font-size: 18px;
+      justify-content: center;
+      height: 120px;
+      font-size: 15px;
       font-weight: bold;
-      line-height: 25%;
       letter-spacing: 1px;
+
+      h3:nth-child(2) {
+        font-family: DIGITAL-Regular, monospace;
+        font-size: 20px;
+        color: #6ff;
+      }
     }
   }
 }
 
 .left-bottom {
+  flex: 1;
   width: 100%;
-  height: 70%;
-  max-height: calc(100% - 300px);
   margin-top: 20px;
+  min-height: 0;
 
   .paging {
     position: absolute;
@@ -335,9 +276,11 @@ table {
   }
 }
 
-.bottom-left {
-  width: calc(50% - 10px);
-  height: 100%;
+// 右侧：养护任务统计（上）
+.right-top {
+  flex-shrink: 0;
+  width: 100%;
+  height: 44%;
 
   #task-chart {
     width: 100%;
@@ -345,73 +288,62 @@ table {
   }
 }
 
-.bottom-right {
-  width: calc(50% - 10px);
-  height: 100%;
-  transform: rotateY(180deg);
+// 右侧：气象监控设备（下）
+.right-bottom {
+  flex: 1;
+  width: 100%;
+  margin-top: 20px;
+  min-height: 0;
 
-  h2,
-  .weather {
-    text-align: right;
-    transform: rotateY(180deg);
-  }
-
+  // 两个气象设备上下布局
   .weather {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 230px;
-    padding: 0 40px;
+    flex-direction: column;
+    justify-content: space-around;
+    height: calc(100% - 50px);
 
-    div {
+    // 单个设备块：站名 + 5 项指标
+    > div {
+      display: flex;
+      flex-direction: column;
       width: 100%;
-      height: 100%;
 
-      div {
+      > div {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        width: 100%;
-        height: 16%;
-        line-height: 40px;
+        height: 24px;
+        padding: 0 25px;
+        line-height: 24px;
 
+        // 站名行
         &:first-child {
-          height: 20%;
+          height: 28px;
+          margin-bottom: 4px;
+          padding: 0 15px;
+          border-bottom: 1px dashed rgb(35 255 249 / 30%);
+
+          h3 {
+            font-weight: bold;
+          }
         }
 
         h3 {
-          line-height: 20px;
+          line-height: 24px;
           text-align: left;
         }
 
         img {
-          width: 28px;
-          height: 28px;
+          width: 24px;
+          height: 24px;
         }
       }
     }
   }
 }
 
-.bottom {
-  position: absolute;
-  bottom: 20px;
-  left: 440px;
-  display: flex;
-  justify-content: space-between;
-  min-width: 600px;
-  height: 300px;
-
-  > div {
-    background-image: url('/assets/image/dash.png');
-    background-repeat: no-repeat;
-    background-position: 20px 35px;
-    background-size: calc(100% - 40px) calc(100% - 55px);
-  }
-}
-
 .left,
-.bottom {
+.right {
   h2 {
     padding: 6px 15px;
     font-size: 18px;

@@ -314,28 +314,12 @@ function renderTaskChart() {
       },
     },
     grid: {
-      left: 20,
-      right: 20,
-      top: 50,
-      bottom: 50,
+      left: 70,
+      right: 40,
+      top: 40,
+      bottom: 20,
     },
     xAxis: [
-      {
-        type: 'category',
-        axisTick: { show: false },
-        data: taskStates,
-        axisLine: {
-          show: false,
-        },
-        axisLabel: {
-          color: '#FFF',
-        },
-        splitLine: {
-          show: false,
-        },
-      },
-    ],
-    yAxis: [
       {
         type: 'value',
         axisLine: {
@@ -349,32 +333,44 @@ function renderTaskChart() {
         },
       },
     ],
+    yAxis: [
+      {
+        type: 'category',
+        inverse: true,
+        axisTick: { show: false },
+        data: taskStates,
+        axisLine: {
+          show: false,
+        },
+        axisLabel: {
+          color: '#FFF',
+        },
+        splitLine: {
+          show: false,
+        },
+      },
+    ],
     series: taskTypes.map((type: string, index: number) => {
       return {
         name: type,
         type: 'bar',
-        barWidth: 20,
+        barWidth: 12,
         barGap: '20%',
         label: {
           show: true,
-          position: 'insideBottom',
-          distance: 10,
-          align: 'left',
-          verticalAlign: 'middle',
-          rotate: 90,
+          position: 'right',
+          distance: 5,
           formatter: '{c}',
-          fontSize: 16,
+          fontSize: 14,
           color: '#FFF',
-          rich: {
-            name: {},
-          },
         },
         emphasis: {
           focus: 'series',
         },
         data: taskData.value[type],
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          // 横向渐变（从左到右）
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
             { offset: 0, color: colors(index, 0.5) },
             { offset: 0.6, color: colors(index, 0.8) },
             { offset: 1, color: colors(index, 1) },
@@ -441,8 +437,7 @@ onMounted(() => {
         <h2>{{ time }}</h2>
       </div>
       <div class="left">
-        <div class="box-card left-top">
-          <box />
+        <div class="left-top">
           <h2>统计概览</h2>
           <div class="lt-dash">
             <div v-for="item in deviceTypes" :key="item.name">
@@ -507,61 +502,19 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      <!--      <div class="right" :style="{ width: `${videoWidth}px` }">-->
-      <!--        <template v-for="(device, index) in selectedDevices" :key="device.id">-->
-      <!--          <Popover-->
-      <!--            placement="left"-->
-      <!--            v-if="index === 0"-->
-      <!--            v-model:open="settingVisible"-->
-      <!--            trigger="click"-->
-      <!--          >-->
-      <!--            <template #content>-->
-      <!--              <Select-->
-      <!--                v-model:value="selectedDevices"-->
-      <!--                mode="multiple"-->
-      <!--                style="width: 300px"-->
-      <!--                placeholder="请选择5个要播放的监控设备"-->
-      <!--                @change="handleChange"-->
-      <!--              >-->
-      <!--                <SelectOption-->
-      <!--                  v-for="item in allDeviceList"-->
-      <!--                  :key="item.id"-->
-      <!--                  :value="item.videoUrl"-->
-      <!--                  :disabled="-->
-      <!--                    (selectedDevices.length >= 5 &&-->
-      <!--                      !selectedDevices.includes(item.videoUrl)) ||-->
-      <!--                    (selectedDevices.length === 1 &&-->
-      <!--                      selectedDevices.includes(item.videoUrl))-->
-      <!--                  "-->
-      <!--                >-->
-      <!--                  {{ item.location }}-->
-      <!--                </SelectOption>-->
-      <!--              </Select>-->
-      <!--              <Button @click="storeDevice()">保存</Button>-->
-      <!--            </template>-->
-      <!--            <img src="/assets/image/setting.png" alt="" />-->
-      <!--          </Popover>-->
-      <!--          <h1>{{ deviceName(device) }}</h1>-->
-      <!--          <video class="videoElement" autoplay muted></video>-->
-      <!--        </template>-->
-      <!--      </div>-->
-      <div
-        class="bottom"
-        :style="{ width: `calc(100% - ${videoWidth + 480}px)` }"
-      >
-        <div class="box-card bottom-left">
+      <div class="right">
+        <div class="box-card right-top">
           <box />
           <h2>养护任务统计</h2>
           <div id="task-chart"></div>
         </div>
-        <div class="box-card bottom-right">
+        <div class="box-card right-bottom">
           <box />
           <h2>气象监控设备</h2>
           <div class="weather">
             <div v-if="weatherList[0]">
               <div>
                 <h3>{{ weatherList[0].station_name }}</h3>
-                <span></span>
               </div>
               <div>
                 <img src="/assets/image/weather/temperature.png" alt="" />
@@ -591,33 +544,32 @@ onMounted(() => {
             </div>
             <div v-if="weatherList[1]">
               <div>
-                <span></span>
                 <h3>{{ weatherList[1].station_name }}</h3>
               </div>
               <div>
-                <h3>度</h3>
-                <h3>{{ weatherList[1].temperature }}℃</h3>
                 <img src="/assets/image/weather/temperature.png" alt="" />
+                <h3>{{ weatherList[1].temperature }}℃</h3>
+                <h3>温</h3>
               </div>
               <div>
-                <h3>度</h3>
-                <h3>{{ weatherList[1].humidity }}%RH</h3>
                 <img src="/assets/image/weather/wet.png" alt="" />
+                <h3>{{ weatherList[1].humidity }}%RH</h3>
+                <h3>湿</h3>
               </div>
               <div>
-                <h3>速</h3>
-                <h3>{{ weatherList[1].wind_speed }}m/s</h3>
                 <img src="/assets/image/weather/speed.png" alt="" />
+                <h3>{{ weatherList[1].wind_speed }}m/s</h3>
+                <h3>风</h3>
               </div>
               <div>
-                <h3>向</h3>
-                <h3>{{ weatherList[1].wind_direction }}</h3>
                 <img src="/assets/image/weather/direction.png" alt="" />
+                <h3>{{ weatherList[1].wind_direction }}</h3>
+                <h3>风</h3>
               </div>
               <div>
-                <h3>压</h3>
-                <h3>{{ weatherList[1].pressure }}Pa</h3>
                 <img src="/assets/image/weather/pressure.png" alt="" />
+                <h3>{{ weatherList[1].pressure }}Pa</h3>
+                <h3>气</h3>
               </div>
             </div>
           </div>
