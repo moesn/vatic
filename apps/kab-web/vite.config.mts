@@ -13,6 +13,7 @@ export default defineConfig(async () => {
             // mock代理目标地址
             // target: 'http://localhost:5320/api',
             target: 'http://192.168.30.250:8085',
+            // target: 'https://kab-equip.sazn-ai.com:8085',
             ws: true,
           },
         },

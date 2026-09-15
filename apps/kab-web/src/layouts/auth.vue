@@ -11,7 +11,7 @@ const clickLogo = () => {};
 
 <template>
   <AuthPageLayout
-    app-name=""
+    app-name=" "
     :logo="logo"
     page-title=""
     :click-logo="clickLogo"
@@ -21,3 +21,27 @@ const clickLogo = () => {};
     <!-- <template #toolbar></template> -->
   </AuthPageLayout>
 </template>
+
+<style scoped lang="scss">
+:deep .bg-background-deep {
+  .login-background {
+    background-image: url('/slogin.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    filter: none;
+  }
+
+  .flex-col-center {
+    display: none;
+  }
+}
+
+:deep .bg-background {
+  background: linear-gradient(
+    154deg,
+    rgb(7 7 9 / 8.24%) 30%,
+    hsl(var(--primary) / 30%) 48%,
+    rgb(7 7 9 / 8.24%) 64%
+  );
+}
+</style>
