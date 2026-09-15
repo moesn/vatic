@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { message, Switch } from 'ant-design-vue';
 
@@ -14,6 +15,8 @@ import { getEventListApi } from '#/views/event/data';
 
 import box from './box.vue';
 import styleJson from './style.json';
+
+const router = useRouter();
 
 let timer;
 const time = ref();
@@ -271,25 +274,30 @@ function createMarkersByType(type: string) {
       );
       const pt = new BMapGL.Point(item.longitude, item.latitude);
       const marker = new BMapGL.Marker(pt, { icon, type });
+      marker.addEventListener('click', () => {
+        if (item.simNo) {
+          router.push({ path: '/video', query: { simNo: item.simNo } });
+        }
+      });
       map.addOverlay(marker);
     });
 }
 
-function deleteMarkersByType(type: string) {
-  map.getOverlays().forEach((overlay: any) => {
-    if (overlay._config?.type === type) {
-      map.removeOverlay(overlay);
-    }
-  });
-}
+// function deleteMarkersByType(type: string) {
+//   map.getOverlays().forEach((overlay: any) => {
+//     if (overlay._config?.type === type) {
+//       map.removeOverlay(overlay);
+//     }
+//   });
+// }
 
-function renderMarkers(show: boolean, type: string) {
-  if (show) {
-    createMarkersByType(type);
-  } else {
-    deleteMarkersByType(type);
-  }
-}
+// function renderMarkers(show: boolean, type: string) {
+//   if (show) {
+//     createMarkersByType(type);
+//   } else {
+//     deleteMarkersByType(type);
+//   }
+// }
 
 // endregion
 
@@ -433,12 +441,11 @@ onMounted(() => {
     <div ref="mapContainer" class="h-full w-full"></div>
     <div class="absolute top-0 flex h-full w-full justify-between">
       <div class="top-banner">
-        <h1>XXXX管理平台</h1>
+        <h1>农村公路安全监测预警系统</h1>
         <h2>{{ time }}</h2>
       </div>
       <div class="left">
         <div class="left-top">
-          <h2>统计概览</h2>
           <div class="lt-dash">
             <div v-for="item in deviceTypes" :key="item.name">
               <h3>{{ item.name }}</h3>
@@ -447,16 +454,14 @@ onMounted(() => {
                   statsData[item.all]?.[item.name] || 0
                 }}
               </h3>
-              <Switch
-                v-model:checked="item.show"
-                @click="() => renderMarkers(item.show, item.name)"
-              />
+<!--              <Switch-->
+<!--                v-model:checked="item.show"-->
+<!--                @click="() => renderMarkers(item.show, item.name)"-->
+<!--              />-->
             </div>
           </div>
         </div>
         <div class="box-card left-bottom">
-          <box />
-          <h2>风险</h2>
           <div class="paging">
             <img
               src="/assets/image/risk/prev.png"
@@ -504,13 +509,9 @@ onMounted(() => {
       </div>
       <div class="right">
         <div class="box-card right-top">
-          <box />
-          <h2>养护任务统计</h2>
           <div id="task-chart"></div>
         </div>
         <div class="box-card right-bottom">
-          <box />
-          <h2>气象监控设备</h2>
           <div class="weather">
             <div v-if="weatherList[0]">
               <div>
@@ -519,27 +520,27 @@ onMounted(() => {
               <div>
                 <img src="/assets/image/weather/temperature.png" alt="" />
                 <h3>{{ weatherList[0].temperature }}℃</h3>
-                <h3>温</h3>
+                <h3>温度</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/wet.png" alt="" />
                 <h3>{{ weatherList[0].humidity }}%RH</h3>
-                <h3>湿</h3>
+                <h3>湿度</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/speed.png" alt="" />
                 <h3>{{ weatherList[0].wind_speed }}m/s</h3>
-                <h3>风</h3>
+                <h3>风速</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/direction.png" alt="" />
                 <h3>{{ weatherList[0].wind_direction }}</h3>
-                <h3>风</h3>
+                <h3>风向</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/pressure.png" alt="" />
                 <h3>{{ weatherList[0].pressure }}Pa</h3>
-                <h3>气</h3>
+                <h3>气压</h3>
               </div>
             </div>
             <div v-if="weatherList[1]">
@@ -549,27 +550,27 @@ onMounted(() => {
               <div>
                 <img src="/assets/image/weather/temperature.png" alt="" />
                 <h3>{{ weatherList[1].temperature }}℃</h3>
-                <h3>温</h3>
+                <h3>温度</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/wet.png" alt="" />
                 <h3>{{ weatherList[1].humidity }}%RH</h3>
-                <h3>湿</h3>
+                <h3>湿度</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/speed.png" alt="" />
                 <h3>{{ weatherList[1].wind_speed }}m/s</h3>
-                <h3>风</h3>
+                <h3>风速</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/direction.png" alt="" />
                 <h3>{{ weatherList[1].wind_direction }}</h3>
-                <h3>风</h3>
+                <h3>风向</h3>
               </div>
               <div>
                 <img src="/assets/image/weather/pressure.png" alt="" />
                 <h3>{{ weatherList[1].pressure }}Pa</h3>
-                <h3>气</h3>
+                <h3>气压</h3>
               </div>
             </div>
           </div>

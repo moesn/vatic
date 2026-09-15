@@ -33,6 +33,7 @@ import {
   ref,
   watch,
 } from 'vue';
+import { useRoute } from 'vue-router';
 
 import {IconifyIcon} from '@vatic/icons';
 
@@ -54,6 +55,8 @@ import Hls from 'hls.js';
 import {useHikiotPlayer} from './useHikiotPlayer';
 
 const { RangePicker } = DatePicker;
+
+const route = useRoute();
 
 // region 页签
 type TabKey = 'alert' | 'data' | 'playback' | 'real';
@@ -137,10 +140,27 @@ async function loadDeviceTree() {
     deviceGroups.value = (await getDeviceTreeApi()) ?? [];
     // 设备查看默认全展开
     expandedPurposes.value = deviceGroups.value.map((group) => group.purpose);
+    // 路由携带 simNo 时自动选中对应设备
+    const simNo = route.query.simNo as string | undefined;
+    if (simNo) {
+      findAndSelectDeviceBySimNo(simNo);
+    }
   } catch {
     // 错误提示由全局响应拦截器统一处理
   } finally {
     deviceLoading.value = false;
+  }
+}
+
+/** 根据 simNo 在设备树中查找并选中设备 */
+function findAndSelectDeviceBySimNo(simNo: string) {
+  for (const group of deviceGroups.value) {
+    for (const device of group.children ?? []) {
+      if (device.simNo === simNo) {
+        selectDevice(device);
+        return;
+      }
+    }
   }
 }
 // endregion
@@ -812,10 +832,23 @@ onDeactivated(() => {
 
 /** 返回本页时若有选中设备，恢复实时播放（与 tabbar 缓存行为对齐） */
 onActivated(() => {
-  if (selectedDevice.value && activeTab.value === 'real') {
+  const simNo = route.query.simNo as string | undefined;
+  if (simNo) {
+    findAndSelectDeviceBySimNo(simNo);
+  } else if (selectedDevice.value && activeTab.value === 'real') {
     playLive();
   }
 });
+
+/** 路由 simNo 变化：自动选中对应设备 */
+watch(
+  () => route.query.simNo,
+  (newSimNo) => {
+    if (newSimNo) {
+      findAndSelectDeviceBySimNo(newSimNo as string);
+    }
+  },
+);
 
 onBeforeUnmount(() => {
   destroyLivePlayer();
