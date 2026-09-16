@@ -218,9 +218,8 @@ export function getVehiclePassListApi(params: {
   startTime?: string;
   vehicleType?: number | string;
 }) {
-  return requestClient.get<PageResult<VehiclePassRecord>>(
-    `/vehicleBehaviorAbnormalRecord/pageQueryList`,
-    { params },
+  return equipRequest<PageResult<VehiclePassRecord>>(
+    `/api/vehicle/pass/list?${toQuery(params)}`,
   );
 }
 
@@ -251,8 +250,9 @@ export function getAlertListApi(params: {
   paramType?: string;
   startTime?: string;
 }) {
-  return equipRequest<PageResult<AlertRecord>>(
-    `/api/alert/list?${toQuery(params)}`,
+  return requestClient.get<PageResult<AlertRecord>>(
+    `/vehicleBehaviorAbnormalRecord/pageQueryList`,
+    { params },
   );
 }
 
