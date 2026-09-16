@@ -8,6 +8,19 @@ import type {
   VehiclePassRecord,
   WeatherStationRecord,
 } from './data';
+import {
+  getAlertListApi,
+  getDeviceTreeApi,
+  getVehiclePassListApi,
+  getWeatherListApi,
+  loadEquipConfig,
+  resolveEquipUrl,
+  resolveStreamUrl,
+  searchRecordingsApi,
+  startLiveApi,
+  startPlaybackApi,
+  stopLiveApi,
+} from './data';
 
 import {
   computed,
@@ -20,9 +33,9 @@ import {
   ref,
   watch,
 } from 'vue';
-import { useRoute } from 'vue-router';
+import {useRoute} from 'vue-router';
 
-import { IconifyIcon } from '@vatic/icons';
+import {IconifyIcon} from '@vatic/icons';
 
 import {
   Button,
@@ -39,21 +52,7 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import Hls from 'hls.js';
-
-import {
-  getAlertListApi,
-  getDeviceTreeApi,
-  getVehiclePassListApi,
-  getWeatherListApi,
-  loadEquipConfig,
-  resolveEquipUrl,
-  resolveStreamUrl,
-  searchRecordingsApi,
-  startLiveApi,
-  startPlaybackApi,
-  stopLiveApi,
-} from './data';
-import { useHikiotPlayer } from './useHikiotPlayer';
+import {useHikiotPlayer} from './useHikiotPlayer';
 
 const { RangePicker } = DatePicker;
 
@@ -450,25 +449,15 @@ const vehicleRange = ref<any>(null);
 
 /** 车辆类型选项（GB/T 15089-2019 常见分类） */
 const vehicleTypeOptions = [
-  { label: '大型汽车', value: 1 },
-  { label: '小型汽车', value: 2 },
-  { label: '轿车', value: 3 },
+  {label: '轿车', value: 1},
+  {label: '货车', value: 2},
+  {label: '面包车', value: 3},
   { label: '客车', value: 4 },
-  { label: '货车', value: 5 },
-  { label: '摩托车', value: 6 },
-  { label: '三轮车', value: 7 },
-  { label: '拖拉机', value: 8 },
+  {label: '小货车', value: 5},
+  {label: '中型客车', value: 7},
+  {label: 'MPV', value: 26},
 ];
 
-/** 车牌颜色选项 */
-const plateColorOptions = [
-  { label: '蓝底白字', value: 1 },
-  { label: '黄底黑字', value: 2 },
-  { label: '黑底白字', value: 3 },
-  { label: '白底黑字', value: 4 },
-  { label: '绿底白字', value: 5 },
-  { label: '新能源', value: 6 },
-];
 const weatherRecord = ref<null | WeatherStationRecord>(null);
 
 const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
@@ -498,14 +487,34 @@ const selectedDeviceOnline = computed(() =>
 );
 
 const vehicleColumns = [
-  { title: '设备名称', dataIndex: 'deviceName', key: 'deviceName' },
+  {title: '设备名称', key: 'equipmentNo'},
   { title: '车辆号', dataIndex: 'carNumber', key: 'carNumber' },
-  { title: '车辆颜色', dataIndex: 'vehicleColorName', key: 'vehicleColorName' },
   { title: '车辆类型', dataIndex: 'vehicleTypeName', key: 'vehicleTypeName' },
+  { title: '车辆颜色', dataIndex: 'vehicleColorName', key: 'vehicleColorName' },
   { title: '地点', key: 'location' },
   { title: '时间', key: 'shotTime', width: 170 },
   { title: '操作', key: 'action', width: 80 },
 ];
+
+const alertColumns = [
+  {title: '设备名称', dataIndex: 'deviceName', key: 'deviceName', align: 'center',},
+  {title: '车牌号', dataIndex: 'carNumber', key: 'carNumber', align: 'center'},
+  { title: '车辆类型', dataIndex: 'vehicleType', key: 'vehicleType' },
+  { title: '车辆颜色', dataIndex: 'vehicleColor', key: 'vehicleColor' },
+  {title: '告警类型', dataIndex: 'aramType', key: 'aramType', align: 'center',},
+  {title: '告警信息', key: 'alarmInfo', align: 'center'},
+  {title: '告警级别', key: 'alarmLevel', width: 90, align: 'center'},
+  {title: '告警时间', key: 'createdTime', width: 170, align: 'center'},
+  {title: '图片', key: 'action', width: 70, align: 'center'},
+];
+
+
+/** 根据 equipmentNo 从 curveDeviceOptions 获取设备名称 */
+function getDeviceNameByEquipmentNo(equipmentNo?: string): string {
+  if (!equipmentNo) return '-';
+  const opt = curveDeviceOptions.value.find((o) => o.value === equipmentNo);
+  return opt?.label ?? equipmentNo;
+}
 
 const vehiclePagination = computed(() => ({
   current: vehiclePage.pageNo,
@@ -665,26 +674,6 @@ function alarmLevelClass(level?: string): string {
   if (level === '3级') return 'font-bold text-blue-500';
   return '';
 }
-
-const alertColumns = [
-  {
-    title: '设备名称',
-    dataIndex: 'deviceName',
-    key: 'deviceName',
-    align: 'center',
-  },
-  { title: '车牌号', dataIndex: 'carNumber', key: 'carNumber', align: 'center' },
-  {
-    title: '告警类型',
-    dataIndex: 'aramType',
-    key: 'aramType',
-    align: 'center',
-  },
-  { title: '告警信息', key: 'alarmInfo', align: 'center' },
-  { title: '告警级别', key: 'alarmLevel', width: 90, align: 'center' },
-  { title: '告警时间', key: 'createdTime', width: 170, align: 'center' },
-  { title: '图片', key: 'action', width: 70, align: 'center' },
-];
 
 const alertPagination = computed(() => ({
   current: alertPage.pageNo,
@@ -1201,7 +1190,7 @@ onBeforeUnmount(() => {
             <!-- 数据详情 -->
             <div v-show="!isWeatherDevice && activeTab === 'data'">
               <template v-if="detailKind === 'vehicle'">
-                <!-- 搜索栏：设备名称、车牌号码、车辆类型、车牌颜色、时间段 -->
+                <!-- 搜索栏：设备名称、车牌号码、车辆类型、时间段 -->
                 <div class="mb-4 flex flex-wrap items-center gap-3">
                   <span class="text-sm text-gray-600">设备名称：</span>
                   <Select
@@ -1228,14 +1217,6 @@ onBeforeUnmount(() => {
                     class="w-32"
                     :options="vehicleTypeOptions"
                     placeholder="全部类型"
-                  />
-                  <span class="text-sm text-gray-600">车牌颜色：</span>
-                  <Select
-                    v-model:value="vehiclePlateColor"
-                    allow-clear
-                    class="w-32"
-                    :options="plateColorOptions"
-                    placeholder="全部颜色"
                   />
                   <span class="text-sm text-gray-600">时间段：</span>
                   <RangePicker
@@ -1264,7 +1245,10 @@ onBeforeUnmount(() => {
                   @change="handleVehicleTableChange"
                 >
                   <template #bodyCell="{ column, record }">
-                    <template v-if="column.key === 'location'">
+                    <template v-if="column.key === 'equipmentNo'">
+                      {{ getDeviceNameByEquipmentNo(record.equipmentNo) }}
+                    </template>
+                    <template v-else-if="column.key === 'location'">
                       {{ selectedDevice?.location }}
                     </template>
                     <template v-else-if="column.key === 'shotTime'">
