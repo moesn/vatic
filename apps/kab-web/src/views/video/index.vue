@@ -441,8 +441,34 @@ const detailLoading = ref(false);
 const vehicleRecords = ref<VehiclePassRecord[]>([]);
 const vehicleTotal = ref(0);
 const vehiclePage = reactive({ pageNo: 1, pageSize: 10 });
-/** 车辆号查询（弯道预警过车记录） */
+/** 数据详情搜索条件 */
+const vehicleEquipmentNo = ref<string | undefined>(undefined);
 const vehicleCarNumber = ref('');
+const vehicleType = ref<number | undefined>(undefined);
+const vehiclePlateColor = ref<number | undefined>(undefined);
+const vehicleRange = ref<any>(null);
+
+/** 车辆类型选项（GB/T 15089-2019 常见分类） */
+const vehicleTypeOptions = [
+  { label: '大型汽车', value: 1 },
+  { label: '小型汽车', value: 2 },
+  { label: '轿车', value: 3 },
+  { label: '客车', value: 4 },
+  { label: '货车', value: 5 },
+  { label: '摩托车', value: 6 },
+  { label: '三轮车', value: 7 },
+  { label: '拖拉机', value: 8 },
+];
+
+/** 车牌颜色选项 */
+const plateColorOptions = [
+  { label: '蓝底白字', value: 1 },
+  { label: '黄底黑字', value: 2 },
+  { label: '黑底白字', value: 3 },
+  { label: '白底黑字', value: 4 },
+  { label: '绿底白字', value: 5 },
+  { label: '新能源', value: 6 },
+];
 const weatherRecord = ref<null | WeatherStationRecord>(null);
 
 const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
@@ -472,11 +498,12 @@ const selectedDeviceOnline = computed(() =>
 );
 
 const vehicleColumns = [
+  { title: '设备名称', dataIndex: 'deviceName', key: 'deviceName' },
   { title: '车辆号', dataIndex: 'carNumber', key: 'carNumber' },
   { title: '车辆颜色', dataIndex: 'vehicleColorName', key: 'vehicleColorName' },
   { title: '车辆类型', dataIndex: 'vehicleTypeName', key: 'vehicleTypeName' },
   { title: '地点', key: 'location' },
-  { title: '时间', key: 'shotTime' },
+  { title: '时间', key: 'shotTime', width: 170 },
   { title: '操作', key: 'action', width: 80 },
 ];
 
@@ -543,11 +570,16 @@ async function loadDataDetails(pageNo = 1) {
   try {
     if (detailKind.value === 'vehicle') {
       vehiclePage.pageNo = pageNo;
+      const [startTime, endTime] = vehicleRange.value ?? [];
       const data = await getVehiclePassListApi({
         carNumber: vehicleCarNumber.value || undefined,
-        equipmentNo: device.simNo,
+        endTime: endTime || undefined,
+        equipmentNo: vehicleEquipmentNo.value || undefined,
         pageNo,
         pageSize: vehiclePage.pageSize,
+        plateColor: vehiclePlateColor.value,
+        startTime: startTime || undefined,
+        vehicleType: vehicleType.value,
       });
       vehicleRecords.value = data?.records ?? [];
       vehicleTotal.value = data?.total ?? 0;
@@ -573,6 +605,17 @@ function handleVehicleTableChange(pagination: any) {
 
 /** 车辆号查询：重置到第 1 页 */
 function handleVehicleSearch() {
+  loadDataDetails(1);
+}
+
+/** 重置数据详情搜索条件（设备恢复为当前选中设备） */
+function resetVehicleSearch() {
+  const device = selectedDevice.value;
+  vehicleEquipmentNo.value = device?.simNo;
+  vehicleCarNumber.value = '';
+  vehicleType.value = undefined;
+  vehiclePlateColor.value = undefined;
+  vehicleRange.value = null;
   loadDataDetails(1);
 }
 // endregion
@@ -630,6 +673,7 @@ const alertColumns = [
     key: 'deviceName',
     align: 'center',
   },
+  { title: '车牌号', dataIndex: 'carNumber', key: 'carNumber', align: 'center' },
   {
     title: '告警类型',
     dataIndex: 'aramType',
@@ -637,7 +681,6 @@ const alertColumns = [
     align: 'center',
   },
   { title: '告警信息', key: 'alarmInfo', align: 'center' },
-  { title: '车牌', dataIndex: 'carNumber', key: 'carNumber', align: 'center' },
   { title: '告警级别', key: 'alarmLevel', width: 90, align: 'center' },
   { title: '告警时间', key: 'createdTime', width: 170, align: 'center' },
   { title: '图片', key: 'action', width: 70, align: 'center' },
@@ -758,7 +801,11 @@ function selectDevice(device: DeviceTreeItem) {
   vehicleRecords.value = [];
   vehicleTotal.value = 0;
   vehiclePage.pageNo = 1;
+  vehicleEquipmentNo.value = device.simNo;
   vehicleCarNumber.value = '';
+  vehicleType.value = undefined;
+  vehiclePlateColor.value = undefined;
+  vehicleRange.value = null;
   weatherRecord.value = null;
   // 预警记录：重置搜索条件，设备默认选中当前设备
   alertRecords.value = [];
@@ -1154,15 +1201,48 @@ onBeforeUnmount(() => {
             <!-- 数据详情 -->
             <div v-show="!isWeatherDevice && activeTab === 'data'">
               <template v-if="detailKind === 'vehicle'">
-                <!-- 车辆号查询 -->
-                <div class="mb-4 flex items-center gap-3">
-                  <span class="text-sm text-gray-600">车辆号：</span>
+                <!-- 搜索栏：设备名称、车牌号码、车辆类型、车牌颜色、时间段 -->
+                <div class="mb-4 flex flex-wrap items-center gap-3">
+                  <span class="text-sm text-gray-600">设备名称：</span>
+                  <Select
+                    v-model:value="vehicleEquipmentNo"
+                    allow-clear
+                    class="w-52"
+                    :options="curveDeviceOptions"
+                    option-filter-prop="label"
+                    placeholder="请选择设备"
+                    show-search
+                  />
+                  <span class="text-sm text-gray-600">车牌号码：</span>
                   <Input
                     v-model:value="vehicleCarNumber"
                     allow-clear
-                    class="w-52"
-                    placeholder="请输入车辆号"
+                    class="w-40"
+                    placeholder="请输入车牌号码"
                     @press-enter="handleVehicleSearch"
+                  />
+                  <span class="text-sm text-gray-600">车辆类型：</span>
+                  <Select
+                    v-model:value="vehicleType"
+                    allow-clear
+                    class="w-32"
+                    :options="vehicleTypeOptions"
+                    placeholder="全部类型"
+                  />
+                  <span class="text-sm text-gray-600">车牌颜色：</span>
+                  <Select
+                    v-model:value="vehiclePlateColor"
+                    allow-clear
+                    class="w-32"
+                    :options="plateColorOptions"
+                    placeholder="全部颜色"
+                  />
+                  <span class="text-sm text-gray-600">时间段：</span>
+                  <RangePicker
+                    v-model:value="vehicleRange"
+                    show-time
+                    value-format="YYYY-MM-DD HH:mm:ss"
+                    :placeholder="['开始时间', '结束时间']"
                   />
                   <Button
                     :loading="detailLoading"
@@ -1172,6 +1252,7 @@ onBeforeUnmount(() => {
                     <IconifyIcon class="mr-1" icon="mdi:magnify" />
                     查询
                   </Button>
+                  <Button @click="resetVehicleSearch">重置</Button>
                 </div>
                 <Table
                   :columns="vehicleColumns"
