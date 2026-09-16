@@ -6,7 +6,7 @@
  *   获取联调地址与访问令牌，然后直连该地址调用，令牌由后端接口
  *   下发，按对接文档约束不写入 URL、源码或日志
  */
-import { requestClient } from '#/api/request';
+import {requestClient} from '#/api/request';
 
 // region 中台联调配置（地址 + 令牌）
 
@@ -218,8 +218,9 @@ export function getVehiclePassListApi(params: {
   startTime?: string;
   vehicleType?: number | string;
 }) {
-  return equipRequest<PageResult<VehiclePassRecord>>(
-    `/api/vehicle/pass/list?${toQuery(params)}`,
+  return requestClient.get<PageResult<VehiclePassRecord>>(
+    `/vehicleBehaviorAbnormalRecord/pageQueryList`,
+    { params },
   );
 }
 

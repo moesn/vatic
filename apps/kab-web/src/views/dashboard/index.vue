@@ -508,9 +508,6 @@ onMounted(() => {
         </div>
       </div>
       <div class="right">
-        <div class="box-card right-top">
-          <div id="task-chart"></div>
-        </div>
         <div class="box-card right-bottom">
           <div class="weather">
             <div v-if="weatherList[0]">
@@ -574,6 +571,9 @@ onMounted(() => {
               </div>
             </div>
           </div>
+        </div>
+        <div class="box-card right-top">
+          <div id="task-chart"></div>
         </div>
       </div>
     </div>
