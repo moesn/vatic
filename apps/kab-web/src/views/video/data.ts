@@ -6,7 +6,7 @@
  *   获取联调地址与访问令牌，然后直连该地址调用，令牌由后端接口
  *   下发，按对接文档约束不写入 URL、源码或日志
  */
-import {requestClient} from '#/api/request';
+import { requestClient } from '#/api/request';
 
 // region 中台联调配置（地址 + 令牌）
 
@@ -227,27 +227,34 @@ export function getVehiclePassListApi(params: {
 export interface AlertRecord {
   id: number;
   equipmentNo?: string;
-  paramType?: string;
-  paramTypeName?: string;
-  alarmMessage?: string;
+  deviceId?: number;
+  deviceName?: string;
+  /** 真实速度（km/h） */
+  trueSpeed?: number;
+  /** 限速（km/h） */
+  limitSpeed?: number;
   carNumber?: string;
+  captureTime?: string;
+  vehicleType?: string;
+  vehicleColor?: string;
+  plateColor?: string;
+  /** 告警图片地址 */
+  imgPath?: null | string;
+  /** 告警类型（后端拼写为 aramType） */
+  aramType?: string;
   alarmLevel?: string;
-  alarmValue?: string;
-  /** 告警图片（base64 data URL，可能为 null） */
-  imgUrl?: null | string;
-  addTime?: string;
-  createTime?: string;
+  createdTime?: string;
 }
 
 /** 预警记录列表 */
 export function getAlertListApi(params: {
   alarmLevel?: string;
+  aramType?: string;
   carNumber?: string;
   endTime?: string;
   equipmentNo?: string;
   pageNo?: number;
   pageSize?: number;
-  paramType?: string;
   startTime?: string;
 }) {
   return requestClient.get<PageResult<AlertRecord>>(

@@ -11,7 +11,7 @@ const clickLogo = () => {};
 
 <template>
   <AuthPageLayout
-    app-name=" "
+    app-name=""
     :logo="logo"
     page-title=""
     :click-logo="clickLogo"

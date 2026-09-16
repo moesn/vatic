@@ -1,25 +1,20 @@
 <script lang="ts" setup>
-import type { NotificationItem } from '@vatic/layouts';
+import type {NotificationItem} from '@vatic/layouts';
+import {BasicLayout, LockScreen, Notification, UserDropdown,} from '@vatic/layouts';
 
-import { computed, onBeforeMount, ref, watch } from 'vue';
+import {computed, onBeforeMount, ref, watch} from 'vue';
 
-import { AuthenticationLoginExpiredModal } from '@vatic/common-ui';
-import { useWatermark } from '@vatic/hooks';
-import { CircleHelp } from '@vatic/icons';
-import {
-  BasicLayout,
-  LockScreen,
-  Notification,
-  UserDropdown,
-} from '@vatic/layouts';
-import { preferences } from '@vatic/preferences';
-import { useAccessStore, useTabbarStore, useUserStore } from '@vatic/stores';
+import {AuthenticationLoginExpiredModal} from '@vatic/common-ui';
+import {useWatermark} from '@vatic/hooks';
+import {CircleHelp} from '@vatic/icons';
+import {preferences} from '@vatic/preferences';
+import {useAccessStore, useTabbarStore, useUserStore} from '@vatic/stores';
 
-import { message } from 'ant-design-vue';
+import {message} from 'ant-design-vue';
 
-import { requestClient } from '#/api/request';
-import { $t } from '#/locales';
-import { useAuthStore } from '#/store';
+import {requestClient} from '#/api/request';
+import {$t} from '#/locales';
+import {useAuthStore} from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
 const { setMenuList } = useTabbarStore();
@@ -149,3 +144,8 @@ onBeforeMount(() => {
     </template>
   </BasicLayout>
 </template>
+<style>
+.text-foreground.truncate.text-nowrap.font-semibold {
+  font-size: 1rem;
+}
+</style>

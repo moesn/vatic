@@ -8,19 +8,6 @@ import type {
   VehiclePassRecord,
   WeatherStationRecord,
 } from './data';
-import {
-  getAlertListApi,
-  getDeviceTreeApi,
-  getVehiclePassListApi,
-  getWeatherListApi,
-  loadEquipConfig,
-  resolveEquipUrl,
-  resolveStreamUrl,
-  searchRecordingsApi,
-  startLiveApi,
-  startPlaybackApi,
-  stopLiveApi,
-} from './data';
 
 import {
   computed,
@@ -35,7 +22,7 @@ import {
 } from 'vue';
 import { useRoute } from 'vue-router';
 
-import {IconifyIcon} from '@vatic/icons';
+import { IconifyIcon } from '@vatic/icons';
 
 import {
   Button,
@@ -52,7 +39,21 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import Hls from 'hls.js';
-import {useHikiotPlayer} from './useHikiotPlayer';
+
+import {
+  getAlertListApi,
+  getDeviceTreeApi,
+  getVehiclePassListApi,
+  getWeatherListApi,
+  loadEquipConfig,
+  resolveEquipUrl,
+  resolveStreamUrl,
+  searchRecordingsApi,
+  startLiveApi,
+  startPlaybackApi,
+  stopLiveApi,
+} from './data';
+import { useHikiotPlayer } from './useHikiotPlayer';
 
 const { RangePicker } = DatePicker;
 
@@ -603,33 +604,43 @@ const curveDeviceOptions = computed(() => {
 });
 
 const alertTypeOptions = [
-  {label: '超速', value: 'overspeed'},
-  {label: '压线', value: 'crimping'},
-  {label: '逆行', value: 'noDirection'},
+  { label: '超速', value: '超速' },
+  { label: '压线', value: '压线' },
+  { label: '逆行', value: '逆行' },
 ];
 
 const alertLevelOptions = [
-  {label: '1级', value: '1'},
-  {label: '2级', value: '2'},
-  {label: '3级', value: '3'},
+  { label: '1级', value: '1级' },
+  { label: '2级', value: '2级' },
+  { label: '3级', value: '3级' },
 ];
 
 /** 告警级别配色（对齐参考页 level-1/2/3） */
 function alarmLevelClass(level?: string): string {
-  if (level === '1') return 'font-bold text-red-500';
-  if (level === '2') return 'font-bold text-orange-500';
-  if (level === '3') return 'font-bold text-blue-500';
+  if (level === '1级') return 'font-bold text-red-500';
+  if (level === '2级') return 'font-bold text-orange-500';
+  if (level === '3级') return 'font-bold text-blue-500';
   return '';
 }
 
 const alertColumns = [
-  {title: '设备名称', dataIndex: 'equipmentNo', key: 'equipmentNo', align: 'center'},
-  {title: '告警类型', dataIndex: 'paramTypeName', key: 'paramTypeName', align: 'center'},
-  {title: '告警信息', dataIndex: 'alarmMessage', key: 'alarmMessage', align: 'center'},
-  {title: '车牌', dataIndex: 'carNumber', key: 'carNumber', align: 'center'},
-  {title: '告警级别', key: 'alarmLevel', width: 90, align: 'center'},
-  {title: '创建时间', key: 'createTime', width: 170, align: 'center'},
-  {title: '图片', key: 'action', width: 70, align: 'center'},
+  {
+    title: '设备名称',
+    dataIndex: 'deviceName',
+    key: 'deviceName',
+    align: 'center',
+  },
+  {
+    title: '告警类型',
+    dataIndex: 'aramType',
+    key: 'aramType',
+    align: 'center',
+  },
+  { title: '告警信息', key: 'alarmInfo', align: 'center' },
+  { title: '车牌', dataIndex: 'carNumber', key: 'carNumber', align: 'center' },
+  { title: '告警级别', key: 'alarmLevel', width: 90, align: 'center' },
+  { title: '告警时间', key: 'createdTime', width: 170, align: 'center' },
+  { title: '图片', key: 'action', width: 70, align: 'center' },
 ];
 
 const alertPagination = computed(() => ({
@@ -647,15 +658,21 @@ async function loadAlertRecords(pageNo = 1) {
     const [startTime, endTime] = alertRange.value ?? [];
     const data = await getAlertListApi({
       alarmLevel: alertLevel.value || undefined,
+      aramType: alertParamType.value || undefined,
       carNumber: alertCarNumber.value || undefined,
       endTime: endTime || undefined,
       equipmentNo: alertEquipmentNo.value || undefined,
       pageNo,
       pageSize: alertPage.pageSize,
-      paramType: alertParamType.value || undefined,
       startTime: startTime || undefined,
     });
-    alertRecords.value = data?.records ?? [];
+    alertRecords.value = (data?.records ?? []).map((r: any) => ({
+      ...r,
+      imgPath:
+        typeof r.imgPath === 'string'
+          ? r.imgPath.replaceAll(/^`|`$/g, '')
+          : r.imgPath,
+    }));
     alertTotal.value = data?.total ?? 0;
   } catch (error: any) {
     handleEquipError(error);
@@ -689,7 +706,7 @@ const currentAlert = ref<AlertRecord | null>(null);
 
 /** 告警图片地址：相对路径补全中台联调地址前缀 */
 const currentAlertImageUrl = computed(() =>
-  resolveEquipUrl(currentAlert.value?.imgUrl),
+  resolveEquipUrl(currentAlert.value?.imgPath),
 );
 
 function showAlertImage(record: any) {
@@ -1262,8 +1279,24 @@ onBeforeUnmount(() => {
                       {{ record.alarmLevel ? `${record.alarmLevel}级` : '-' }}
                     </span>
                   </template>
-                  <template v-else-if="column.key === 'createTime'">
-                    {{ formatTime(record.createTime) }}
+                  <template v-else-if="column.key === 'alarmInfo'">
+                    <span
+                      v-if="
+                        record.aramType === '超速' &&
+                        record.trueSpeed &&
+                        record.limitSpeed
+                      "
+                    >
+                      {{ record.trueSpeed }}km/h > {{ record.limitSpeed }}km/h
+                    </span>
+                    <span v-else-if="record.vehicleType || record.vehicleColor">
+                      {{ record.vehicleColor || '' }}
+                      {{ record.vehicleType || '' }}
+                    </span>
+                    <span v-else>-</span>
+                  </template>
+                  <template v-else-if="column.key === 'createdTime'">
+                    {{ formatTime(record.createdTime) }}
                   </template>
                   <template v-else-if="column.key === 'action'">
                     <a

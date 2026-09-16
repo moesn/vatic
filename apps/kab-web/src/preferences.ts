@@ -1,4 +1,4 @@
-import { defineOverridesPreferences } from '@vatic/preferences';
+import {defineOverridesPreferences} from '@vatic/preferences';
 
 /**
  * @description 项目配置文件
@@ -11,7 +11,7 @@ export const overridesPreferences = defineOverridesPreferences({
     name: '农村公路安全监测预警系统',
   },
   logo: {
-    enable: false,
+    enable: true,
     source: '',
   },
 });
