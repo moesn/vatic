@@ -1236,7 +1236,6 @@ onBeforeUnmount(() => {
                   <Input
                     v-model:value="vehicleCarNumber"
                     allow-clear
-                    allow-search
                     class="w-40"
                     placeholder="请输入车牌号码"
                     @press-enter="handleVehicleSearch"
@@ -1245,9 +1244,11 @@ onBeforeUnmount(() => {
                   <Select
                     v-model:value="vehicleType"
                     allow-clear
-                    class="w-32"
+                    class="w-36"
                     :options="vehicleTypeOptions"
+                    option-filter-prop="label"
                     placeholder="全部类型"
+                    show-search
                   />
                   <span class="text-sm text-gray-600">时间段：</span>
                   <RangePicker
@@ -1331,10 +1332,11 @@ onBeforeUnmount(() => {
                 <Select
                   v-model:value="vehicleType"
                   allow-clear
-                  allow-search
-                  class="w-32"
+                  class="w-36"
                   :options="vehicleTypeOptions"
+                  option-filter-prop="label"
                   placeholder="全部类型"
+                  show-search
                 />
                 <span class="text-sm text-gray-600">告警类型：</span>
                 <Select
