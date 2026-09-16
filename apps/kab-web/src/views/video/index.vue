@@ -447,15 +447,45 @@ const vehicleType = ref<number | undefined>(undefined);
 const vehiclePlateColor = ref<number | undefined>(undefined);
 const vehicleRange = ref<any>(null);
 
-/** 车辆类型选项（GB/T 15089-2019 常见分类） */
+/** 车辆类型选项（与后端设备识别字典对齐） */
 const vehicleTypeOptions = [
-  {label: '轿车', value: 1},
-  {label: '货车', value: 2},
-  {label: '面包车', value: 3},
+  { label: '未知', value: 0 },
+  { label: '轿车', value: 1 },
+  { label: '货车', value: 2 },
+  { label: '面包车', value: 3 },
   { label: '客车', value: 4 },
-  {label: '小货车', value: 5},
-  {label: '中型客车', value: 7},
-  {label: 'MPV', value: 26},
+  { label: '小货车', value: 5 },
+  { label: 'SUV', value: 6 },
+  { label: '中型客车', value: 7 },
+  { label: '摩托车', value: 8 },
+  { label: '行人', value: 9 },
+  { label: '校车', value: 10 },
+  { label: '泥头车-渣土车', value: 11 },
+  { label: '高危车', value: 12 },
+  { label: '骑行人', value: 13 },
+  { label: '微型轿车', value: 14 },
+  { label: '小型轿车', value: 15 },
+  { label: '紧凑型轿车', value: 16 },
+  { label: '两厢轿车', value: 17 },
+  { label: '三厢轿车', value: 18 },
+  { label: '轻客', value: 19 },
+  { label: '小型SUV', value: 20 },
+  { label: '紧凑型SUV', value: 21 },
+  { label: '中型SUV', value: 22 },
+  { label: '中大型SUV', value: 23 },
+  { label: '大型SUV', value: 24 },
+  { label: '微型面包车', value: 25 },
+  { label: 'MPV', value: 26 },
+  { label: '轿跑', value: 27 },
+  { label: '微卡', value: 28 },
+  { label: '皮卡', value: 29 },
+  { label: '中卡', value: 30 },
+  { label: '轻卡', value: 31 },
+  { label: '重卡', value: 32 },
+  { label: '出租车', value: 33 },
+  { label: '油罐车', value: 34 },
+  { label: '吊车', value: 35 },
+  { label: '海外摩托车', value: 36 },
 ];
 
 const weatherRecord = ref<null | WeatherStationRecord>(null);
@@ -507,7 +537,6 @@ const alertColumns = [
   {title: '告警时间', key: 'createdTime', width: 170, align: 'center'},
   {title: '图片', key: 'action', width: 70, align: 'center'},
 ];
-
 
 /** 根据 equipmentNo 从 curveDeviceOptions 获取设备名称 */
 function getDeviceNameByEquipmentNo(equipmentNo?: string): string {
@@ -697,6 +726,7 @@ async function loadAlertRecords(pageNo = 1) {
       pageNo,
       pageSize: alertPage.pageSize,
       startTime: startTime || undefined,
+      vehicleType: vehicleTypeOptions.find((o) => o.value === vehicleType.value)?.label,
     });
     alertRecords.value = (data?.records ?? []).map((r: any) => ({
       ...r,
@@ -1206,6 +1236,7 @@ onBeforeUnmount(() => {
                   <Input
                     v-model:value="vehicleCarNumber"
                     allow-clear
+                    allow-search
                     class="w-40"
                     placeholder="请输入车牌号码"
                     @press-enter="handleVehicleSearch"
@@ -1295,6 +1326,15 @@ onBeforeUnmount(() => {
                   class="w-40"
                   placeholder="请输入车牌号码"
                   @press-enter="handleAlertSearch"
+                />
+                <span class="text-sm text-gray-600">车辆类型：</span>
+                <Select
+                  v-model:value="vehicleType"
+                  allow-clear
+                  allow-search
+                  class="w-32"
+                  :options="vehicleTypeOptions"
+                  placeholder="全部类型"
                 />
                 <span class="text-sm text-gray-600">告警类型：</span>
                 <Select

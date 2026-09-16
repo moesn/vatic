@@ -256,6 +256,7 @@ export function getAlertListApi(params: {
   pageNo?: number;
   pageSize?: number;
   startTime?: string;
+  vehicleType?: string;
 }) {
   return requestClient.get<PageResult<AlertRecord>>(
     `/vehicleBehaviorAbnormalRecord/pageQueryList`,
