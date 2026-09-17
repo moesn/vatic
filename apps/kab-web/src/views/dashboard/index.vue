@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { message, Switch } from 'ant-design-vue';
+import { message } from 'ant-design-vue';
 
 import {
   getDataStatsApi,
@@ -13,7 +13,6 @@ import {
 } from '#/views/dashboard/data';
 import { getEventListApi } from '#/views/event/data';
 
-import box from './box.vue';
 import styleJson from './style.json';
 
 const router = useRouter();
@@ -262,8 +261,8 @@ function loadMap() {
 
 function createMarkersByType(type: string) {
   const bodyWidth = document.body.offsetWidth;
-  const width = Math.min(bodyWidth * 0.03, 90);
-  const height = Math.min(bodyWidth * 0.04, 120);
+  const width = Math.min(bodyWidth * 0.03, 100);
+  const height = Math.min(bodyWidth * 0.03, 100);
 
   allDeviceList.value
     ?.filter((d: any) => d.purpose === type)
@@ -454,10 +453,10 @@ onMounted(() => {
                   statsData[item.all]?.[item.name] || 0
                 }}
               </h3>
-<!--              <Switch-->
-<!--                v-model:checked="item.show"-->
-<!--                @click="() => renderMarkers(item.show, item.name)"-->
-<!--              />-->
+              <!--              <Switch-->
+              <!--                v-model:checked="item.show"-->
+              <!--                @click="() => renderMarkers(item.show, item.name)"-->
+              <!--              />-->
             </div>
           </div>
         </div>
