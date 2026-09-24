@@ -218,8 +218,9 @@ export function getVehiclePassListApi(params: {
   startTime?: string;
   vehicleType?: number | string;
 }) {
-  return equipRequest<PageResult<VehiclePassRecord>>(
-    `/api/vehicle/pass/list?${toQuery(params)}`,
+  return requestClient.get<PageResult<VehiclePassRecord>>(
+    `/vehiclePassRecord/pageQueryList`,
+    { params },
   );
 }
 
