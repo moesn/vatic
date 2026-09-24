@@ -12,6 +12,7 @@ import {
   getAlertListApi,
   getDeviceTreeApi,
   getVehiclePassListApi,
+  getVehiclePassStatisticsApi,
   getWeatherListApi,
   loadEquipConfig,
   resolveEquipUrl,
@@ -644,6 +645,7 @@ function handleVehicleTableChange(pagination: any) {
 /** 车辆号查询：重置到第 1 页 */
 function handleVehicleSearch() {
   loadDataDetails(1);
+  loadVehiclePassStatistics();
 }
 
 /** 重置数据详情搜索条件（设备恢复为当前选中设备） */
@@ -654,8 +656,118 @@ function resetVehicleSearch() {
   vehicleType.value = undefined;
   vehiclePlateColor.value = undefined;
   vehicleRange.value = null;
+  trendDimension.value = 1;
   loadDataDetails(1);
+  loadVehiclePassStatistics();
 }
+
+// region 数据详情统计趋势
+const trendChartRef = ref<HTMLElement | null>(null);
+let trendChart: any = null;
+const trendLoading = ref(false);
+const trendDimension = ref<number>(1);
+const trendData = ref<{ total: number; trend: Array<{ time: string; count: number }> }>({
+  total: 0,
+  trend: [],
+});
+
+const dimensionOptions = [
+  { label: '当天', value: 1 },
+  { label: '近一周', value: 2 },
+  { label: '近一个月', value: 3 },
+];
+
+function initTrendChart() {
+  const echarts = (window as any).echarts;
+  if (!echarts || !trendChartRef.value) return;
+  trendChart = echarts.init(trendChartRef.value);
+}
+
+function renderTrendChart() {
+  if (!trendChart) initTrendChart();
+  if (!trendChart) return;
+
+  const data = trendData.value.trend ?? [];
+  const times = data.map((d) => d.time);
+  const counts = data.map((d) => d.count);
+
+  trendChart.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { left: 40, right: 20, top: 30, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      data: times,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#999', fontSize: 11 },
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#999', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f0f0f0' } },
+    },
+    series: [
+      {
+        type: 'line',
+        data: counts,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { width: 2, color: '#1890ff' },
+        itemStyle: { color: '#1890ff' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(24,144,255,0.3)' },
+              { offset: 1, color: 'rgba(24,144,255,0.02)' },
+            ],
+          },
+        },
+      },
+    ],
+  });
+}
+
+async function loadVehiclePassStatistics() {
+  const device = selectedDevice.value;
+  if (!device || detailKind.value !== 'vehicle') return;
+
+  trendLoading.value = true;
+  try {
+    const [startTime, endTime] = vehicleRange.value ?? [];
+    const data = await getVehiclePassStatisticsApi({
+      carNumber: vehicleCarNumber.value || undefined,
+      dimension: trendDimension.value,
+      endTime: endTime || undefined,
+      equipmentNo: vehicleEquipmentNo.value || undefined,
+      plateColor: vehiclePlateColor.value,
+      startTime: startTime || undefined,
+      vehicleType: vehicleType.value,
+    });
+    trendData.value = {
+      total: data?.total ?? 0,
+      trend: data?.trend ?? [],
+    };
+    await nextTick();
+    renderTrendChart();
+  } catch (error: any) {
+    handleEquipError(error);
+  } finally {
+    trendLoading.value = false;
+  }
+}
+
+function handleTrendResize() {
+  trendChart?.resize();
+}
+
+watch(trendDimension, () => {
+  loadVehiclePassStatistics();
+});
 // endregion
 
 // region 预警记录（仅弯道预警设备，文档 7.4 /api/alert/list）
@@ -825,6 +937,7 @@ function selectDevice(device: DeviceTreeItem) {
   vehicleType.value = undefined;
   vehiclePlateColor.value = undefined;
   vehicleRange.value = null;
+  trendDimension.value = 1;
   weatherRecord.value = null;
   // 预警记录：重置搜索条件，设备默认选中当前设备
   alertRecords.value = [];
@@ -855,6 +968,7 @@ function selectDevice(device: DeviceTreeItem) {
       }
       case 'data': {
         loadDataDetails(1);
+        loadVehiclePassStatistics();
 
         break;
       }
@@ -883,10 +997,10 @@ watch(activeTab, (tab) => {
   } else if (
     tab === 'data' &&
     selectedDevice.value &&
-    detailKind.value !== 'none' &&
-    vehicleRecords.value.length === 0
+    detailKind.value !== 'none'
   ) {
     loadDataDetails(1);
+    loadVehiclePassStatistics();
   } else if (
     tab === 'alert' &&
     selectedDevice.value &&
@@ -902,6 +1016,7 @@ onMounted(() => {
   loadEquipConfig().catch(() => {
     // 错误提示由全局响应拦截器统一处理
   });
+  window.addEventListener('resize', handleTrendResize);
 });
 
 /**
@@ -936,6 +1051,8 @@ watch(
 onBeforeUnmount(() => {
   destroyLivePlayer();
   destroyPlaybackPlayer();
+  window.removeEventListener('resize', handleTrendResize);
+  trendChart?.dispose();
 });
 // endregion
 </script>
@@ -1266,6 +1383,41 @@ onBeforeUnmount(() => {
                     查询
                   </Button>
                   <Button @click="resetVehicleSearch">重置</Button>
+                </div>
+                <!-- 统计趋势图 -->
+                <div class="mb-4 rounded border border-gray-200 bg-white p-4">
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <IconifyIcon class="text-primary" icon="mdi:chart-timeline-variant" />
+                      过车数量趋势（{{ trendDimension === 1 ? '按小时统计' : '按天统计' }}）
+                    </span>
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm text-gray-500">共 {{ trendData.total }} 条过车记录</span>
+                      <div class="flex items-center gap-1">
+                        <Button
+                          v-for="opt in dimensionOptions"
+                          :key="opt.value"
+                          size="small"
+                          :type="trendDimension === opt.value ? 'primary' : 'default'"
+                          @click="trendDimension = opt.value"
+                        >
+                          {{ opt.label }}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <Spin :spinning="trendLoading">
+                    <div
+                      ref="trendChartRef"
+                      class="h-[250px] w-full"
+                    ></div>
+                    <div
+                      v-if="!trendLoading && trendData.trend.length === 0"
+                      class="py-8 text-center text-sm text-gray-400"
+                    >
+                      暂无趋势数据
+                    </div>
+                  </Spin>
                 </div>
                 <Table
                   :columns="vehicleColumns"

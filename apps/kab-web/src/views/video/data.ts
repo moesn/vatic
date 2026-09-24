@@ -224,6 +224,28 @@ export function getVehiclePassListApi(params: {
   );
 }
 
+/** 过车记录统计趋势接口响应 */
+export interface VehiclePassStatistics {
+  total: number;
+  trend: Array<{ time: string; count: number }>;
+}
+
+/** 过车记录统计趋势 */
+export function getVehiclePassStatisticsApi(params: {
+  carNumber?: string;
+  dimension?: number;
+  endTime?: string;
+  equipmentNo?: string;
+  plateColor?: number | string;
+  startTime?: string;
+  vehicleType?: number | string;
+}) {
+  return requestClient.get<VehiclePassStatistics>(
+    `/vehiclePassRecord/statistics`,
+    { params },
+  );
+}
+
 /** 预警记录（文档 7.4 /api/alert/list） */
 export interface AlertRecord {
   id: number;
