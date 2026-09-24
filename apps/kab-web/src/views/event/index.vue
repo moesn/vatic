@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { TableColumnsType } from 'ant-design-vue';
 
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, h, onMounted, reactive, ref, watch } from 'vue';
 
 import { useVaticModal } from '@vatic/common-ui';
 
@@ -12,7 +12,6 @@ import { useVaticForm } from '#/adapter/form';
 import {
   dispatchApi,
   disposeApi,
-  EventRecord,
   getEventListApi,
   getEventStatsApi,
   getStaffListApi,
@@ -77,7 +76,7 @@ getStaffListApi().then((res: any[]) => {
 
 // region 表格
 const eventLoading = ref(false);
-const eventRecords = ref<EventRecord[]>([]);
+const eventRecords = ref<any[]>([]);
 const eventTotal = ref(0);
 const eventPage = reactive({ pageNo: 1, pageSize: 10 });
 const selectedRowKeys = ref<number[]>([]);
@@ -93,7 +92,7 @@ const selectedEvents = computed(() =>
     })),
 );
 
-const eventColumns: TableColumnsType<EventRecord> = [
+const eventColumns: TableColumnsType<any> = [
   {
     title: '图片',
     dataIndex: 'imageUrl',
@@ -390,7 +389,7 @@ const [DisposeModal, DisposeModalApi] = useVaticModal({
   title: '处置',
 });
 
-function openDispatchModal(row?: EventRecord) {
+function openDispatchModal(row?: any) {
   const events = row
     ? [row].map((d) => ({
         eventType: d.eventType,
@@ -408,7 +407,7 @@ function openDispatchModal(row?: EventRecord) {
   }).open();
 }
 
-function openDisposeModal(row?: EventRecord) {
+function openDisposeModal(row?: any) {
   const events = row
     ? [row].map((d) => ({
         eventType: d.eventType,

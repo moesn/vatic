@@ -1,4 +1,4 @@
-import { requestClient } from '#/api/request';
+import {requestClient} from '#/api/request';
 
 /** 事件记录（新接口返回结构） */
 export interface EventRecord {
@@ -44,10 +44,11 @@ export interface EventListParams {
 }
 
 /** 事件列表 */
-export function getEventListApi(params: EventListParams) {
-  return requestClient.get<PageResult<EventRecord>>('/riskEvent/pageQueryList', {
-    params,
-  });
+export function getEventListApi(data: EventListParams) {
+  return requestClient.post<PageResult<EventRecord>>(
+    '/riskevents/eventViewStatisticsList',
+    data,
+  );
 }
 
 /** 事件类型选项 */
