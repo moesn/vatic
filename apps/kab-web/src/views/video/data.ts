@@ -287,6 +287,30 @@ export function getAlertListApi(params: {
   );
 }
 
+/** 预警记录统计趋势：按告警类型分组，key 为告警类型（超速/压线/逆行） */
+export type AlertStatistics = Record<
+  string,
+  Array<{ aramType: string; total: number; captureTime: string }>
+>;
+
+/** 预警记录统计趋势 */
+export function getAlertStatisticsApi(params: {
+  alarmLevel?: string;
+  aramType?: string;
+  carNumber?: string;
+  dimension?: number;
+  endTime?: string;
+  equipmentNo?: string;
+  plateColor?: number | string;
+  startTime?: string;
+  vehicleType?: number | string;
+}) {
+  return requestClient.get<AlertStatistics>(
+    `/vehicleBehaviorAbnormalRecord/abnormalStatistics`,
+    { params },
+  );
+}
+
 /** 气象站监测数据（字段以后端实际推送为准） */
 export interface WeatherStationRecord {
   station_id?: string;

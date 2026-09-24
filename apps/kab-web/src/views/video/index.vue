@@ -10,6 +10,7 @@ import type {
 } from './data';
 import {
   getAlertListApi,
+  getAlertStatisticsApi,
   getDeviceTreeApi,
   getVehiclePassListApi,
   getVehiclePassStatisticsApi,
@@ -763,6 +764,7 @@ async function loadVehiclePassStatistics() {
 
 function handleTrendResize() {
   trendChart?.resize();
+  alertTrendChart?.resize();
 }
 
 watch(trendDimension, () => {
@@ -857,6 +859,7 @@ async function loadAlertRecords(pageNo = 1) {
 
 function handleAlertSearch() {
   loadAlertRecords(1);
+  loadAlertStatistics();
 }
 
 /** 重置搜索条件（设备恢复为当前选中设备） */
@@ -866,12 +869,149 @@ function resetAlertSearch() {
   alertParamType.value = undefined;
   alertLevel.value = undefined;
   alertRange.value = null;
+  alertTrendDimension.value = 1;
   loadAlertRecords(1);
+  loadAlertStatistics();
 }
 
 function handleAlertTableChange(pagination: any) {
   loadAlertRecords(pagination.current);
 }
+// endregion
+
+// region 预警记录统计趋势
+const alertTrendChartRef = ref<HTMLElement | null>(null);
+let alertTrendChart: any = null;
+const alertTrendLoading = ref(false);
+const alertTrendDimension = ref<number>(1);
+/** 按告警类型分组的趋势数据：{ "超速": [{ aramType, total, captureTime }], ... } */
+const alertTrendData = ref<Record<string, Array<{ aramType: string; total: number; captureTime: string }>>>({});
+/** 所有告警类型的总条数 */
+const alertTrendTotal = ref(0);
+
+const alertDimensionOptions = [
+  { label: '当天', value: 1 },
+  { label: '近一周', value: 2 },
+  { label: '近一个月', value: 3 },
+];
+
+/** 多系列配色 */
+const alertSeriesColors = ['#1890ff', '#ff4d4f', '#faad14', '#52c41a', '#722ed1'];
+
+function initAlertTrendChart() {
+  const echarts = (window as any).echarts;
+  if (!echarts || !alertTrendChartRef.value) return;
+  alertTrendChart = echarts.init(alertTrendChartRef.value);
+}
+
+function renderAlertTrendChart() {
+  if (!alertTrendChart) initAlertTrendChart();
+  if (!alertTrendChart) return;
+
+  const grouped = alertTrendData.value;
+  const types = Object.keys(grouped);
+
+  if (types.length === 0) {
+    alertTrendChart.clear();
+    return;
+  }
+
+  // 收集所有时间点，取并集作为 x 轴
+  const timeSet = new Set<string>();
+  types.forEach((t) => grouped[t].forEach((d) => timeSet.add(d.captureTime)));
+  const times = Array.from(timeSet).sort();
+
+  // 计算总条数
+  alertTrendTotal.value = types.reduce(
+    (sum, t) => sum + grouped[t].reduce((s, d) => s + d.total, 0),
+    0,
+  );
+
+  // 构建多系列数据
+  const series = types.map((type, idx) => {
+    const color = alertSeriesColors[idx % alertSeriesColors.length];
+    const dataMap = new Map(grouped[type].map((d) => [d.captureTime, d.total]));
+    const data = times.map((t) => dataMap.get(t) ?? 0);
+    return {
+      name: type,
+      type: 'line',
+      data,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 6,
+      lineStyle: { width: 2, color },
+      itemStyle: { color },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: color.replace(')', ',0.25)').replace('rgb', 'rgba') },
+            { offset: 1, color: 'rgba(255,255,255,0.01)' },
+          ],
+        },
+      },
+    };
+  });
+
+  alertTrendChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: {
+      data: types,
+      top: 0,
+      textStyle: { color: '#666' },
+    },
+    grid: { left: 40, right: 20, top: 40, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      data: times,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#999', fontSize: 11 },
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#999', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f0f0f0' } },
+    },
+    series,
+  });
+}
+
+async function loadAlertStatistics() {
+  const device = selectedDevice.value;
+  if (!device) return;
+
+  alertTrendLoading.value = true;
+  try {
+    const [startTime, endTime] = alertRange.value ?? [];
+    const data = await getAlertStatisticsApi({
+      alarmLevel: alertLevel.value || undefined,
+      aramType: alertParamType.value || undefined,
+      carNumber: alertCarNumber.value || undefined,
+      dimension: alertTrendDimension.value,
+      endTime: endTime || undefined,
+      equipmentNo: alertEquipmentNo.value || undefined,
+      filePath: undefined,
+      plateColor: vehiclePlateColor.value,
+      startTime: startTime || undefined,
+      vehicleType: vehicleType.value,
+    });
+    alertTrendData.value = data ?? {};
+    await nextTick();
+    renderAlertTrendChart();
+  } catch (error: any) {
+    handleEquipError(error);
+  } finally {
+    alertTrendLoading.value = false;
+  }
+}
+
+watch(alertTrendDimension, () => {
+  loadAlertStatistics();
+});
 // endregion
 
 // region 预警图片弹窗
@@ -948,6 +1088,7 @@ function selectDevice(device: DeviceTreeItem) {
   alertParamType.value = undefined;
   alertLevel.value = undefined;
   alertRange.value = null;
+  alertTrendDimension.value = 1;
 
   if (detailKind.value === 'weather') {
     // 气象设备不显示页签，直接加载数据详情
@@ -963,6 +1104,7 @@ function selectDevice(device: DeviceTreeItem) {
     switch (activeTab.value) {
       case 'alert': {
         loadAlertRecords(1);
+        loadAlertStatistics();
 
         break;
       }
@@ -1003,10 +1145,12 @@ watch(activeTab, (tab) => {
     loadVehiclePassStatistics();
   } else if (
     tab === 'alert' &&
-    selectedDevice.value &&
-    alertRecords.value.length === 0
+    selectedDevice.value
   ) {
-    loadAlertRecords(1);
+    if (alertRecords.value.length === 0) {
+      loadAlertRecords(1);
+    }
+    loadAlertStatistics();
   }
 });
 
@@ -1053,6 +1197,7 @@ onBeforeUnmount(() => {
   destroyPlaybackPlayer();
   window.removeEventListener('resize', handleTrendResize);
   trendChart?.dispose();
+  alertTrendChart?.dispose();
 });
 // endregion
 </script>
@@ -1522,6 +1667,41 @@ onBeforeUnmount(() => {
                   查询
                 </Button>
                 <Button @click="resetAlertSearch">重置</Button>
+              </div>
+              <!-- 预警统计趋势图 -->
+              <div class="mb-4 rounded border border-gray-200 bg-white p-4">
+                <div class="mb-3 flex items-center justify-between">
+                  <span class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <IconifyIcon class="text-primary" icon="mdi:chart-timeline-variant" />
+                    预警数量趋势（{{ alertTrendDimension === 1 ? '按小时统计' : '按天统计' }}）
+                  </span>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-500">共 {{ alertTrendTotal }} 条预警记录</span>
+                    <div class="flex items-center gap-1">
+                      <Button
+                        v-for="opt in alertDimensionOptions"
+                        :key="opt.value"
+                        size="small"
+                        :type="alertTrendDimension === opt.value ? 'primary' : 'default'"
+                        @click="alertTrendDimension = opt.value"
+                      >
+                        {{ opt.label }}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <Spin :spinning="alertTrendLoading">
+                  <div
+                    ref="alertTrendChartRef"
+                    class="h-[250px] w-full"
+                  ></div>
+                  <div
+                    v-if="!alertTrendLoading && alertTrendData.trend?.length === 0"
+                    class="py-8 text-center text-sm text-gray-400"
+                  >
+                    暂无趋势数据
+                  </div>
+                </Spin>
               </div>
               <Table
                 :columns="alertColumns"

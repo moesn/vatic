@@ -1,333 +1,231 @@
 <script lang="ts" setup>
-import type { VxeTableGridOptions } from '@vatic/plugins/vxe-table';
+import type { TableColumnsType } from 'ant-design-vue';
 
-import { computed, h, onMounted, reactive, ref, watch } from 'vue';
-import { useTippy } from 'vue-tippy';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
-import { ColPage, useVaticModal } from '@vatic/common-ui';
-import { IconifyIcon } from '@vatic/icons';
+import { useVaticModal } from '@vatic/common-ui';
 
-import { Button, Card, Image, message, Popover, Tooltip } from 'ant-design-vue';
+import { Button, Image, Input, message, Select, Space, Table, Tag } from 'ant-design-vue';
+import { RangePicker } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
-import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import {
   dispatchApi,
   disposeApi,
+  EventRecord,
   getEventListApi,
   getEventStatsApi,
   getStaffListApi,
-  getStreetTreeApi,
 } from '#/views/event/data';
 
-const props = reactive({
-  leftCollapsedWidth: 3,
-  leftCollapsible: true,
-  leftMaxWidth: 50,
-  leftMinWidth: 12,
-  leftWidth: 20,
-  resizable: true,
-  rightWidth: 80,
-  splitHandle: true,
-  splitLine: true,
+// region 搜索条件
+const searchForm = reactive({
+  eventType: undefined as string | undefined,
+  location: '',
+  level: undefined as string | undefined,
+  status: undefined as string | undefined,
+  timeRange: null as null | [string, string],
 });
 
-const mapContainer = ref(null);
-const mapIsLoaded = ref(false);
+const eventTypeOptions = ref<{ label: string; value: string }[]>([]);
+const staffList = ref<{ label: string; value: number }[]>([]);
 
-const eventStatInit = ref<boolean>(false);
-const eventStatList = ref<any>([]);
-const staffList = ref<any>([]);
-const eventType = ref<any>([]);
-getEventStatsApi().then((res) => {
-  eventStatList.value = res.map((d: any) => {
-    return { label: d.eventType, value: d.eventType };
-  });
-});
-getStaffListApi().then((res) => {
-  staffList.value = res.map((d: any) => {
-    return { label: d.name, value: d.id };
-  });
-});
+/** 事件级别配色 */
+const levelColorMap: Record<string, string> = {
+  低: 'blue',
+  中: 'orange',
+  高: 'red',
+};
 
-let map: any;
+/** 事件状态配色 */
+const statusColorMap: Record<string, string> = {
+  未派发: 'default',
+  待确认: 'gold',
+  处理中: 'processing',
+  待复核: 'purple',
+  已完成: 'green',
+};
 
-function loadHuaXi() {
-  const boundary = new BMapGL.Boundary();
-  boundary.get('花溪区', (rs: any) => {
-    if (rs.boundaries.length === 0) {
-      setTimeout(() => loadHuaXi(), 500);
-    } else {
-      for (let i = 0; i < rs.boundaries.length; i++) {
-        const xyArr = rs.boundaries[i].split(';');
-        const ptArr = [];
+const levelOptions = [
+  { label: '低', value: '低' },
+  { label: '中', value: '中' },
+  { label: '高', value: '高' },
+];
 
-        for (const element of xyArr) {
-          const tmp = element.split(',');
-          const pt = new BMapGL.Point(tmp[0], tmp[1]);
-          ptArr.push(pt);
-        }
+const statusOptions = [
+  { label: '未派发', value: '未派发' },
+  { label: '待确认', value: '待确认' },
+  { label: '处理中', value: '处理中' },
+  { label: '待复核', value: '待复核' },
+  { label: '已完成', value: '已完成' },
+];
 
-        const mapMask = new BMapGL.MapMask(ptArr, {
-          isBuildingMask: true,
-          isPoiMask: true,
-          isMapMask: true,
-          showRegion: 'inside',
-          topFillColor: '#5679ea',
-          topFillOpacity: 0.5,
-          sideFillColor: '#5679ea',
-          sideFillOpacity: 0.9,
-        });
-
-        map.addOverlay(mapMask);
-        map.enableDragging();
-        map.enableScrollWheelZoom();
-      }
-      mapIsLoaded.value = true;
-    }
-  });
-}
-
-function loadMap() {
-  map = new BMapGL.Map(mapContainer.value, {
-    enableMapClick: false,
-    enableScrollWheelZoom: false,
-    enableAutoResize: true,
-  });
-  map.disableDragging();
-  map.centerAndZoom(
-    new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
-    13,
-  );
-
-  document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
-
-  loadHuaXi();
-}
-
-function createCircleImage(src: string, isDevice: boolean) {
-  const size = 45;
-  const borderWidth = 5;
-  const borderColor = isDevice ? '#DC143C' : '#4776E6';
-
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx: any = canvas.getContext('2d');
-    const img = new window.Image();
-
-    img.addEventListener('load', () => {
-      canvas.width = size + borderWidth * 2;
-      canvas.height = size + borderWidth * 2;
-
-      ctx.beginPath();
-      ctx.arc(
-        size / 2 + borderWidth,
-        size / 2 + borderWidth,
-        size / 2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.lineWidth = borderWidth;
-      ctx.strokeStyle = borderColor;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(
-        size / 2 + borderWidth,
-        size / 2 + borderWidth,
-        size / 2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.closePath();
-      ctx.clip();
-
-      ctx.drawImage(img, borderWidth, borderWidth, size, size);
-
-      resolve(canvas.toDataURL());
-    });
-    img.src = src;
-  });
-}
-
-function createMarkers(events: any) {
-  if (mapIsLoaded.value) {
-    map.getOverlays().forEach((overlay: any) => {
-      map.removeOverlay(overlay);
-    });
-    events.forEach((event: any) => {
-      createCircleImage(event.imageUrl, !!event.sourceDeviceId).then((img) => {
-        const point = new BMapGL.Point(event.latitude, event.longitude);
-        const icon = new BMapGL.Icon(img, new BMapGL.Size(40, 40));
-
-        const marker = new BMapGL.Marker(point, { icon, data: event });
-        map.addOverlay(marker);
-
-        setTimeout(() =>
-          useTippy(marker.domElement, {
-            content: h('div', [
-              h('p', `事件类型：${event.eventType}`),
-              h('p', `事件位置：${event.location}`),
-              h('p', `首次发现时间：${event.captureTime}`),
-              h('img', {
-                src: event.imageUrl,
-                style: 'margin-top: 10px',
-              }),
-            ]),
-          }),
-        );
-      });
-    });
-  } else {
-    setTimeout(() => createMarkers(events), 500);
-  }
-}
-
-function transformTableData(resData: any) {
-  function deleteLevel(data: any) {
-    data.forEach((d: any) => {
-      if (d.value === '5201') {
-        resData.length = 0;
-      } else if (d.parentId === '5201') {
-        resData.push(d);
-      }
-      if (d.children) {
-        deleteLevel(d.children);
-      }
-    });
-  }
-
-  deleteLevel(resData);
-}
-
-const [LocationGrid, LocationGridApi] = useVaticVxeGrid({
-  gridEvents: {},
-  gridOptions: {
-    columns: [
-      { align: 'left', title: '', type: 'checkbox', width: 30 },
-      {
-        align: 'left',
-        field: 'title',
-        title: '位置',
-        treeNode: true,
-      },
-    ],
-    height: 'auto',
-    keepSource: true,
-    pagerConfig: {
-      enabled: false,
-    },
-    checkboxConfig: {
-      checkStrictly: false,
-      visibleMethod: ({ row }) => row.value.length > 8,
-    },
-    proxyConfig: {
-      ajax: {
-        query: async (_params) => {
-          const resData = await getStreetTreeApi();
-          transformTableData(resData);
-          return resData;
-        },
-      },
-    },
-    treeConfig: {},
-  } as VxeTableGridOptions,
+getEventStatsApi().then((res: any[]) => {
+  eventTypeOptions.value = res.map((d: any) => ({
+    label: d.eventType ?? d.label,
+    value: d.eventType ?? d.value,
+  }));
 });
 
-const [TaskGrid, TaskGridApi] = useVaticVxeGrid({
-  gridEvents: {},
-  gridOptions: {
-    columns: [
-      { align: 'left', title: '', type: 'checkbox', width: 30 },
-      {
-        field: 'imageUrl',
-        slots: { default: 'image-url' },
-        title: '事件列表',
-        width: 80,
-      },
-      {
-        align: 'left',
-        field: 'name',
-        slots: { default: 'risk-info' },
-        title: '',
-      },
-    ],
-    height: 'auto',
-    keepSource: true,
-    showOverflow: false,
-    pagerConfig: {
-      pageSize: 1,
-      pagerCount: 5,
-      layouts: ['PrevPage', 'NextPage', 'Jump', 'PageCount', 'Total'],
-    },
-    proxyConfig: {
-      ajax: {
-        query: async () => {
-          const formValues = await TypeFormApi?.getValues();
-          const params = {
-            status: '未派发',
-            eventTypes: formValues?.eventType,
-            locations: LocationGridApi?.grid
-              .getCheckboxRecords()
-              .filter((d: any) => d.value.length > 8)
-              .map((d: any) => d.title),
-          };
-          const res = await getEventListApi(params);
-          createMarkers(res.records);
-          return res;
-        },
-      },
-    },
-  } as VxeTableGridOptions,
+getStaffListApi().then((res: any[]) => {
+  staffList.value = res.map((d: any) => ({
+    label: d.name,
+    value: d.id,
+  }));
 });
+// endregion
 
-let TypeForm: any, TypeFormApi: any;
+// region 表格
+const eventLoading = ref(false);
+const eventRecords = ref<EventRecord[]>([]);
+const eventTotal = ref(0);
+const eventPage = reactive({ pageNo: 1, pageSize: 10 });
+const selectedRowKeys = ref<number[]>([]);
 
-watch(
-  () => eventStatList.value,
-  async (options) => {
-    if (options && options.length > 0) {
-      [TypeForm, TypeFormApi] = useVaticForm({
-        commonConfig: {
-          hideLabel: true,
-          componentProps: {
-            class: 'w-full',
-          },
-        },
-        showDefaultActions: false,
-        handleValuesChange(values) {
-          eventType.value = values.eventType;
-        },
-        handleSubmit(values) {
-          console.warn(values);
-        },
-        schema: [
-          {
-            component: 'CheckboxGroup',
-            componentProps: {
-              name: 'eventType',
-              options,
-            },
-            fieldName: 'eventType',
-          },
-        ],
-      });
-      eventStatInit.value = true;
-    }
-  },
+const selectedEvents = computed(() =>
+  eventRecords.value
+    .filter((r) => selectedRowKeys.value.includes(r.id))
+    .map((r) => ({
+      eventType: r.eventType,
+      location: r.location,
+      latitude: r.latitude,
+      longitude: r.longitude,
+    })),
 );
 
+const eventColumns: TableColumnsType<EventRecord> = [
+  {
+    title: '图片',
+    dataIndex: 'imageUrl',
+    width: 90,
+    customRender: ({ record }) => {
+      const url = (record.imageUrl ?? '').replaceAll(/^`|`$/g, '');
+      return url ? h(Image, { src: url, width: 70, height: 50, style: { objectFit: 'cover' } }) : '-';
+    },
+  },
+  { title: '事件类型', dataIndex: 'eventType', width: 140 },
+  { title: '事件位置', dataIndex: 'location', width: 160 },
+  {
+    title: '发现时间',
+    dataIndex: 'captureTime',
+    width: 170,
+    customRender: ({ record }) => formatTime(record.captureTime),
+  },
+  {
+    title: '级别',
+    dataIndex: 'level',
+    width: 80,
+    customRender: ({ record }) =>
+      record.level ? h(Tag, { color: levelColorMap[record.level] ?? 'default' }, () => record.level) : '-',
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    width: 100,
+    customRender: ({ record }) =>
+      record.status ? h(Tag, { color: statusColorMap[record.status] ?? 'default' }, () => record.status) : '-',
+  },
+  { title: '处理人', dataIndex: 'assignedTo', width: 100, customRender: ({ record }) => {
+    if (!record.assignedTo || record.assignedTo === -1) return '-';
+    const staff = staffList.value.find((s) => s.value === record.assignedTo);
+    return staff?.label ?? record.assignedTo;
+  }},
+  { title: '备注', dataIndex: 'remark', ellipsis: true },
+  {
+    title: '操作',
+    key: 'action',
+    width: 140,
+    fixed: 'right',
+    customRender: ({ record }) =>
+      h(Space, {}, () => [
+        h(
+          Button,
+          {
+            size: 'small',
+            type: 'link',
+            disabled: record.status === '已完成',
+            onClick: () => openDispatchModal(record),
+          },
+          () => '派发',
+        ),
+        h(
+          Button,
+          {
+            size: 'small',
+            type: 'link',
+            disabled: record.status === '已完成',
+            onClick: () => openDisposeModal(record),
+          },
+          () => '处置',
+        ),
+      ]),
+  },
+];
+
+function formatTime(t?: string) {
+  if (!t) return '-';
+  return t.replace('T', ' ').slice(0, 19);
+}
+
+async function loadEventList() {
+  eventLoading.value = true;
+  try {
+    const [startTime, endTime] = searchForm.timeRange ?? [];
+    const data = await getEventListApi({
+      eventType: searchForm.eventType,
+      location: searchForm.location || undefined,
+      level: searchForm.level,
+      status: searchForm.status,
+      startTime: startTime || undefined,
+      endTime: endTime || undefined,
+      pageNo: eventPage.pageNo,
+      pageSize: eventPage.pageSize,
+    });
+    eventRecords.value = (data?.records ?? []).map((r) => ({
+      ...r,
+      imageUrl: typeof r.imageUrl === 'string' ? r.imageUrl.replaceAll(/^`|`$/g, '') : r.imageUrl,
+    }));
+    eventTotal.value = data?.total ?? 0;
+    selectedRowKeys.value = [];
+  } catch (error: any) {
+    message.error(error?.message ?? '加载失败');
+  } finally {
+    eventLoading.value = false;
+  }
+}
+
+function handleEventSearch() {
+  eventPage.pageNo = 1;
+  loadEventList();
+}
+
+function resetEventSearch() {
+  searchForm.eventType = undefined;
+  searchForm.location = '';
+  searchForm.level = undefined;
+  searchForm.status = undefined;
+  searchForm.timeRange = null;
+  eventPage.pageNo = 1;
+  loadEventList();
+}
+
+function handleTableChange(pagination: any) {
+  eventPage.pageNo = pagination.current;
+  eventPage.pageSize = pagination.pageSize;
+  loadEventList();
+}
+
+const rowSelection = computed(() => ({
+  selectedRowKeys: selectedRowKeys.value,
+  onChange: (keys: number[]) => {
+    selectedRowKeys.value = keys;
+  },
+}));
+// endregion
+
+// region 派发 & 处置弹窗
 let DispatchForm: any, DispatchFormApi: any;
 let DisposeForm: any, DisposeFormApi: any;
-
-const selectEvents = computed(() =>
-  TaskGridApi.grid.getCheckboxRecords().map((d) => ({
-    eventType: d.eventType,
-    location: d.location,
-    latitude: d.latitude,
-    longitude: d.longitude,
-  })),
-);
 
 watch(
   () => staffList.value,
@@ -335,37 +233,27 @@ watch(
     if (options && options.length > 0) {
       [DispatchForm, DispatchFormApi] = useVaticForm({
         handleSubmit: (formData: Record<string, any>) => {
-          message.loading({
-            content: '派发中...',
-            duration: 0,
-            key: 'is-form-submitting',
-          });
+          message.loading({ content: '派发中...', duration: 0, key: 'is-form-submitting' });
           DispatchModalApi.lock();
           const { taskType, assignedTo } = formData;
           const data = {
             taskType,
             assignedTo,
-            riskEventsEntityList: selectEvents.value,
+            riskEventsEntityList: selectedEvents.value,
           };
-          dispatchApi(data).then((_) => {
+          dispatchApi(data).then(() => {
             DispatchModalApi.close();
-            TaskGridApi.grid.commitProxy('query');
-            message.success({
-              content: `派发成功`,
-              duration: 2,
-              key: 'is-form-submitting',
-            });
+            loadEventList();
+            message.success({ content: '派发成功', duration: 2, key: 'is-form-submitting' });
           });
         },
         schema: [
           {
             component: 'Textarea',
             fieldName: 'eventNameList',
-            componentProps: {
-              rows: 10,
-            },
+            componentProps: { rows: 8 },
             label: '事件列表',
-            labelWidth: 60,
+            labelWidth: 70,
             disabled: true,
           },
           {
@@ -379,18 +267,14 @@ watch(
               checkedValue: '紧急',
               unCheckedValue: '普通',
             },
-            labelWidth: 60,
+            labelWidth: 70,
           },
           {
             component: 'Select',
-            componentProps: {
-              options: staffList.value,
-              class: 'w-full',
-              placeholder: '请选择处理人',
-            },
+            componentProps: { options: staffList.value, class: 'w-full', placeholder: '请选择处理人' },
             fieldName: 'assignedTo',
             label: '处理人',
-            labelWidth: 60,
+            labelWidth: 70,
             rules: 'required',
           },
         ],
@@ -399,44 +283,32 @@ watch(
 
       [DisposeForm, DisposeFormApi] = useVaticForm({
         handleSubmit: (formData: Record<string, any>) => {
-          message.loading({
-            content: '保存中...',
-            duration: 0,
-            key: 'is-form-submitting',
-          });
+          message.loading({ content: '保存中...', duration: 0, key: 'is-form-submitting' });
           DisposeModalApi.lock();
           const { disposeMethod, pauseTo, remark } = formData;
-          const data = {
+          const data: any = {
             status: '未派发',
             remark: '',
             pauseTo: Date.now() - 10 * 60 * 1000,
-            riskEventsEntityList: selectEvents.value,
+            riskEventsEntityList: selectedEvents.value,
           };
-
           if (disposeMethod === '误报') {
             data.status = '已完成';
             data.remark = remark || '误报';
           } else {
             data.pauseTo = Date.now() + pauseTo * 60 * 1000;
           }
-
-          disposeApi(data).then((_) => {
+          disposeApi(data).then(() => {
             DisposeModalApi.close();
-            TaskGridApi.grid.commitProxy('query');
-            message.success({
-              content: `保存成功`,
-              duration: 2,
-              key: 'is-form-submitting',
-            });
+            loadEventList();
+            message.success({ content: '保存成功', duration: 2, key: 'is-form-submitting' });
           });
         },
         schema: [
           {
             component: 'Textarea',
             fieldName: 'eventNameList',
-            componentProps: {
-              rows: 10,
-            },
+            componentProps: { rows: 8 },
             label: '事件列表',
             labelWidth: 70,
             disabled: true,
@@ -461,9 +333,7 @@ watch(
             label: '误报说明',
             labelWidth: 70,
             dependencies: {
-              if: (formData: any) => {
-                return formData.disposeMethod === '误报';
-              },
+              if: (formData: any) => formData.disposeMethod === '误报',
               triggerFields: ['disposeMethod'],
             },
           },
@@ -473,16 +343,9 @@ watch(
             label: '暂停时长',
             labelWidth: 70,
             rules: 'required',
-            componentProps: {
-              class: 'w-full',
-              min: 1,
-              step: 1,
-              addonAfter: '分钟',
-            },
+            componentProps: { class: 'w-full', min: 1, step: 1, addonAfter: '分钟' },
             dependencies: {
-              if: (formData: any) => {
-                return formData.disposeMethod === '暂停';
-              },
+              if: (formData: any) => formData.disposeMethod === '暂停',
               triggerFields: ['disposeMethod'],
             },
           },
@@ -492,14 +355,6 @@ watch(
     }
   },
 );
-
-const expandAll = () => {
-  LocationGridApi.grid?.setAllTreeExpand(true);
-};
-
-const collapseAll = () => {
-  LocationGridApi.grid?.setAllTreeExpand(false);
-};
 
 const [DispatchModal, DispatchModalApi] = useVaticModal({
   fullscreenButton: false,
@@ -512,12 +367,10 @@ const [DispatchModal, DispatchModalApi] = useVaticModal({
   onOpenChange(isOpen: boolean) {
     if (isOpen) {
       const values = DispatchModalApi.getData<Record<string, any>>();
-      if (values) {
-        DispatchFormApi.setValues(values);
-      }
+      if (values) DispatchFormApi.setValues(values);
     }
   },
-  title: `派发`,
+  title: '派发',
 });
 
 const [DisposeModal, DisposeModalApi] = useVaticModal({
@@ -531,267 +384,149 @@ const [DisposeModal, DisposeModalApi] = useVaticModal({
   onOpenChange(isOpen: boolean) {
     if (isOpen) {
       const values = DisposeModalApi.getData<Record<string, any>>();
-      if (values) {
-        DisposeFormApi.setValues(values);
-      }
+      if (values) DisposeFormApi.setValues(values);
     }
   },
-  title: `处置`,
+  title: '处置',
 });
 
-function appendToDoList(row: any = '', toggle: boolean = false) {
-  if (typeof TaskGridApi.grid.getCheckboxRecords === 'function') {
-    const checkedRecords = TaskGridApi.grid.getCheckboxRecords();
-
-    if (row) {
-      const risk = TaskGridApi.grid
-        .getCheckboxRecords()
-        .find((item) => item.id === row.id);
-      if (toggle) {
-        TaskGridApi.grid.setCheckboxRow(row, !risk);
-      } else {
-        return !!risk;
-      }
-    } else {
-      return checkedRecords.length;
-    }
+function openDispatchModal(row?: EventRecord) {
+  const events = row
+    ? [row].map((d) => ({
+        eventType: d.eventType,
+        location: d.location,
+        latitude: d.latitude,
+        longitude: d.longitude,
+      }))
+    : selectedEvents.value;
+  if (events.length === 0) {
+    message.warning('请先选择事件');
+    return;
   }
+  DispatchModalApi.setData({
+    eventNameList: events.map((d) => `【${d.eventType}】${d.location}`).join('\n'),
+  }).open();
 }
 
+function openDisposeModal(row?: EventRecord) {
+  const events = row
+    ? [row].map((d) => ({
+        eventType: d.eventType,
+        location: d.location,
+        latitude: d.latitude,
+        longitude: d.longitude,
+      }))
+    : selectedEvents.value;
+  if (events.length === 0) {
+    message.warning('请先选择事件');
+    return;
+  }
+  DisposeModalApi.setData({
+    eventNameList: events.map((d) => `【${d.eventType}】${d.location}`).join('\n'),
+  }).open();
+}
+// endregion
+
 onMounted(() => {
-  loadMap();
+  loadEventList();
 });
 </script>
+
 <template>
-  <div class="h-full w-full" style="min-width: 1700px">
-    <div ref="mapContainer" class="h-full w-full"></div>
-    <div class="absolute top-0 flex h-full w-full justify-between">
-      <ColPage auto-content-height v-bind="props">
-        <template #left="{ isCollapsed, expand }">
-          <div v-if="isCollapsed" @click="expand">
-            <Tooltip title="点击展开左侧">
-              <Button class="z-50" shape="circle" type="primary">
-                <template #icon>
-                  <IconifyIcon class="text-2xl" icon="bi:arrow-right" />
-                </template>
-              </Button>
-            </Tooltip>
-          </div>
-          <div v-else :style="{ minWidth: '200px' }" class="z-50 h-full">
-            <Card
-              :body-style="{ height: '100%', padding: '12px' }"
-              class="z-50 h-full"
-            >
-              <TypeForm class="mb-3 h-1/6 overflow-auto" v-if="eventStatInit" />
-              <Button
-                type="primary"
-                @click="TaskGridApi.grid.commitProxy('query')"
-                class="position-absolute z-50 w-full"
-              >
-                查询
-              </Button>
-              <LocationGrid class="h-5/6">
-                <template #toolbar-tools>
-                  <Button
-                    class="mr-2"
-                    size="small"
-                    type="link"
-                    @click="expandAll"
-                  >
-                    展开
-                  </Button>
-                  <Button size="small" type="link" @click="collapseAll">
-                    折叠
-                  </Button>
-                </template>
-              </LocationGrid>
-            </Card>
-          </div>
-        </template>
-        <div class="ml-2 h-full">
-          <Card
-            :body-style="{ height: '100%', padding: 0 }"
-            class="z-50 float-right h-full w-1/4"
-          >
-            <TaskGrid>
-              <template #toolbar-tools>
-                <Button
-                  size="small"
-                  type="link"
-                  :disabled="appendToDoList() === 0"
-                  @click="
-                    DisposeModalApi.setData({
-                      eventNameList: selectEvents
-                        .map((d) => `【${d.eventType}】${d.location}`)
-                        .join('\n'),
-                    }).open()
-                  "
-                >
-                  处置（{{ appendToDoList() }}）
-                </Button>
-                <Button
-                  size="small"
-                  type="link"
-                  :disabled="appendToDoList() === 0"
-                  @click="
-                    DispatchModalApi.setData({
-                      eventNameList: selectEvents
-                        .map((d) => `【${d.eventType}】${d.location}`)
-                        .join('\n'),
-                    }).open()
-                  "
-                >
-                  派发（{{ appendToDoList() }}）
-                </Button>
-              </template>
-              <template #image-url="{ row }">
-                <Image :src="row.imageUrl" height="80" width="80" />
-              </template>
-              <template #risk-info="{ row }">
-                <Popover placement="left">
-                  <template #content>
-                    <p>事件类型：{{ row.eventType }}</p>
-                    <p>事件位置：{{ row.location }}</p>
-                    <p>首次发现时间：{{ row.captureTime }}</p>
-                    <div class="popover-image">
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                      <Popover placement="left">
-                        <template #content>
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </template>
-                        <div style="width: 30%">
-                          <Image :src="row.imageUrl" :preview="false" />
-                        </div>
-                      </Popover>
-                    </div>
-                  </template>
-                  <Tooltip
-                    :title="
-                      appendToDoList(row)
-                        ? '点击【移出】待派发列表'
-                        : '点击【加入】待派发列表'
-                    "
-                    :color="appendToDoList(row) ? 'red' : 'blue'"
-                  >
-                    <a
-                      style="color: #006be6"
-                      @click="appendToDoList(row, true)"
-                    >
-                      {{ row.eventType }}
-                    </a>
-                  </Tooltip>
-                </Popover>
-                <h6>{{ row.location }}</h6>
-                <h6>{{ row.captureTime }}</h6>
-              </template>
-            </TaskGrid>
-          </Card>
-        </div>
-      </ColPage>
+  <div class="p-5">
+    <!-- 搜索栏 -->
+    <div class="mb-4 flex flex-wrap items-center gap-3 rounded border border-gray-200 bg-white p-4">
+      <span class="text-sm text-gray-600">事件类型：</span>
+      <Select
+        v-model:value="searchForm.eventType"
+        allow-clear
+        class="w-40"
+        :options="eventTypeOptions"
+        option-filter-prop="label"
+        placeholder="全部类型"
+        show-search
+      />
+      <span class="text-sm text-gray-600">事件位置：</span>
+      <Input
+        v-model:value="searchForm.location"
+        allow-clear
+        class="w-40"
+        placeholder="请输入位置"
+        @press-enter="handleEventSearch"
+      />
+      <span class="text-sm text-gray-600">级别：</span>
+      <Select
+        v-model:value="searchForm.level"
+        allow-clear
+        class="w-28"
+        :options="levelOptions"
+        placeholder="全部"
+      />
+      <span class="text-sm text-gray-600">状态：</span>
+      <Select
+        v-model:value="searchForm.status"
+        allow-clear
+        class="w-28"
+        :options="statusOptions"
+        placeholder="全部"
+      />
+      <span class="text-sm text-gray-600">时间：</span>
+      <RangePicker
+        v-model:value="searchForm.timeRange"
+        show-time
+        value-format="YYYY-MM-DD HH:mm:ss"
+        :placeholder="['开始时间', '结束时间']"
+      />
+      <Button type="primary" @click="handleEventSearch">查询</Button>
+      <Button @click="resetEventSearch">重置</Button>
     </div>
-    <DisposeModal>
-      <DisposeForm />
-    </DisposeModal>
+
+    <!-- 表格操作栏 -->
+    <div class="mb-3 flex items-center justify-between">
+      <span class="text-sm text-gray-500">
+        共 {{ eventTotal }} 条，已选 {{ selectedRowKeys.length }} 项
+      </span>
+      <Space>
+        <Button
+          :disabled="selectedRowKeys.length === 0"
+          @click="openDispatchModal()"
+        >
+          派发（{{ selectedRowKeys.length }}）
+        </Button>
+        <Button
+          :disabled="selectedRowKeys.length === 0"
+          @click="openDisposeModal()"
+        >
+          处置（{{ selectedRowKeys.length }}）
+        </Button>
+      </Space>
+    </div>
+
+    <!-- 事件表格 -->
+    <Table
+      :columns="eventColumns"
+      :data-source="eventRecords"
+      :loading="eventLoading"
+      :pagination="{
+        current: eventPage.pageNo,
+        pageSize: eventPage.pageSize,
+        total: eventTotal,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: (t) => `共 ${t} 条`,
+      }"
+      :row-selection="rowSelection"
+      row-key="id"
+      scroll={{ x: 1200 }}
+      size="middle"
+      @change="handleTableChange"
+    />
+
     <DispatchModal>
       <DispatchForm />
     </DispatchModal>
+    <DisposeModal>
+      <DisposeForm />
+    </DisposeModal>
   </div>
 </template>
-<style lang="scss" scoped>
-::v-deep .vxe-table--body-wrapper {
-  z-index: 999;
-}
-
-::v-deep .vxe-grid {
-  padding: 0;
-
-  .vxe-pager {
-    margin-top: 0;
-  }
-
-  .vxe-table--header-wrapper {
-    background-color: transparent;
-  }
-
-  .vxe-toolbar {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 10;
-    height: 38px;
-  }
-}
-
-.popover-image {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  width: 500px;
-  max-height: calc(100vh - 250px);
-  margin-top: 10px;
-  overflow: auto;
-}
-</style>
