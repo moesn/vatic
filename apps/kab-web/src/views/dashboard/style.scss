@@ -227,42 +227,35 @@ table {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 20px;
 
-    // 单个设备块：站名 + 5 项指标
+    // template 直接渲染 > div 指标行
     > div {
       display: flex;
-      flex-direction: column;
-      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      height: 36px;
+      padding: 0 25px;
+      line-height: 24px;
 
-      > div {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 36px;
-        padding: 0 25px;
-        line-height: 24px;
-
-        // 站名行
-        &:first-child {
-          height: 28px;
-          margin-bottom: 4px;
-          padding: 0 15px;
-
-          h3 {
-            font-weight: bold;
-          }
-        }
+      // 站名行
+      &:first-child {
+        height: 28px;
+        margin-bottom: 4px;
+        padding: 0 15px;
 
         h3 {
-          line-height: 24px;
-          text-align: left;
+          font-weight: bold;
         }
+      }
 
-        img {
-          width: 24px;
-          height: 24px;
-        }
+      h3 {
+        line-height: 24px;
+        text-align: left;
+      }
+
+      img {
+        width: 24px;
+        height: 24px;
       }
     }
   }
