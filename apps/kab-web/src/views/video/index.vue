@@ -1447,13 +1447,11 @@ onBeforeUnmount(() => {
                     <template #icon>+</template>放大
                   </Button>
                 </div>
-                <!-- 自动扫描 -->
+                <!-- 自动扫描（点击切换开/关） -->
                 <Button
                   size="small"
                   type="dashed"
-                  @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.PAN_AUTO)"
-                  @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.PAN_AUTO)"
-                  @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.PAN_AUTO)"
+                  @click="hikLive.ptzToggleAuto()"
                 >自动扫描</Button>
               </div>
               <!-- 其它厂商：flv/hls 流（16:9 自适应宽度） -->

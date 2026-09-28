@@ -277,6 +277,8 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
       const init = await getHikiotPlayInit(serial, channelNo);
       // 第 5 章调用链：初始化插件（每次全新连接）
       await initPlugin(init);
+      // 保存当前设备信息（ptzControl 需要）
+      currentDeviceSerial = serial;
       const c = client!;
       await call(
         c,
@@ -380,56 +382,113 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
   }
 
   // ---- 云台控制 ----
-  // SDK: wsClient.ptzControl(wndNo, { command, action }, callback)
-  // command: LEFT / RIGHT / UP / DOWN / UP_LEFT / UP_RIGHT / DOWN_LEFT / DOWN_RIGHT / ZOOM_IN / ZOOM_OUT / PAN_AUTO
-  // action: 0 = 开始, 1 = 停止
+  // 官方 demo（HikOpenVideoSDK demo index.html cloudControl）验证的调用方式：
+  //   ptzControl(1, { cmdType, deviceSerial, channelNo, direction, speed }, callback)
+  //   cmdType: 'start' | 'stop'
+  //   direction: 云台方向码（见 PTZ_COMMANDS）
+  //   speed: 0-2，默认 1
+  // stop 需延迟 500ms 发送（等 start 回调返回，start 失败则跳过 stop）
+  // 注意：部分设备（枪机/半球）不支持 PTZ，调用会返回错误
 
+  /** 云台方向码（官方 demo cloudBtnList） */
   const PTZ_COMMANDS = {
-    LEFT: 'LEFT',
-    RIGHT: 'RIGHT',
-    UP: 'UP',
-    DOWN: 'DOWN',
-    UP_LEFT: 'UP_LEFT',
-    UP_RIGHT: 'UP_RIGHT',
-    DOWN_LEFT: 'DOWN_LEFT',
-    DOWN_RIGHT: 'DOWN_RIGHT',
-    ZOOM_IN: 'ZOOM_IN',
-    ZOOM_OUT: 'ZOOM_OUT',
-    PAN_AUTO: 'PAN_AUTO',
+    UP: 0,
+    DOWN: 1,
+    LEFT: 2,
+    RIGHT: 3,
+    UP_LEFT: 4,
+    DOWN_LEFT: 5,
+    UP_RIGHT: 6,
+    DOWN_RIGHT: 7,
+    ZOOM_IN: 8, // 焦距变大
+    ZOOM_OUT: 9, // 焦距变小
+    PAN_AUTO: 16, // 云台自动旋转
   } as const;
 
   type PtzCommand = (typeof PTZ_COMMANDS)[keyof typeof PTZ_COMMANDS];
 
+  /** 云台速度：0-2 */
+  const PTZ_SPEED = 1;
+
+  /** 当前正在播放的设备序列号（ptzControl 需显式指定设备） */
+  let currentDeviceSerial: string | null = null;
+  /** 上次 start 是否成功（失败时不发送 stop，与官方 demo needStopHandle 一致） */
+  let ptzActive = false;
+  /** 自动扫描开关状态 */
+  let ptzAutoOn = false;
+
+  function sendPtz(cmdType: 'start' | 'stop', direction: number, withSpeed = true) {
+    if (!client || !connected || !currentDeviceSerial) return;
+    const data: Record<string, unknown> = {
+      channelNo,
+      cmdType,
+      deviceSerial: currentDeviceSerial,
+      direction,
+    };
+    if (withSpeed) {
+      data.speed = PTZ_SPEED;
+    }
+    client.ptzControl(1, data, (resp: any) => {
+      if (resp?.code !== 0) {
+        ptzActive = false;
+        message.error(`云台控制失败: ${resp?.msg ?? resp?.message ?? ''}`);
+      } else {
+        ptzActive = cmdType === 'start';
+      }
+    });
+  }
+
   /** 开始云台动作（按下方向键时调用） */
-  function ptzStart(command: PtzCommand): boolean {
-    if (!client || !connected) {
+  function ptzStart(direction: PtzCommand): boolean {
+    if (!client || !connected || !currentDeviceSerial) {
       message.warning('请先播放实时视频再控制云台');
       return false;
     }
-    try {
-      client.ptzControl(0, { action: 0, command }, () => {});
-      return true;
-    } catch (e: any) {
-      message.error(`云台控制失败: ${e?.message ?? e}`);
-      return false;
-    }
+    ptzActive = true;
+    sendPtz('start', direction);
+    return true;
   }
 
-  /** 停止云台动作（松开方向键时调用） */
-  function ptzStop(command: PtzCommand) {
-    if (!client || !connected) return;
-    try {
-      client.ptzControl(0, { action: 1, command }, () => {});
-    } catch {
-      // 忽略：连接可能已断开
-    }
+  /** 停止云台动作（松开方向键时调用；延迟 500ms 等 start 回调） */
+  function ptzStop(direction: PtzCommand) {
+    setTimeout(() => {
+      if (ptzActive) {
+        ptzActive = false;
+        sendPtz('stop', direction);
+      }
+    }, 500);
   }
 
   /** 一键操作：开始 → 300ms 后自动停止（适合点击缩放按钮） */
-  function ptzClick(command: PtzCommand) {
-    if (ptzStart(command)) {
-      setTimeout(() => ptzStop(command), 300);
+  function ptzClick(direction: PtzCommand) {
+    if (ptzStart(direction)) {
+      setTimeout(() => ptzStop(direction), 300);
     }
+  }
+
+  /** 自动扫描：点击切换开/关（官方 demo cloudControlAuto 模式） */
+  function ptzToggleAuto() {
+    if (!client || !connected || !currentDeviceSerial) {
+      message.warning('请先播放实时视频再控制云台');
+      return;
+    }
+    ptzAutoOn = !ptzAutoOn;
+    // 官方 demo：start 时带 speed，stop 时不带
+    const data: Record<string, unknown> = {
+      channelNo,
+      cmdType: ptzAutoOn ? 'start' : 'stop',
+      deviceSerial: currentDeviceSerial,
+      direction: PTZ_COMMANDS.PAN_AUTO,
+    };
+    if (ptzAutoOn) {
+      data.speed = 1;
+    }
+    client.ptzControl(1, data, (resp: any) => {
+      if (resp?.code !== 0) {
+        ptzAutoOn = false;
+        message.error(`云台控制失败: ${resp?.msg ?? resp?.message ?? ''}`);
+      }
+    });
   }
 
   function destroy() {
@@ -472,6 +531,7 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     ptzClick,
     ptzStart,
     ptzStop,
+    ptzToggleAuto,
     ready,
     stop,
   };
