@@ -1390,6 +1390,72 @@ onBeforeUnmount(() => {
                   {{ hikLive.error }}
                 </div>
               </div>
+              <!-- 海康云台控制 -->
+              <div
+                v-if="isHikvision && selectedDevice"
+                class="mx-auto mt-3 flex w-full items-center justify-center gap-4 rounded border border-gray-200 bg-white p-3"
+              >
+                <span class="text-sm font-medium text-gray-600">云台控制</span>
+                <div class="flex items-center gap-1">
+                  <!-- 方向十字键 -->
+                  <div class="relative h-24 w-24">
+                    <Button
+                      class="absolute left-1/2 top-0 -translate-x-1/2"
+                      size="small"
+                      @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.UP)"
+                      @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.UP)"
+                      @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.UP)"
+                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.UP)"
+                      @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.UP)"
+                    >↑</Button>
+                    <Button
+                      class="absolute left-0 top-1/2 -translate-y-1/2"
+                      size="small"
+                      @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.LEFT)"
+                      @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.LEFT)"
+                      @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.LEFT)"
+                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.LEFT)"
+                      @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.LEFT)"
+                    >←</Button>
+                    <Button
+                      class="absolute right-0 top-1/2 -translate-y-1/2"
+                      size="small"
+                      @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.RIGHT)"
+                      @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.RIGHT)"
+                      @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.RIGHT)"
+                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.RIGHT)"
+                      @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.RIGHT)"
+                    >→</Button>
+                    <Button
+                      class="absolute bottom-0 left-1/2 -translate-x-1/2"
+                      size="small"
+                      @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.DOWN)"
+                      @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.DOWN)"
+                      @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.DOWN)"
+                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.DOWN)"
+                      @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.DOWN)"
+                    >↓</Button>
+                  </div>
+                </div>
+                <div class="h-10 w-px bg-gray-200"></div>
+                <!-- 缩放 -->
+                <div class="flex items-center gap-1">
+                  <Button size="small" @click="hikLive.ptzClick(hikLive.PTZ_COMMANDS.ZOOM_OUT)">
+                    <template #icon>−</template>缩小
+                  </Button>
+                  <Button size="small" @click="hikLive.ptzClick(hikLive.PTZ_COMMANDS.ZOOM_IN)">
+                    <template #icon>+</template>放大
+                  </Button>
+                </div>
+                <!-- 自动扫描 -->
+                <Button
+                  size="small"
+                  type="dashed"
+                  @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.PAN_AUTO)"
+                  @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.PAN_AUTO)"
+                  @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.PAN_AUTO)"
+                >自动扫描</Button>
+              </div>
               <!-- 其它厂商：flv/hls 流（16:9 自适应宽度） -->
               <div
                 v-else

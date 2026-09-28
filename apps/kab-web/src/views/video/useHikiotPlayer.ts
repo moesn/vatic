@@ -379,6 +379,59 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     }
   }
 
+  // ---- 云台控制 ----
+  // SDK: wsClient.ptzControl(wndNo, { command, action }, callback)
+  // command: LEFT / RIGHT / UP / DOWN / UP_LEFT / UP_RIGHT / DOWN_LEFT / DOWN_RIGHT / ZOOM_IN / ZOOM_OUT / PAN_AUTO
+  // action: 0 = 开始, 1 = 停止
+
+  const PTZ_COMMANDS = {
+    LEFT: 'LEFT',
+    RIGHT: 'RIGHT',
+    UP: 'UP',
+    DOWN: 'DOWN',
+    UP_LEFT: 'UP_LEFT',
+    UP_RIGHT: 'UP_RIGHT',
+    DOWN_LEFT: 'DOWN_LEFT',
+    DOWN_RIGHT: 'DOWN_RIGHT',
+    ZOOM_IN: 'ZOOM_IN',
+    ZOOM_OUT: 'ZOOM_OUT',
+    PAN_AUTO: 'PAN_AUTO',
+  } as const;
+
+  type PtzCommand = (typeof PTZ_COMMANDS)[keyof typeof PTZ_COMMANDS];
+
+  /** 开始云台动作（按下方向键时调用） */
+  function ptzStart(command: PtzCommand): boolean {
+    if (!client || !connected) {
+      message.warning('请先播放实时视频再控制云台');
+      return false;
+    }
+    try {
+      client.ptzControl(0, { action: 0, command }, () => {});
+      return true;
+    } catch (e: any) {
+      message.error(`云台控制失败: ${e?.message ?? e}`);
+      return false;
+    }
+  }
+
+  /** 停止云台动作（松开方向键时调用） */
+  function ptzStop(command: PtzCommand) {
+    if (!client || !connected) return;
+    try {
+      client.ptzControl(0, { action: 1, command }, () => {});
+    } catch {
+      // 忽略：连接可能已断开
+    }
+  }
+
+  /** 一键操作：开始 → 300ms 后自动停止（适合点击缩放按钮） */
+  function ptzClick(command: PtzCommand) {
+    if (ptzStart(command)) {
+      setTimeout(() => ptzStop(command), 300);
+    }
+  }
+
   function destroy() {
     stop();
     disconnect();
@@ -413,8 +466,12 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     destroy,
     error,
     loading,
+    PTZ_COMMANDS,
     playPlayback,
     playPreview,
+    ptzClick,
+    ptzStart,
+    ptzStop,
     ready,
     stop,
   };
