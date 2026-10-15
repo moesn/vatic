@@ -47,7 +47,7 @@ const [Drawer, DrawerApi] = useVaticDrawer({
     }
 
     (keyValue
-      ? requestClient.patch(update, body)
+      ? requestClient.post(update, body)
       : requestClient.post(create, body)
     )
       .then(() => {

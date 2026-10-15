@@ -130,7 +130,7 @@ function onDelete(row: any) {
   });
 
   requestClient
-    .delete(delUrl, { data: { ids: [row[keyField]] } })
+    .post(delUrl, { ids: [row[keyField]] })
     .then(() => {
       message.success({
         content: `${row[nameField]} 删除成功`,
@@ -313,7 +313,7 @@ watch(
                 const data: any = { state: newStatus };
                 data[keyField] = row[keyField];
 
-                await requestClient.patch(apiUrl, data);
+                await requestClient.post(apiUrl, data);
                 return true;
               } catch {
                 return false;

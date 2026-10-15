@@ -67,7 +67,7 @@ async function handleChangePassword(payload: {
   oldPassword: string;
 }) {
   try {
-    await requestClient.patch('/api/user/changePassword', {
+    await requestClient.post('/api/user/changePassword', {
       id: Number(userStore.userInfo?.userId),
       newPassword: payload.newPassword,
       oldPassword: payload.oldPassword,
