@@ -56,9 +56,31 @@
     ],
     "search": [
       {
-        "title": "关键字",
-        "field": "keywords",
-        "type": "Input"
+        "title": "用户名",
+        "field": "account",
+        "type": "Input",
+        "maxLength": 20
+      },
+      {
+        "title": "真实姓名",
+        "field": "username",
+        "type": "Input",
+        "maxLength": 20
+      },
+      {
+        "title": "启用状态",
+        "field": "enable",
+        "type": "Select",
+        "options": [
+          {
+            "label": "启用",
+            "value": true
+          },
+          {
+            "label": "禁用",
+            "value": false
+          }
+        ]
       }
     ]
   },
