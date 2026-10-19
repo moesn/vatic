@@ -59,6 +59,18 @@ table {
   }
 }
 
+// 地图区域：只显示在左右面板之间的中间区域
+// 左面板 400px + 20px 边距，右面板 300px + 20px 边距，顶部横幅 70px + 面板上边距 80px
+// 四周背景色 #091220 与地图底图 land 色一致（见模板根元素）
+.map-center {
+  position: absolute;
+  top: 90px;
+  right: 340px;
+  bottom: 40px;
+  left: 440px;
+  overflow: hidden;
+}
+
 .left {
   display: flex;
   flex-direction: column;

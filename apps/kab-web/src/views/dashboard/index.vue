@@ -218,17 +218,17 @@ function loadHuaXi() {
     if (rs.boundaries.length === 0) {
       setTimeout(() => loadHuaXi(), 100);
     } else {
+      const allPts: any[] = [];
       for (let i = 0; i < rs.boundaries.length; i++) {
         const xyArr = rs.boundaries[i].split(';');
-        const ptArr = [];
 
         for (const element of xyArr) {
           const tmp = element.split(',');
           const pt = new BMapGL.Point(tmp[0], tmp[1]);
-          ptArr.push(pt);
+          allPts.push(pt);
         }
 
-        const mapMask = new BMapGL.MapMask(ptArr, {
+        const mapMask = new BMapGL.MapMask(allPts, {
           isBuildingMask: true,
           isPoiMask: true,
           isMapMask: true,
@@ -242,9 +242,14 @@ function loadHuaXi() {
         map.addOverlay(mapMask);
         map.enableDragging();
         map.enableScrollWheelZoom();
-
-        deviceTypes.forEach((item: any) => createMarkersByType(item.name));
       }
+
+      // 视野自动适配到花溪区边界，保证区域完整落在中间地图容器内
+      if (allPts.length > 0) {
+        map.setViewport(allPts);
+      }
+
+      deviceTypes.forEach((item: any) => createMarkersByType(item.name));
     }
   });
 }
@@ -444,8 +449,9 @@ onMounted(() => {
 });
 </script>
 <template>
-  <div class="h-full w-full" style="min-width: 1700px">
-    <div ref="mapContainer" class="h-full w-full"></div>
+  <div class="h-full w-full" style="min-width: 1700px; background: #091220">
+    <!-- 地图只渲染在两侧面板之间的中间区域，四周背景与地图底图同色 -->
+    <div ref="mapContainer" class="map-center"></div>
     <div class="absolute top-0 flex h-full w-full justify-between">
       <div class="top-banner">
         <h1>农村公路安全监测预警系统</h1>
