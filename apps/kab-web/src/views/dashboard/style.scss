@@ -61,7 +61,7 @@ table {
 
 // 地图区域：只显示在左右面板之间的中间区域
 // 左面板 400px + 20px 边距，右面板 300px + 20px 边距，顶部横幅 70px + 面板上边距 80px
-// 四周背景色 #091220 与地图底图 land 色一致（见模板根元素）
+// 初始透明占位（保持尺寸让地图正常初始化），tilesloaded 后延迟 300ms 淡入
 .map-center {
   position: absolute;
   top: 90px;
@@ -69,6 +69,12 @@ table {
   bottom: 40px;
   left: 440px;
   overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s;
+
+  &.map-visible {
+    opacity: 1;
+  }
 }
 
 .left {

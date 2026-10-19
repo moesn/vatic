@@ -255,10 +255,20 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
       }
     } catch (error_: any) {
       disconnect();
-      const hint =
+      let hint: string =
         (error_?.code !== undefined && CONNECT_ERROR_MAP[error_.code]) ||
         error_?.message ||
-        String(error_);
+        '';
+      // SDK 在本地 WebSocket 连接失败时 reject 原生 Event（无 code/message），
+      // 通常对应插件服务未安装/未运行（ws://127.0.0.1:18002 连不通）
+      if (!hint) {
+        hint =
+          error_ instanceof Event
+            ? '本地插件服务连接失败：请确认 HikOpenVideoSDK 插件已安装并正在运行后重试'
+            : error_ && typeof error_ === 'object'
+              ? JSON.stringify(error_)
+              : String(error_);
+      }
       throw new Error(`插件连接失败: ${hint}`);
     }
     connected = true;

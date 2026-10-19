@@ -17,6 +17,13 @@ import styleJson from './style.json';
 
 const router = useRouter();
 
+/** 页面四周背景色：默认取地图底图陆地色，与地图无缝衔接 */
+const landColor: string =
+  (styleJson.find((s: any) => s.featureType === 'land') as any)?.stylers?.color?.slice(
+    0,
+    7,
+  ) || '#091220';
+
 let timer;
 const time = ref();
 clearInterval(timer);
@@ -211,6 +218,9 @@ const deviceTypes = [
 ];
 
 let map: any;
+/** 地图是否已加载完成（tilesloaded 后延迟显示，避免中间区域空白/闪烁） */
+const mapVisible = ref(false);
+let tilesLoadedFlag = false;
 
 function loadHuaXi() {
   const boundary = new BMapGL.Boundary();
@@ -261,11 +271,22 @@ function loadMap() {
     enableAutoResize: true,
   });
   map.disableDragging();
+  // zoom 12 保证花溪区掩膜完整落在中间地图区域内，掩膜蓝色与四周陆地色有明显区分
   map.centerAndZoom(
     new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
-    13,
+    12,
   );
   map.setMapStyleV2({ styleJson });
+
+  // 监听瓦片加载完成，延迟 300ms 后显示地图
+  tilesLoadedFlag = false;
+  map.addEventListener('tilesloaded', () => {
+    if (tilesLoadedFlag) return;
+    tilesLoadedFlag = true;
+    setTimeout(() => {
+      mapVisible.value = true;
+    }, 300);
+  });
 
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
 
@@ -449,9 +470,16 @@ onMounted(() => {
 });
 </script>
 <template>
-  <div class="h-full w-full" style="min-width: 1700px; background: #091220">
-    <!-- 地图只渲染在两侧面板之间的中间区域，四周背景与地图底图同色 -->
-    <div ref="mapContainer" class="map-center"></div>
+  <div
+    class="h-full w-full"
+    :style="{ minWidth: '1700px', background: landColor }"
+  >
+    <!-- 地图只渲染在两侧面板之间的中间区域，四周背景与地图底图陆地色一致 -->
+    <div
+      ref="mapContainer"
+      class="map-center"
+      :class="{ 'map-visible': mapVisible }"
+    ></div>
     <div class="absolute top-0 flex h-full w-full justify-between">
       <div class="top-banner">
         <h1>农村公路安全监测预警系统</h1>
