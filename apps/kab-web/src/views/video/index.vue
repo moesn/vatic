@@ -364,6 +364,64 @@ function destroyPlaybackPlayer() {
   playbackStreamReady.value = false;
 }
 
+// region 长时间无操作自动断开（5 分钟）
+const IDLE_DISCONNECT_MS = 5 * 60 * 1000;
+let idleTimer: number | undefined;
+
+/** 是否有视频正在播放（实况：普通流/海康画面就绪；回放：流已就绪） */
+function isAnyVideoPlaying(): boolean {
+  return (
+    liveCleanup !== null ||
+    hikLive.ready.value ||
+    (playbackCleanup !== null && playbackStreamReady.value)
+  );
+}
+
+/** 5 分钟无操作：自动断开正在播放的实况与回放 */
+function resetVideoIdleTimer() {
+  window.clearTimeout(idleTimer);
+  idleTimer = window.setTimeout(() => {
+    if (!isAnyVideoPlaying()) return;
+    if (playbackCleanup) {
+      destroyPlaybackPlayer();
+      playbackStatus.value = '长时间无操作，回放已自动断开';
+    }
+    if (liveCleanup || hikLive.ready.value) {
+      destroyLivePlayer();
+      liveTip.value = '长时间无操作，实时视频已自动断开';
+    }
+  }, IDLE_DISCONNECT_MS);
+}
+
+// 用户活动即重置空闲计时（mousemove 高频触发，clearTimeout/setTimeout 开销可忽略）
+const IDLE_EVENTS = [
+  'keydown',
+  'mousedown',
+  'mousemove',
+  'scroll',
+  'touchstart',
+  'wheel',
+] as const;
+
+/** 启动空闲检测（页面激活/首次进入时调用） */
+function startVideoIdleWatch() {
+  IDLE_EVENTS.forEach((event) => {
+    window.addEventListener(event, resetVideoIdleTimer, { passive: true });
+  });
+  resetVideoIdleTimer();
+}
+
+/** 停止空闲检测并清理（页面失活/卸载时调用） */
+function clearVideoIdleWatch() {
+  IDLE_EVENTS.forEach((event) => {
+    window.removeEventListener(event, resetVideoIdleTimer);
+  });
+  window.clearTimeout(idleTimer);
+}
+
+startVideoIdleWatch();
+// endregion
+
 async function queryPlayback() {
   const device = selectedDevice.value;
   playbackTip.value = '';
@@ -1223,10 +1281,12 @@ onMounted(() => {
 onDeactivated(() => {
   destroyLivePlayer();
   destroyPlaybackPlayer();
+  clearVideoIdleWatch();
 });
 
 /** 返回本页时若有选中设备，恢复实时播放（与 tabbar 缓存行为对齐） */
 onActivated(() => {
+  startVideoIdleWatch();
   const simNo = route.query.simNo as string | undefined;
   if (simNo) {
     findAndSelectDeviceBySimNo(simNo);
@@ -1248,10 +1308,40 @@ watch(
 onBeforeUnmount(() => {
   destroyLivePlayer();
   destroyPlaybackPlayer();
+  clearVideoIdleWatch();
   window.removeEventListener('resize', handleTrendResize);
   trendChart?.dispose();
   alertTrendChart?.dispose();
 });
+
+// region 任何形式离开页面（刷新/关闭标签页/跳转）都停止播放
+/**
+ * 刷新/关闭标签页时 Vue 卸载钩子不保证执行，必须挂 beforeunload/pagehide；
+ * 停止实况接口改用 fetch keepalive 发出（axios 请求在 unload 阶段会被浏览器取消）；
+ * 海康插件窗口随 WebSocket 断开自动关闭，同步调用 stop() 尽力隐藏；
+ * 两个事件都会触发，destroy 系列均是幂等的，重复调用安全
+ */
+function handlePageUnload() {
+  const params = liveCameraParams;
+  if (params) {
+    try {
+      void fetch('/api/video-platform/live/stop', {
+        body: JSON.stringify(params),
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        method: 'POST',
+      }).catch(() => {});
+    } catch {
+      // 忽略：unload 阶段 fetch 可能被拦截，尽力而为
+    }
+  }
+  destroyLivePlayer();
+  destroyPlaybackPlayer();
+}
+
+window.addEventListener('beforeunload', handlePageUnload);
+window.addEventListener('pagehide', handlePageUnload);
+// endregion
 // endregion
 </script>
 

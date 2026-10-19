@@ -262,6 +262,17 @@ export const parseFormSchema = async (
         );
         break;
       }
+      case 'Input':
+      case 'InputPassword': {
+        // 默认带清除按钮（搜索框/表单输入框），schema props 可覆盖
+        formItem.componentProps = Object.assign(
+          {
+            allowClear: true,
+          },
+          props || {},
+        );
+        break;
+      }
       case 'InputNumber': {
         formItem.componentProps = Object.assign(
           {} as InputNumberProps,

@@ -231,12 +231,31 @@ function loadHuaXi() {
       const allPts: any[] = [];
       for (let i = 0; i < rs.boundaries.length; i++) {
         const xyArr = rs.boundaries[i].split(';');
+        const ringPts: any[] = [];
 
         for (const element of xyArr) {
           const tmp = element.split(',');
           const pt = new BMapGL.Point(tmp[0], tmp[1]);
+          ringPts.push(pt);
           allPts.push(pt);
         }
+        // 闭合边界环（首尾点不同时补首点），保证轮廓线首尾相接
+        const first = ringPts[0];
+        const last = ringPts[ringPts.length - 1];
+        if (
+          ringPts.length > 1 &&
+          (first.lng !== last.lng || first.lat !== last.lat)
+        ) {
+          ringPts.push(first);
+        }
+
+        // 边界描边：亮青色轮廓线，让区域边界更清晰
+        const borderLine = new BMapGL.Polyline(ringPts, {
+          strokeColor: '#4be1ff',
+          strokeOpacity: 0.9,
+          strokeWeight: 2,
+        });
+        map.addOverlay(borderLine);
 
         const mapMask = new BMapGL.MapMask(allPts, {
           isBuildingMask: true,
