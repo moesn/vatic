@@ -283,6 +283,7 @@ export const parseFormSchema = async (
           {
             allowClear: true,
             filterOption: true,
+            options,
             placeholder: '请选择',
             showSearch: true,
           } as SelectProps,
