@@ -13,43 +13,84 @@
         "width": 50
       },
       {
-        "title": "用户名",
-        "field": "account"
+        "title": "操作账号",
+        "field": "operAccount"
       },
       {
-        "title": "时间",
-        "field": "loginTime",
-        "format": "datetime"
+        "title": "操作人员",
+        "field": "operName"
       },
       {
-        "title": "IP地址",
-        "field": "ipaddr"
+        "title": "操作角色",
+        "field": "operRoleNames",
+        "minWidth": 100
       },
       {
-        "title": "操作",
-        "field": "msg",
-        "width": 80,
+        "title": "业务类型",
+        "field": "businessType",
+        "width": 90,
         "type": "Tag",
         "options": [
           {
-            "label": "登入",
-            "value": "登录成功",
+            "label": "其它",
+            "value": 0
+          },
+          {
+            "label": "新增",
+            "value": 1,
+            "color": "success"
+          },
+          {
+            "label": "修改",
+            "value": 2,
             "color": "processing"
           },
           {
-            "label": "登入",
-            "value": "登录失败",
-            "color": "processing"
+            "label": "删除",
+            "value": 3,
+            "color": "error"
           },
           {
-            "label": "登出",
-            "value": "登出成功"
+            "label": "授权",
+            "value": 4,
+            "color": "warning"
           },
           {
-            "label": "登入",
-            "value": "登出失败"
+            "label": "导出",
+            "value": 5,
+            "color": "warning"
+          },
+          {
+            "label": "强退",
+            "value": 6,
+            "color": "error"
+          },
+          {
+            "label": "生成代码",
+            "value": 7
+          },
+          {
+            "label": "清空数据",
+            "value": 8,
+            "color": "error"
           }
         ]
+      },
+      {
+        "title": "操作描述",
+        "field": "title",
+        "minWidth": 160
+      },
+      {
+        "title": "操作时间",
+        "field": "operTime",
+        "format": "datetime",
+        "minWidth": 150
+      },
+      {
+        "title": "错误消息",
+        "field": "errorMsg",
+        "minWidth": 160
       },
       {
         "title": "操作结果",
@@ -59,12 +100,12 @@
         "options": [
           {
             "label": "成功",
-            "value": "0",
+            "value": 0,
             "color": "success"
           },
           {
             "label": "失败",
-            "value": "1",
+            "value": 1,
             "color": "error"
           }
         ]
@@ -75,6 +116,83 @@
         "title": "关键字",
         "field": "keywords",
         "type": "Input"
+      },
+      {
+        "title": "操作类别",
+        "field": "operatorType",
+        "type": "Select",
+        "options": [
+          {
+            "label": "其它",
+            "value": 0
+          },
+          {
+            "label": "后台用户",
+            "value": 1
+          },
+          {
+            "label": "手机端用户",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "title": "业务类型",
+        "field": "businessType",
+        "type": "Select",
+        "options": [
+          {
+            "label": "其它",
+            "value": 0
+          },
+          {
+            "label": "新增",
+            "value": 1
+          },
+          {
+            "label": "修改",
+            "value": 2
+          },
+          {
+            "label": "删除",
+            "value": 3
+          },
+          {
+            "label": "授权",
+            "value": 4
+          },
+          {
+            "label": "导出",
+            "value": 5
+          },
+          {
+            "label": "强退",
+            "value": 6
+          },
+          {
+            "label": "生成代码",
+            "value": 7
+          },
+          {
+            "label": "清空数据",
+            "value": 8
+          }
+        ]
+      },
+      {
+        "title": "状态",
+        "field": "status",
+        "type": "Select",
+        "options": [
+          {
+            "label": "成功",
+            "value": 0
+          },
+          {
+            "label": "失败",
+            "value": 1
+          }
+        ]
       }
     ]
   }

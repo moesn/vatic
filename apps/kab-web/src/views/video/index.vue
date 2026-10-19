@@ -8,21 +8,6 @@ import type {
   VehiclePassRecord,
   WeatherStationRecord,
 } from './data';
-import {
-  getAlertListApi,
-  getAlertStatisticsApi,
-  getDeviceTreeApi,
-  getVehiclePassListApi,
-  getVehiclePassStatisticsApi,
-  getWeatherListApi,
-  loadEquipConfig,
-  resolveEquipUrl,
-  resolveStreamUrl,
-  searchRecordingsApi,
-  startLiveApi,
-  startPlaybackApi,
-  stopLiveApi,
-} from './data';
 
 import {
   computed,
@@ -35,9 +20,9 @@ import {
   ref,
   watch,
 } from 'vue';
-import {useRoute} from 'vue-router';
+import { useRoute } from 'vue-router';
 
-import {IconifyIcon} from '@vatic/icons';
+import { IconifyIcon } from '@vatic/icons';
 
 import {
   Button,
@@ -54,7 +39,23 @@ import {
 } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import Hls from 'hls.js';
-import {useHikiotPlayer} from './useHikiotPlayer';
+
+import {
+  getAlertListApi,
+  getAlertStatisticsApi,
+  getDeviceTreeApi,
+  getVehiclePassListApi,
+  getVehiclePassStatisticsApi,
+  getWeatherListApi,
+  loadEquipConfig,
+  resolveEquipUrl,
+  resolveStreamUrl,
+  searchRecordingsApi,
+  startLiveApi,
+  startPlaybackApi,
+  stopLiveApi,
+} from './data';
+import { useHikiotPlayer } from './useHikiotPlayer';
 
 const { RangePicker } = DatePicker;
 
@@ -519,7 +520,7 @@ const selectedDeviceOnline = computed(() =>
 );
 
 const vehicleColumns = [
-  {title: '设备名称', key: 'equipmentNo'},
+  { title: '设备名称', key: 'equipmentNo' },
   { title: '车辆号', dataIndex: 'carNumber', key: 'carNumber' },
   { title: '车辆类型', dataIndex: 'vehicleTypeName', key: 'vehicleTypeName' },
   { title: '车辆颜色', dataIndex: 'vehicleColorName', key: 'vehicleColorName' },
@@ -529,15 +530,30 @@ const vehicleColumns = [
 ];
 
 const alertColumns = [
-  {title: '设备名称', dataIndex: 'deviceName', key: 'deviceName', align: 'center',},
-  {title: '车牌号', dataIndex: 'carNumber', key: 'carNumber', align: 'center'},
+  {
+    title: '设备名称',
+    dataIndex: 'deviceName',
+    key: 'deviceName',
+    align: 'center',
+  },
+  {
+    title: '车牌号',
+    dataIndex: 'carNumber',
+    key: 'carNumber',
+    align: 'center',
+  },
   { title: '车辆类型', dataIndex: 'vehicleType', key: 'vehicleType' },
   { title: '车辆颜色', dataIndex: 'vehicleColor', key: 'vehicleColor' },
-  {title: '告警类型', dataIndex: 'aramType', key: 'aramType', align: 'center',},
-  {title: '告警信息', key: 'alarmInfo', align: 'center'},
-  {title: '告警级别', key: 'alarmLevel', width: 90, align: 'center'},
-  {title: '告警时间', key: 'createdTime', width: 170, align: 'center'},
-  {title: '图片', key: 'action', width: 70, align: 'center'},
+  {
+    title: '告警类型',
+    dataIndex: 'aramType',
+    key: 'aramType',
+    align: 'center',
+  },
+  { title: '告警信息', key: 'alarmInfo', align: 'center' },
+  { title: '告警级别', key: 'alarmLevel', width: 90, align: 'center' },
+  { title: '告警时间', key: 'createdTime', width: 170, align: 'center' },
+  { title: '图片', key: 'action', width: 70, align: 'center' },
 ];
 
 /** 根据 equipmentNo 从 curveDeviceOptions 获取设备名称 */
@@ -667,7 +683,10 @@ const trendChartRef = ref<HTMLElement | null>(null);
 let trendChart: any = null;
 const trendLoading = ref(false);
 const trendDimension = ref<number>(1);
-const trendData = ref<{ total: number; trend: Array<{ time: string; count: number }> }>({
+const trendData = ref<{
+  total: number;
+  trend: Array<{ count: number; time: string }>;
+}>({
   total: 0,
   trend: [],
 });
@@ -721,7 +740,10 @@ function renderTrendChart() {
         areaStyle: {
           color: {
             type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
               { offset: 0, color: 'rgba(24,144,255,0.3)' },
               { offset: 1, color: 'rgba(24,144,255,0.02)' },
@@ -840,7 +862,8 @@ async function loadAlertRecords(pageNo = 1) {
       pageNo,
       pageSize: alertPage.pageSize,
       startTime: startTime || undefined,
-      vehicleType: vehicleTypeOptions.find((o) => o.value === vehicleType.value)?.label,
+      vehicleType: vehicleTypeOptions.find((o) => o.value === vehicleType.value)
+        ?.label,
     });
     alertRecords.value = (data?.records ?? []).map((r: any) => ({
       ...r,
@@ -885,7 +908,12 @@ let alertTrendChart: any = null;
 const alertTrendLoading = ref(false);
 const alertTrendDimension = ref<number>(1);
 /** 按告警类型分组的趋势数据：{ "超速": [{ aramType, total, captureTime }], ... } */
-const alertTrendData = ref<Record<string, Array<{ aramType: string; total: number; captureTime: string }>>>({});
+const alertTrendData = ref<
+  Record<
+    string,
+    Array<{ aramType: string; captureTime: string; total: number }>
+  >
+>({});
 /** 所有告警类型的总条数 */
 const alertTrendTotal = ref(0);
 
@@ -896,7 +924,13 @@ const alertDimensionOptions = [
 ];
 
 /** 多系列配色 */
-const alertSeriesColors = ['#1890ff', '#ff4d4f', '#faad14', '#52c41a', '#722ed1'];
+const alertSeriesColors = [
+  '#1890ff',
+  '#ff4d4f',
+  '#faad14',
+  '#52c41a',
+  '#722ed1',
+];
 
 function initAlertTrendChart() {
   const echarts = (window as any).echarts;
@@ -919,7 +953,7 @@ function renderAlertTrendChart() {
   // 收集所有时间点，取并集作为 x 轴
   const timeSet = new Set<string>();
   types.forEach((t) => grouped[t].forEach((d) => timeSet.add(d.captureTime)));
-  const times = Array.from(timeSet).sort();
+  const times = [...timeSet].sort();
 
   // 计算总条数
   alertTrendTotal.value = types.reduce(
@@ -944,9 +978,15 @@ function renderAlertTrendChart() {
       areaStyle: {
         color: {
           type: 'linear',
-          x: 0, y: 0, x2: 0, y2: 1,
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
           colorStops: [
-            { offset: 0, color: color.replace(')', ',0.25)').replace('rgb', 'rgba') },
+            {
+              offset: 0,
+              color: color.replace(')', ',0.25)').replace('rgb', 'rgba'),
+            },
             { offset: 1, color: 'rgba(255,255,255,0.01)' },
           ],
         },
@@ -1143,10 +1183,7 @@ watch(activeTab, (tab) => {
   ) {
     loadDataDetails(1);
     loadVehiclePassStatistics();
-  } else if (
-    tab === 'alert' &&
-    selectedDevice.value
-  ) {
+  } else if (tab === 'alert' && selectedDevice.value) {
     if (alertRecords.value.length === 0) {
       loadAlertRecords(1);
     }
@@ -1405,45 +1442,67 @@ onBeforeUnmount(() => {
                       @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.UP)"
                       @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.UP)"
                       @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.UP)"
-                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.UP)"
+                      @touchstart.prevent="
+                        hikLive.ptzStart(hikLive.PTZ_COMMANDS.UP)
+                      "
                       @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.UP)"
-                    >↑</Button>
+                    >
+                      ↑
+                    </Button>
                     <Button
                       class="absolute left-0 top-1/2 -translate-y-1/2"
                       size="small"
                       @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.LEFT)"
                       @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.LEFT)"
                       @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.LEFT)"
-                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.LEFT)"
+                      @touchstart.prevent="
+                        hikLive.ptzStart(hikLive.PTZ_COMMANDS.LEFT)
+                      "
                       @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.LEFT)"
-                    >←</Button>
+                    >
+                      ←
+                    </Button>
                     <Button
                       class="absolute right-0 top-1/2 -translate-y-1/2"
                       size="small"
                       @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.RIGHT)"
                       @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.RIGHT)"
                       @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.RIGHT)"
-                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.RIGHT)"
+                      @touchstart.prevent="
+                        hikLive.ptzStart(hikLive.PTZ_COMMANDS.RIGHT)
+                      "
                       @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.RIGHT)"
-                    >→</Button>
+                    >
+                      →
+                    </Button>
                     <Button
                       class="absolute bottom-0 left-1/2 -translate-x-1/2"
                       size="small"
                       @mousedown="hikLive.ptzStart(hikLive.PTZ_COMMANDS.DOWN)"
                       @mouseup="hikLive.ptzStop(hikLive.PTZ_COMMANDS.DOWN)"
                       @mouseleave="hikLive.ptzStop(hikLive.PTZ_COMMANDS.DOWN)"
-                      @touchstart.prevent="hikLive.ptzStart(hikLive.PTZ_COMMANDS.DOWN)"
+                      @touchstart.prevent="
+                        hikLive.ptzStart(hikLive.PTZ_COMMANDS.DOWN)
+                      "
                       @touchend="hikLive.ptzStop(hikLive.PTZ_COMMANDS.DOWN)"
-                    >↓</Button>
+                    >
+                      ↓
+                    </Button>
                   </div>
                 </div>
                 <div class="h-10 w-px bg-gray-200"></div>
                 <!-- 缩放 -->
                 <div class="flex items-center gap-1">
-                  <Button size="small" @click="hikLive.ptzClick(hikLive.PTZ_COMMANDS.ZOOM_OUT)">
+                  <Button
+                    size="small"
+                    @click="hikLive.ptzClick(hikLive.PTZ_COMMANDS.ZOOM_OUT)"
+                  >
                     <template #icon>−</template>缩小
                   </Button>
-                  <Button size="small" @click="hikLive.ptzClick(hikLive.PTZ_COMMANDS.ZOOM_IN)">
+                  <Button
+                    size="small"
+                    @click="hikLive.ptzClick(hikLive.PTZ_COMMANDS.ZOOM_IN)"
+                  >
                     <template #icon>+</template>放大
                   </Button>
                 </div>
@@ -1452,7 +1511,9 @@ onBeforeUnmount(() => {
                   size="small"
                   type="dashed"
                   @click="hikLive.ptzToggleAuto()"
-                >自动扫描</Button>
+                >
+                  自动扫描
+                </Button>
               </div>
               <!-- 其它厂商：flv/hls 流（16:9 自适应宽度） -->
               <div
@@ -1548,16 +1609,16 @@ onBeforeUnmount(() => {
               <template v-if="detailKind === 'vehicle'">
                 <!-- 搜索栏：设备名称、车牌号码、车辆类型、时间段 -->
                 <div class="mb-4 flex flex-wrap items-center gap-3">
-                  <span class="text-sm text-gray-600">设备名称：</span>
-                  <Select
-                    v-model:value="vehicleEquipmentNo"
-                    allow-clear
-                    class="w-52"
-                    :options="curveDeviceOptions"
-                    option-filter-prop="label"
-                    placeholder="请选择设备"
-                    show-search
-                  />
+                  <!--                  <span class="text-sm text-gray-600">设备名称：</span>-->
+                  <!--                  <Select-->
+                  <!--                    v-model:value="vehicleEquipmentNo"-->
+                  <!--                    allow-clear-->
+                  <!--                    class="w-52"-->
+                  <!--                    :options="curveDeviceOptions"-->
+                  <!--                    option-filter-prop="label"-->
+                  <!--                    placeholder="请选择设备"-->
+                  <!--                    show-search-->
+                  <!--                  />-->
                   <span class="text-sm text-gray-600">车牌号码：</span>
                   <Input
                     v-model:value="vehicleCarNumber"
@@ -1596,18 +1657,29 @@ onBeforeUnmount(() => {
                 <!-- 统计趋势图 -->
                 <div class="mb-4 rounded border border-gray-200 bg-white p-4">
                   <div class="flex items-center justify-between">
-                    <span class="flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <IconifyIcon class="text-primary" icon="mdi:chart-timeline-variant" />
-                      过车数量趋势（{{ trendDimension === 1 ? '按小时统计' : '按天统计' }}）
+                    <span
+                      class="flex items-center gap-2 text-sm font-medium text-gray-700"
+                    >
+                      <IconifyIcon
+                        class="text-primary"
+                        icon="mdi:chart-timeline-variant"
+                      />
+                      过车数量趋势（{{
+                        trendDimension === 1 ? '按小时统计' : '按天统计'
+                      }}）
                     </span>
                     <div class="flex items-center gap-3">
-                      <span class="text-sm text-gray-500">共 {{ trendData.total }} 条过车记录</span>
+                      <span class="text-sm text-gray-500"
+                        >共 {{ trendData.total }} 条过车记录</span
+                      >
                       <div class="flex items-center gap-1">
                         <Button
                           v-for="opt in dimensionOptions"
                           :key="opt.value"
                           size="small"
-                          :type="trendDimension === opt.value ? 'primary' : 'default'"
+                          :type="
+                            trendDimension === opt.value ? 'primary' : 'default'
+                          "
                           @click="trendDimension = opt.value"
                         >
                           {{ opt.label }}
@@ -1616,10 +1688,7 @@ onBeforeUnmount(() => {
                     </div>
                   </div>
                   <Spin :spinning="trendLoading">
-                    <div
-                      ref="trendChartRef"
-                      class="h-[250px] w-full"
-                    ></div>
+                    <div ref="trendChartRef" class="h-[250px] w-full"></div>
                     <div
                       v-if="!trendLoading && trendData.trend.length === 0"
                       class="py-8 text-center text-sm text-gray-400"
@@ -1671,16 +1740,16 @@ onBeforeUnmount(() => {
             <div v-show="!isWeatherDevice && activeTab === 'alert'">
               <!-- 搜索栏：设备名称（弯道设备下拉）、车牌号码、告警类型、时间段 -->
               <div class="mb-4 flex flex-wrap items-center gap-3">
-                <span class="text-sm text-gray-600">设备名称：</span>
-                <Select
-                  v-model:value="alertEquipmentNo"
-                  allow-clear
-                  class="w-52"
-                  :options="curveDeviceOptions"
-                  option-filter-prop="label"
-                  placeholder="请选择设备"
-                  show-search
-                />
+                <!--                <span class="text-sm text-gray-600">设备名称：</span>-->
+                <!--                <Select-->
+                <!--                  v-model:value="alertEquipmentNo"-->
+                <!--                  allow-clear-->
+                <!--                  class="w-52"-->
+                <!--                  :options="curveDeviceOptions"-->
+                <!--                  option-filter-prop="label"-->
+                <!--                  placeholder="请选择设备"-->
+                <!--                  show-search-->
+                <!--                />-->
                 <span class="text-sm text-gray-600">车牌号码：</span>
                 <Input
                   v-model:value="alertCarNumber"
@@ -1735,18 +1804,31 @@ onBeforeUnmount(() => {
               <!-- 预警统计趋势图 -->
               <div class="mb-4 rounded border border-gray-200 bg-white p-4">
                 <div class="mb-3 flex items-center justify-between">
-                  <span class="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <IconifyIcon class="text-primary" icon="mdi:chart-timeline-variant" />
-                    预警数量趋势（{{ alertTrendDimension === 1 ? '按小时统计' : '按天统计' }}）
+                  <span
+                    class="flex items-center gap-2 text-sm font-medium text-gray-700"
+                  >
+                    <IconifyIcon
+                      class="text-primary"
+                      icon="mdi:chart-timeline-variant"
+                    />
+                    预警数量趋势（{{
+                      alertTrendDimension === 1 ? '按小时统计' : '按天统计'
+                    }}）
                   </span>
                   <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-500">共 {{ alertTrendTotal }} 条预警记录</span>
+                    <span class="text-sm text-gray-500"
+                      >共 {{ alertTrendTotal }} 条预警记录</span
+                    >
                     <div class="flex items-center gap-1">
                       <Button
                         v-for="opt in alertDimensionOptions"
                         :key="opt.value"
                         size="small"
-                        :type="alertTrendDimension === opt.value ? 'primary' : 'default'"
+                        :type="
+                          alertTrendDimension === opt.value
+                            ? 'primary'
+                            : 'default'
+                        "
                         @click="alertTrendDimension = opt.value"
                       >
                         {{ opt.label }}
@@ -1755,12 +1837,11 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
                 <Spin :spinning="alertTrendLoading">
+                  <div ref="alertTrendChartRef" class="h-[250px] w-full"></div>
                   <div
-                    ref="alertTrendChartRef"
-                    class="h-[250px] w-full"
-                  ></div>
-                  <div
-                    v-if="!alertTrendLoading && alertTrendData.trend?.length === 0"
+                    v-if="
+                      !alertTrendLoading && alertTrendData.trend?.length === 0
+                    "
                     class="py-8 text-center text-sm text-gray-400"
                   >
                     暂无趋势数据
