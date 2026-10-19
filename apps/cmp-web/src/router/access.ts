@@ -25,11 +25,15 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
   return await generateAccessible(preferences.app.accessMode, {
     ...options,
     fetchMenuListAsync: async () => {
-      message.loading({
+      const close = message.loading({
         content: `${$t('common.loadingMenu')}...`,
-        duration: 1.5,
+        duration: 0,
       });
-      return await getAllMenusApi();
+      try {
+        return await getAllMenusApi();
+      } finally {
+        close();
+      }
     },
     // 可以指定没有权限跳转403页面
     forbiddenComponent,

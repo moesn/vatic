@@ -105,12 +105,6 @@ const eventColumns: TableColumnsType<any> = [
   { title: '事件类型', dataIndex: 'eventType', width: 140 },
   { title: '事件位置', dataIndex: 'location', width: 160 },
   {
-    title: '发现时间',
-    dataIndex: 'captureTime',
-    width: 170,
-    customRender: ({ record }) => formatTime(record.captureTime),
-  },
-  {
     title: '级别',
     dataIndex: 'level',
     width: 80,
@@ -130,6 +124,12 @@ const eventColumns: TableColumnsType<any> = [
     return staff?.label ?? record.assignedTo;
   }},
   { title: '备注', dataIndex: 'remark', ellipsis: true },
+  {
+    title: '发现时间',
+    dataIndex: 'captureTime',
+    width: 170,
+    customRender: ({ record }) => formatTime(record.captureTime),
+  },
   {
     title: '操作',
     key: 'action',
