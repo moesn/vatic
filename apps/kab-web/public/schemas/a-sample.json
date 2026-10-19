@@ -40,7 +40,8 @@
       {
         "title": "姓名",
         "field": "name",
-        "required": true
+        "required": true,
+        "maxLength": 20
       },
       {
         "title": "城市",

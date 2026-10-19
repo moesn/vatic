@@ -38,7 +38,8 @@
       {
         "title": "名称",
         "field": "name",
-        "required": true
+        "required": true,
+        "maxLength": 20
       },
       {
         "title": "编码",

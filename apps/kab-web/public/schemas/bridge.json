@@ -92,7 +92,8 @@
       {
         "title": "桥梁名称",
         "field": "bridgeName",
-        "required": true
+        "required": true,
+        "maxLength": 50
       },
       {
         "title": "位置",
@@ -129,39 +130,47 @@
       },
       {
         "title": "管理单位名称",
-        "field": "managementUnit"
+        "field": "managementUnit",
+        "maxLength": 50
       },
       {
         "title": "管理单位联系方式",
         "field": "managementContact",
-        "rules": "phone"
+        "rules": "phone",
+        "maxLength": 11
       },
       {
         "title": "养护单位名称",
-        "field": "maintenanceUnit"
+        "field": "maintenanceUnit",
+        "maxLength": 50
       },
       {
         "title": "养护单位联系方式",
         "field": "maintenanceContact",
-        "rules": "phone"
+        "rules": "phone",
+        "maxLength": 11
       },
       {
         "title": "监管单位名称",
-        "field": "supervisionUnit"
+        "field": "supervisionUnit",
+        "maxLength": 50
       },
       {
         "title": "监管单位联系方式",
         "field": "supervisionContact",
-        "rules": "phone"
+        "rules": "phone",
+        "maxLength": 11
       },
       {
         "title": "施工单位名称",
-        "field": "constructionUnit"
+        "field": "constructionUnit",
+        "maxLength": 50
       },
       {
         "title": "施工单位联系方式",
         "field": "constructionContact",
-        "rules": "phone"
+        "rules": "phone",
+        "maxLength": 11
       }
     ]
   }

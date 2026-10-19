@@ -90,6 +90,7 @@ export const parseFormSchema = async (
       afterFetch,
       options,
       span,
+      maxLength,
     } = formItem;
 
     formItem.component = type || 'Input';
@@ -105,6 +106,15 @@ export const parseFormSchema = async (
     if (rules) {
       let rule: any;
       switch (rules) {
+        case 'creditCode': {
+          rule = z
+            .string()
+            .length(18, '长度必须为18位')
+            .regex(/^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, {
+              message: '无效的统一社会信用代码',
+            });
+          break;
+        }
         case 'email': {
           rule = z.string().email('无效的邮箱');
           break;
@@ -164,24 +174,15 @@ export const parseFormSchema = async (
             );
           break;
         }
+        case 'url': {
+          rule = z.string().url('无效的URL');
+          break;
+        }
         case 'vin': {
           rule = z
             .string()
             .length(17, '长度必须为17位')
             .regex(/^[A-HJ-NPR-Z0-9]{17}$/, '车架号格式错误');
-          break;
-        }
-        case 'creditCode': {
-          rule = z
-            .string()
-            .length(18, '长度必须为18位')
-            .regex(/^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, {
-              message: '无效的统一社会信用代码',
-            });
-          break;
-        }
-        case 'url': {
-          rule = z.string().url('无效的URL');
           break;
         }
       }
@@ -332,6 +333,18 @@ export const parseFormSchema = async (
         }
         break;
       }
+    }
+
+    if (
+      maxLength &&
+      ['Input', 'InputPassword', 'Textarea', 'InputNumber'].includes(
+        formItem.component,
+      )
+    ) {
+      formItem.componentProps = Object.assign(
+        formItem.componentProps || {},
+        { maxlength: maxLength },
+      );
     }
   }
 };

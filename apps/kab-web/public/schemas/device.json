@@ -73,12 +73,14 @@
       {
         "title": "设备名称",
         "field": "deviceName",
-        "required": true
+        "required": true,
+        "maxLength": 30
       },
       {
         "title": "SIM卡号",
         "field": "simNo",
-        "required": true
+        "required": true,
+        "maxLength": 20
       },
       {
         "title": "设备用途",
@@ -144,12 +146,14 @@
       },
       {
         "title": "负责人姓名",
-        "field": "manager"
+        "field": "manager",
+        "maxLength": 20
       },
       {
         "title": "负责人电话",
         "field": "managerPhone",
-        "rules": "phone"
+        "rules": "phone",
+        "maxLength": 11
       }
     ]
   }

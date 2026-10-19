@@ -78,16 +78,19 @@
         "title": "车牌号",
         "field": "plateNo",
         "rules": "plate",
+        "maxLength": 8,
         "required": true
       },
       {
         "title": "车架号",
         "field": "vin",
-        "rules": "vin"
+        "rules": "vin",
+        "maxLength": 17
       },
       {
         "title": "车主姓名",
-        "field": "ownerName"
+        "field": "ownerName",
+        "maxLength": 20
       },
       {
         "title": "养护企业",

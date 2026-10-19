@@ -65,7 +65,8 @@
       {
         "title": "姓名",
         "field": "name",
-        "required": true
+        "required": true,
+        "maxLength": 20
       },
       {
         "title": "性别",
@@ -95,12 +96,14 @@
         "title": "身份证号",
         "field": "idNo",
         "rules": "idCard",
+        "maxLength": 18,
         "required": true
       },
       {
         "title": "联系电话",
         "field": "phone",
         "rules": "phone",
+        "maxLength": 11,
         "required": true
       },
       {

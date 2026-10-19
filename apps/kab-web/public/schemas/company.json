@@ -73,12 +73,14 @@
         "title": "企业名称",
         "field": "name",
         "type": "Input",
+        "maxLength": 50,
         "required": true
       },
       {
         "title": "联络人",
         "field": "contactPerson",
         "type": "Input",
+        "maxLength": 20,
         "required": true
       },
       {
@@ -86,25 +88,29 @@
         "field": "contactPersonPhone",
         "type": "Input",
         "rules": "phone",
+        "maxLength": 11,
         "required": true
       },
       {
         "title": "企业简称",
         "field": "shortName",
-        "type": "Input"
+        "type": "Input",
+        "maxLength": 30
       },
       {
         "title": "机构代码(18位社会统一信用代码)",
         "field": "code",
         "type": "Input",
         "rules": "creditCode",
+        "maxLength": 18,
         "labelWidth": 110
       },
       {
         "title": "企业联系电话",
         "field": "phone",
         "type": "Input",
-        "rules": "phone"
+        "rules": "phone",
+        "maxLength": 11
       },
       {
         "title": "经营许可证",

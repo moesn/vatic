@@ -129,7 +129,8 @@
           {
             "title": "复核意见说明",
             "field": "result",
-            "type": "Textarea"
+            "type": "Textarea",
+            "maxLength": 200
           }
         ]
       }
