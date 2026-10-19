@@ -94,6 +94,7 @@
       {
         "title": "身份证号",
         "field": "idNo",
+        "rules": "idCard",
         "required": true
       },
       {

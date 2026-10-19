@@ -10,7 +10,7 @@ export async function getAllMenusApi() {
     '/auth/queryPermissionsTree',
   );
 
-  return new Promise((resolve) => {
+  return new Promise<RouteRecordStringComponent[]>((resolve) => {
     const menus = res
       .filter((d: any) => d.createdTime.startsWith('2025'))
       .map((item: any) => {

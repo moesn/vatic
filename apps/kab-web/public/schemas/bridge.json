@@ -133,7 +133,8 @@
       },
       {
         "title": "管理单位联系方式",
-        "field": "managementContact"
+        "field": "managementContact",
+        "rules": "phone"
       },
       {
         "title": "养护单位名称",
@@ -141,7 +142,8 @@
       },
       {
         "title": "养护单位联系方式",
-        "field": "maintenanceContact"
+        "field": "maintenanceContact",
+        "rules": "phone"
       },
       {
         "title": "监管单位名称",
@@ -149,7 +151,8 @@
       },
       {
         "title": "监管单位联系方式",
-        "field": "supervisionContact"
+        "field": "supervisionContact",
+        "rules": "phone"
       },
       {
         "title": "施工单位名称",
@@ -157,7 +160,8 @@
       },
       {
         "title": "施工单位联系方式",
-        "field": "constructionContact"
+        "field": "constructionContact",
+        "rules": "phone"
       }
     ]
   }

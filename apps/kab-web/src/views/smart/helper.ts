@@ -155,6 +155,35 @@ export const parseFormSchema = async (
             );
           break;
         }
+        case 'plate': {
+          rule = z
+            .string()
+            .regex(
+              /^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-HJ-NP-Z][A-HJ-NP-Z0-9]{4,5}[A-HJ-NP-Z0-9挂学警港澳]$/,
+              { message: '无效的车牌号' },
+            );
+          break;
+        }
+        case 'vin': {
+          rule = z
+            .string()
+            .length(17, '长度必须为17位')
+            .regex(/^[A-HJ-NPR-Z0-9]{17}$/, '车架号格式错误');
+          break;
+        }
+        case 'creditCode': {
+          rule = z
+            .string()
+            .length(18, '长度必须为18位')
+            .regex(/^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, {
+              message: '无效的统一社会信用代码',
+            });
+          break;
+        }
+        case 'url': {
+          rule = z.string().url('无效的URL');
+          break;
+        }
       }
       formItem.rules = required ? rule : rule.optional();
     } else if (required) {

@@ -131,6 +131,7 @@
       {
         "title": "视频播放URL",
         "field": "videoUrl",
+        "rules": "url",
         "required": true
       },
       {
@@ -147,7 +148,8 @@
       },
       {
         "title": "负责人电话",
-        "field": "managerPhone"
+        "field": "managerPhone",
+        "rules": "phone"
       }
     ]
   }
