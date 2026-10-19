@@ -11,6 +11,7 @@ import type {
 
 import {
   computed,
+  h,
   nextTick,
   onActivated,
   onBeforeUnmount,
@@ -32,7 +33,6 @@ import {
   Image,
   Input,
   message,
-  Modal,
   Select,
   Spin,
   Table,
@@ -526,7 +526,22 @@ const vehicleColumns = [
   { title: '车辆颜色', dataIndex: 'vehicleColorName', key: 'vehicleColorName' },
   { title: '地点', key: 'location' },
   { title: '时间', key: 'shotTime', width: 170 },
-  { title: '操作', key: 'action', width: 80 },
+  {
+    title: '图片',
+    dataIndex: 'imgUrl',
+    width: 90,
+    customRender: ({ record }) => {
+      const url = record.imgUrl ? resolveEquipUrl(record.imgUrl) : '';
+      return url
+        ? h(Image, {
+            height: 50,
+            src: url,
+            style: { objectFit: 'cover' },
+            width: 70,
+          })
+        : '-';
+    },
+  },
 ];
 
 const alertColumns = [
@@ -553,7 +568,23 @@ const alertColumns = [
   { title: '告警信息', key: 'alarmInfo', align: 'center' },
   { title: '告警级别', key: 'alarmLevel', width: 90, align: 'center' },
   { title: '告警时间', key: 'createdTime', width: 170, align: 'center' },
-  { title: '图片', key: 'action', width: 70, align: 'center' },
+  {
+    title: '图片',
+    dataIndex: 'imgPath',
+    width: 90,
+    align: 'center',
+    customRender: ({ record }) => {
+      const url = record.imgPath ? resolveEquipUrl(record.imgPath) : '';
+      return url
+        ? h(Image, {
+            height: 50,
+            src: url,
+            style: { objectFit: 'cover' },
+            width: 70,
+          })
+        : '-';
+    },
+  },
 ];
 
 /** 根据 equipmentNo 从 curveDeviceOptions 获取设备名称 */
@@ -755,21 +786,30 @@ function renderTrendChart() {
   });
 }
 
+/** 过车统计图表是否展开（默认收起，展开时才加载数据） */
+const trendExpanded = ref(false);
+
+/** 展开/收起过车统计图表，展开后重算图表尺寸并加载数据 */
+async function toggleTrendExpanded() {
+  trendExpanded.value = !trendExpanded.value;
+  if (trendExpanded.value) {
+    await nextTick();
+    trendChart?.resize();
+    loadVehiclePassStatistics();
+  }
+}
+
 async function loadVehiclePassStatistics() {
   const device = selectedDevice.value;
   if (!device || detailKind.value !== 'vehicle') return;
+  // 图表收起时不请求，展开时再加载
+  if (!trendExpanded.value) return;
 
   trendLoading.value = true;
   try {
-    const [startTime, endTime] = vehicleRange.value ?? [];
     const data = await getVehiclePassStatisticsApi({
-      carNumber: vehicleCarNumber.value || undefined,
       dimension: trendDimension.value,
-      endTime: endTime || undefined,
       equipmentNo: vehicleEquipmentNo.value || undefined,
-      plateColor: vehiclePlateColor.value,
-      startTime: startTime || undefined,
-      vehicleType: vehicleType.value,
     });
     trendData.value = {
       total: data?.total ?? 0,
@@ -1020,24 +1060,30 @@ function renderAlertTrendChart() {
   });
 }
 
+/** 预警统计图表是否展开（默认收起，展开时才加载数据） */
+const alertTrendExpanded = ref(false);
+
+/** 展开/收起预警统计图表，展开后重算图表尺寸并加载数据 */
+async function toggleAlertTrendExpanded() {
+  alertTrendExpanded.value = !alertTrendExpanded.value;
+  if (alertTrendExpanded.value) {
+    await nextTick();
+    alertTrendChart?.resize();
+    loadAlertStatistics();
+  }
+}
+
 async function loadAlertStatistics() {
   const device = selectedDevice.value;
   if (!device) return;
+  // 图表收起时不请求，展开时再加载
+  if (!alertTrendExpanded.value) return;
 
   alertTrendLoading.value = true;
   try {
-    const [startTime, endTime] = alertRange.value ?? [];
     const data = await getAlertStatisticsApi({
-      alarmLevel: alertLevel.value || undefined,
-      aramType: alertParamType.value || undefined,
-      carNumber: alertCarNumber.value || undefined,
       dimension: alertTrendDimension.value,
-      endTime: endTime || undefined,
       equipmentNo: alertEquipmentNo.value || undefined,
-      filePath: undefined,
-      plateColor: vehiclePlateColor.value,
-      startTime: startTime || undefined,
-      vehicleType: vehicleType.value,
     });
     alertTrendData.value = data ?? {};
     await nextTick();
@@ -1052,36 +1098,6 @@ async function loadAlertStatistics() {
 watch(alertTrendDimension, () => {
   loadAlertStatistics();
 });
-// endregion
-
-// region 预警图片弹窗
-const alertImageVisible = ref(false);
-const currentAlert = ref<AlertRecord | null>(null);
-
-/** 告警图片地址：相对路径补全中台联调地址前缀 */
-const currentAlertImageUrl = computed(() =>
-  resolveEquipUrl(currentAlert.value?.imgPath),
-);
-
-function showAlertImage(record: any) {
-  currentAlert.value = record;
-  alertImageVisible.value = true;
-}
-// endregion
-
-// region 车辆抓拍图片弹窗
-const carImageVisible = ref(false);
-const currentVehicle = ref<null | VehiclePassRecord>(null);
-
-/** 抓拍图片地址：相对路径补全中台联调地址前缀 */
-const currentVehicleImageUrl = computed(() =>
-  resolveEquipUrl(currentVehicle.value?.imgUrl),
-);
-
-function showVehicleImage(record: VehiclePassRecord) {
-  currentVehicle.value = record;
-  carImageVisible.value = true;
-}
 // endregion
 
 /** 时间显示格式化：2026-08-24T09:00:00 -> 2026-08-24 09:00:00 */
@@ -1607,6 +1623,57 @@ onBeforeUnmount(() => {
             <!-- 数据详情 -->
             <div v-show="!isWeatherDevice && activeTab === 'data'">
               <template v-if="detailKind === 'vehicle'">
+                <!-- 统计趋势图：默认收起，点击标题展开 -->
+                <div class="mb-4 rounded border border-gray-200 bg-white p-4">
+                  <div
+                    class="flex cursor-pointer select-none items-center justify-between"
+                    @click="toggleTrendExpanded"
+                  >
+                    <span
+                      class="flex items-center gap-2 text-sm font-medium text-gray-700"
+                    >
+                      <IconifyIcon
+                        class="text-primary"
+                        icon="mdi:chart-timeline-variant"
+                      />
+                      过车数量趋势（{{
+                        trendDimension === 1 ? '按小时统计' : '按天统计'
+                      }}）
+                      <IconifyIcon
+                        class="text-gray-400 transition-transform"
+                        :class="trendExpanded ? 'rotate-180' : ''"
+                        icon="mdi:chevron-down"
+                      />
+                    </span>
+                    <div class="flex items-center gap-3" @click.stop>
+                      <span class="text-sm text-gray-500"
+                        >共 {{ trendData.total }} 条过车记录</span
+                      >
+                      <div class="flex items-center gap-1">
+                        <Button
+                          v-for="opt in dimensionOptions"
+                          :key="opt.value"
+                          size="small"
+                          :type="
+                            trendDimension === opt.value ? 'primary' : 'default'
+                          "
+                          @click="trendDimension = opt.value"
+                        >
+                          {{ opt.label }}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <Spin v-show="trendExpanded" :spinning="trendLoading">
+                    <div ref="trendChartRef" class="h-[250px] w-full"></div>
+                    <div
+                      v-if="!trendLoading && trendData.trend.length === 0"
+                      class="py-8 text-center text-sm text-gray-400"
+                    >
+                      暂无趋势数据
+                    </div>
+                  </Spin>
+                </div>
                 <!-- 搜索栏：设备名称、车牌号码、车辆类型、时间段 -->
                 <div class="mb-4 flex flex-wrap items-center gap-3">
                   <!--                  <span class="text-sm text-gray-600">设备名称：</span>-->
@@ -1654,49 +1721,6 @@ onBeforeUnmount(() => {
                   </Button>
                   <Button @click="resetVehicleSearch">重置</Button>
                 </div>
-                <!-- 统计趋势图 -->
-                <div class="mb-4 rounded border border-gray-200 bg-white p-4">
-                  <div class="flex items-center justify-between">
-                    <span
-                      class="flex items-center gap-2 text-sm font-medium text-gray-700"
-                    >
-                      <IconifyIcon
-                        class="text-primary"
-                        icon="mdi:chart-timeline-variant"
-                      />
-                      过车数量趋势（{{
-                        trendDimension === 1 ? '按小时统计' : '按天统计'
-                      }}）
-                    </span>
-                    <div class="flex items-center gap-3">
-                      <span class="text-sm text-gray-500"
-                        >共 {{ trendData.total }} 条过车记录</span
-                      >
-                      <div class="flex items-center gap-1">
-                        <Button
-                          v-for="opt in dimensionOptions"
-                          :key="opt.value"
-                          size="small"
-                          :type="
-                            trendDimension === opt.value ? 'primary' : 'default'
-                          "
-                          @click="trendDimension = opt.value"
-                        >
-                          {{ opt.label }}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <Spin :spinning="trendLoading">
-                    <div ref="trendChartRef" class="h-[250px] w-full"></div>
-                    <div
-                      v-if="!trendLoading && trendData.trend.length === 0"
-                      class="py-8 text-center text-sm text-gray-400"
-                    >
-                      暂无趋势数据
-                    </div>
-                  </Spin>
-                </div>
                 <Table
                   :columns="vehicleColumns"
                   :data-source="vehicleRecords"
@@ -1716,14 +1740,6 @@ onBeforeUnmount(() => {
                     <template v-else-if="column.key === 'shotTime'">
                       {{ formatTime(record.shotTime) }}
                     </template>
-                    <template v-else-if="column.key === 'action'">
-                      <a
-                        class="text-primary cursor-pointer"
-                        @click="showVehicleImage(record)"
-                      >
-                        详情
-                      </a>
-                    </template>
                   </template>
                 </Table>
               </template>
@@ -1738,6 +1754,61 @@ onBeforeUnmount(() => {
 
             <!-- 预警记录（仅弯道预警设备） -->
             <div v-show="!isWeatherDevice && activeTab === 'alert'">
+              <!-- 预警统计趋势图：默认收起，点击标题展开 -->
+              <div class="mb-4 rounded border border-gray-200 bg-white p-4">
+                <div
+                  class="flex cursor-pointer select-none items-center justify-between"
+                  @click="toggleAlertTrendExpanded"
+                >
+                  <span
+                    class="flex items-center gap-2 text-sm font-medium text-gray-700"
+                  >
+                    <IconifyIcon
+                      class="text-primary"
+                      icon="mdi:chart-timeline-variant"
+                    />
+                    预警数量趋势（{{
+                      alertTrendDimension === 1 ? '按小时统计' : '按天统计'
+                    }}）
+                    <IconifyIcon
+                      class="text-gray-400 transition-transform"
+                      :class="alertTrendExpanded ? 'rotate-180' : ''"
+                      icon="mdi:chevron-down"
+                    />
+                  </span>
+                  <div class="flex items-center gap-3" @click.stop>
+                    <span class="text-sm text-gray-500"
+                      >共 {{ alertTrendTotal }} 条预警记录</span
+                    >
+                    <div class="flex items-center gap-1">
+                      <Button
+                        v-for="opt in alertDimensionOptions"
+                        :key="opt.value"
+                        size="small"
+                        :type="
+                          alertTrendDimension === opt.value
+                            ? 'primary'
+                            : 'default'
+                        "
+                        @click="alertTrendDimension = opt.value"
+                      >
+                        {{ opt.label }}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <Spin v-show="alertTrendExpanded" :spinning="alertTrendLoading">
+                  <div ref="alertTrendChartRef" class="h-[250px] w-full"></div>
+                  <div
+                    v-if="
+                      !alertTrendLoading && alertTrendData.trend?.length === 0
+                    "
+                    class="py-8 text-center text-sm text-gray-400"
+                  >
+                    暂无趋势数据
+                  </div>
+                </Spin>
+              </div>
               <!-- 搜索栏：设备名称（弯道设备下拉）、车牌号码、告警类型、时间段 -->
               <div class="mb-4 flex flex-wrap items-center gap-3">
                 <!--                <span class="text-sm text-gray-600">设备名称：</span>-->
@@ -1801,53 +1872,6 @@ onBeforeUnmount(() => {
                 </Button>
                 <Button @click="resetAlertSearch">重置</Button>
               </div>
-              <!-- 预警统计趋势图 -->
-              <div class="mb-4 rounded border border-gray-200 bg-white p-4">
-                <div class="mb-3 flex items-center justify-between">
-                  <span
-                    class="flex items-center gap-2 text-sm font-medium text-gray-700"
-                  >
-                    <IconifyIcon
-                      class="text-primary"
-                      icon="mdi:chart-timeline-variant"
-                    />
-                    预警数量趋势（{{
-                      alertTrendDimension === 1 ? '按小时统计' : '按天统计'
-                    }}）
-                  </span>
-                  <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-500"
-                      >共 {{ alertTrendTotal }} 条预警记录</span
-                    >
-                    <div class="flex items-center gap-1">
-                      <Button
-                        v-for="opt in alertDimensionOptions"
-                        :key="opt.value"
-                        size="small"
-                        :type="
-                          alertTrendDimension === opt.value
-                            ? 'primary'
-                            : 'default'
-                        "
-                        @click="alertTrendDimension = opt.value"
-                      >
-                        {{ opt.label }}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                <Spin :spinning="alertTrendLoading">
-                  <div ref="alertTrendChartRef" class="h-[250px] w-full"></div>
-                  <div
-                    v-if="
-                      !alertTrendLoading && alertTrendData.trend?.length === 0
-                    "
-                    class="py-8 text-center text-sm text-gray-400"
-                  >
-                    暂无趋势数据
-                  </div>
-                </Spin>
-              </div>
               <Table
                 :columns="alertColumns"
                 :data-source="alertRecords"
@@ -1882,14 +1906,6 @@ onBeforeUnmount(() => {
                   <template v-else-if="column.key === 'createdTime'">
                     {{ formatTime(record.createdTime) }}
                   </template>
-                  <template v-else-if="column.key === 'action'">
-                    <a
-                      class="text-primary cursor-pointer"
-                      @click="showAlertImage(record)"
-                    >
-                      查看
-                    </a>
-                  </template>
                 </template>
               </Table>
             </div>
@@ -1897,56 +1913,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
-
-    <!-- 预警图片弹窗 -->
-    <Modal
-      v-model:open="alertImageVisible"
-      :footer="null"
-      title="告警图片"
-      :width="520"
-    >
-      <div class="flex justify-center p-2">
-        <Image
-          v-if="currentAlertImageUrl"
-          :src="currentAlertImageUrl"
-          class="w-full rounded object-contain"
-        />
-        <div
-          v-else
-          class="flex h-72 w-full items-center justify-center rounded bg-gray-100 text-gray-500"
-        >
-          <div class="text-center">
-            <IconifyIcon class="mb-2 text-4xl" icon="mdi:camera" />
-            <p>暂无告警图片</p>
-          </div>
-        </div>
-      </div>
-    </Modal>
-
-    <!-- 车辆图片弹窗 -->
-    <Modal
-      v-model:open="carImageVisible"
-      :footer="null"
-      title="车辆抓拍图片"
-      :width="520"
-    >
-      <div class="flex justify-center p-2">
-        <Image
-          v-if="currentVehicleImageUrl"
-          :src="currentVehicleImageUrl"
-          class="w-full rounded object-contain"
-        />
-        <div
-          v-else
-          class="flex h-72 w-full items-center justify-center rounded bg-gray-100 text-gray-500"
-        >
-          <div class="text-center">
-            <IconifyIcon class="mb-2 text-4xl" icon="mdi:camera" />
-            <p>暂无抓拍图片</p>
-          </div>
-        </div>
-      </div>
-    </Modal>
   </div>
 </template>
 
