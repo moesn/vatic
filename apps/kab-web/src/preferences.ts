@@ -1,4 +1,4 @@
-import {defineOverridesPreferences} from '@vatic/preferences';
+import { defineOverridesPreferences } from '@vatic/preferences';
 
 /**
  * @description 项目配置文件
@@ -13,5 +13,8 @@ export const overridesPreferences = defineOverridesPreferences({
   logo: {
     enable: true,
     source: '',
+  },
+  widget: {
+    languageToggle: false,
   },
 });

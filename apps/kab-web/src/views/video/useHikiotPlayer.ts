@@ -16,7 +16,7 @@ import type { HikiotPlayInit } from './data';
  */
 import { onBeforeUnmount, ref, watch } from 'vue';
 
-import { message } from 'ant-design-vue';
+import { message, Modal } from 'ant-design-vue';
 
 import { getHikiotPlayInit } from './data';
 
@@ -149,22 +149,33 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
   function onPluginEvent(event: Event) {
     const data = (event as CustomEvent).detail;
     if (!data) return;
-    if (data.cmd === 'cameraPlayStats') {
-      const s = data.data;
-      if (Number(s?.playStats) === 1) {
-        // 画面就绪确认：清除 5s 兜底定时器
-        clearReadyTimer();
-        ready.value = true;
-        error.value = '';
-      } else {
-        // playStats !== 1：播放已停止（可能 token 过期）
-        ready.value = false;
+    switch (data.cmd) {
+      case 'cameraPlayStats': {
+        const s = data.data;
+        if (Number(s?.playStats) === 1) {
+          // 画面就绪确认：清除 5s 兜底定时器
+          clearReadyTimer();
+          ready.value = true;
+          error.value = '';
+        } else {
+          // playStats !== 1：播放已停止（可能 token 过期）
+          ready.value = false;
+        }
+
+        break;
       }
-    } else if (data.cmd === 'msgTips') {
-      console.warn('[海康插件提示]', data);
-    } else if (data.cmd === 'disconnect') {
-      connected = false;
-      ready.value = false;
+      case 'disconnect': {
+        connected = false;
+        ready.value = false;
+
+        break;
+      }
+      case 'msgTips': {
+        console.warn('[海康插件提示]', data);
+
+        break;
+      }
+      // No default
     }
   }
 
@@ -185,6 +196,34 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     }, READY_TIMEOUT);
   }
 
+  /** 实况加载超时（ms）：超时仍未完成加载流程则结束加载态并弹窗提示 */
+  const LOADING_TIMEOUT = 30_000;
+  let loadingTimer: number | undefined;
+
+  function clearLoadingTimer() {
+    if (loadingTimer) {
+      window.clearTimeout(loadingTimer);
+      loadingTimer = undefined;
+    }
+  }
+
+  /** 30 秒加载兜底：插件调用链挂起（连接/回调不返回）时结束加载态并弹窗 */
+  function startLoadingTimer() {
+    clearLoadingTimer();
+    loadingTimer = window.setTimeout(() => {
+      loadingTimer = undefined;
+      if (!loading.value) return;
+      loading.value = false;
+      error.value =
+        '海康实时视频加载超时：请确认插件已运行、设备在线且已授权后重试';
+      Modal.error({
+        content:
+          '海康实时视频加载超时（30 秒），请确认插件已运行、设备在线且已授权后重试',
+        title: '加载超时',
+      });
+    }, LOADING_TIMEOUT);
+  }
+
   /** 断开旧连接（插件窗口复用会与单路预览冲突：同 webTitle 重建挂起，需全新建立） */
   function disconnect() {
     if (client) {
@@ -202,7 +241,7 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
   async function connectPlugin(): Promise<any> {
     const Ctor = getClientCtor();
     if (typeof Ctor !== 'function') {
-      throw new Error(
+      throw new TypeError(
         '未检测到海康 WEB 插件 SDK（需 Windows + Chrome/Edge 并安装 WEB 插件 exe）',
       );
     }
@@ -214,12 +253,12 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
       if (!(resp?.code === 0 && resp?.message === 'connect success')) {
         throw new Error(`插件连接异常: ${resp?.message ?? resp?.msg ?? ''}`);
       }
-    } catch (e: any) {
+    } catch (error_: any) {
       disconnect();
       const hint =
-        (e?.code !== undefined && CONNECT_ERROR_MAP[e.code]) ||
-        e?.message ||
-        String(e);
+        (error_?.code !== undefined && CONNECT_ERROR_MAP[error_.code]) ||
+        error_?.message ||
+        String(error_);
       throw new Error(`插件连接失败: ${hint}`);
     }
     connected = true;
@@ -272,6 +311,7 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
     loading.value = true;
     ready.value = false;
     error.value = '';
+    startLoadingTimer();
     try {
       // 4.3 播放初始化：获取聚合数据（服务端 8 秒短缓存，可放心重试）
       const init = await getHikiotPlayInit(serial, channelNo);
@@ -317,6 +357,7 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
           : (error_?.message ?? '海康实况加载失败');
       message.error(error.value);
     } finally {
+      clearLoadingTimer();
       loading.value = false;
     }
   }
@@ -371,6 +412,7 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
   /** 停止播放：隐藏插件窗口（SDK 无 stopAllPreview 方法） */
   function stop() {
     clearReadyTimer();
+    clearLoadingTimer();
     ready.value = false;
     if (client && connected) {
       try {
@@ -411,13 +453,17 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
   const PTZ_SPEED = 1;
 
   /** 当前正在播放的设备序列号（ptzControl 需显式指定设备） */
-  let currentDeviceSerial: string | null = null;
+  let currentDeviceSerial: null | string = null;
   /** 上次 start 是否成功（失败时不发送 stop，与官方 demo needStopHandle 一致） */
   let ptzActive = false;
   /** 自动扫描开关状态 */
   let ptzAutoOn = false;
 
-  function sendPtz(cmdType: 'start' | 'stop', direction: number, withSpeed = true) {
+  function sendPtz(
+    cmdType: 'start' | 'stop',
+    direction: number,
+    withSpeed = true,
+  ) {
     if (!client || !connected || !currentDeviceSerial) return;
     const data: Record<string, unknown> = {
       channelNo,
@@ -429,11 +475,11 @@ export function useHikiotPlayer(options: HikiotPlayerOptions) {
       data.speed = PTZ_SPEED;
     }
     client.ptzControl(1, data, (resp: any) => {
-      if (resp?.code !== 0) {
+      if (resp?.code === 0) {
+        ptzActive = cmdType === 'start';
+      } else {
         ptzActive = false;
         message.error(`云台控制失败: ${resp?.msg ?? resp?.message ?? ''}`);
-      } else {
-        ptzActive = cmdType === 'start';
       }
     });
   }

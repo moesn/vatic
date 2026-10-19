@@ -337,14 +337,13 @@ export const parseFormSchema = async (
 
     if (
       maxLength &&
-      ['Input', 'InputPassword', 'Textarea', 'InputNumber'].includes(
+      ['Input', 'InputNumber', 'InputPassword', 'Textarea'].includes(
         formItem.component,
       )
     ) {
-      formItem.componentProps = Object.assign(
-        formItem.componentProps || {},
-        { maxlength: maxLength },
-      );
+      formItem.componentProps = Object.assign(formItem.componentProps || {}, {
+        maxlength: maxLength,
+      });
     }
   }
 };
