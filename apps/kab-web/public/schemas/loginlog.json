@@ -63,12 +63,19 @@
     ],
     "search": [
       {
-        "title": "关键字",
-        "field": "keywords",
-        "type": "Input"
+        "title": "用户账号",
+        "field": "account",
+        "type": "Input",
+        "maxLength": 20
       },
       {
-        "title": "状态",
+        "title": "IP地址",
+        "field": "ipaddr",
+        "type": "Input",
+        "maxLength": 50
+      },
+      {
+        "title": "操作结果",
         "field": "status",
         "type": "Select",
         "options": [

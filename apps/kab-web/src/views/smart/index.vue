@@ -416,7 +416,7 @@ watch(
           .filter((s: any) => s.type === 'RangePicker')
           .map((d: any) => [d.field, d.rangeFields]),
         schema: searchSchema,
-        wrapperClass: 'grid-cols-6',
+        wrapperClass: 'grid-cols-7',
         showCollapseButton: false,
       };
     }
