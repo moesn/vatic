@@ -17,28 +17,45 @@
         "field": "account"
       },
       {
-        "title": "操作时间",
+        "title": "登录时间",
         "field": "loginTime",
-        "format": "datetime"
+        "format": "datetime",
+        "minWidth": 150
       },
       {
         "title": "IP地址",
-        "field": "ipaddr"
+        "field": "ipaddr",
+        "minWidth": 120
+      },
+      {
+        "title": "设备类型",
+        "field": "deviceType",
+        "width": 90
+      },
+      {
+        "title": "浏览器",
+        "field": "browser",
+        "minWidth": 100
+      },
+      {
+        "title": "操作系统",
+        "field": "os",
+        "minWidth": 200
       },
       {
         "title": "操作结果",
-        "field": "msg",
-        "width": 80,
+        "field": "status",
+        "width": 90,
         "type": "Tag",
         "options": [
           {
             "label": "成功",
-            "value": 0,
+            "value": "0",
             "color": "success"
           },
           {
             "label": "失败",
-            "value": 1,
+            "value": "1",
             "color": "error"
           }
         ]
@@ -49,6 +66,21 @@
         "title": "关键字",
         "field": "keywords",
         "type": "Input"
+      },
+      {
+        "title": "状态",
+        "field": "status",
+        "type": "Select",
+        "options": [
+          {
+            "label": "成功",
+            "value": "0"
+          },
+          {
+            "label": "失败",
+            "value": "1"
+          }
+        ]
       }
     ]
   }
