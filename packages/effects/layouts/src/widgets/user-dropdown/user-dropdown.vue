@@ -29,7 +29,6 @@ import {
 import { useMagicKeys, whenever } from '@vueuse/core';
 
 import { LockScreenModal } from '../lock-screen';
-
 import ChangePasswordModal from './change-password-modal.vue';
 
 interface Props {
@@ -99,6 +98,7 @@ const [LogoutModal, logoutModalApi] = useVaticModal({
 
 const [ChangePasswordVaticModal, changePasswordModalApi] = useVaticModal({
   connectedComponent: ChangePasswordModal,
+  footer: false,
 });
 
 const refTrigger = useTemplateRef('refTrigger');

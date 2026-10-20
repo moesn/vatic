@@ -76,6 +76,23 @@ function loadHuaXi() {
           const pt = new BMapGL.Point(tmp[0], tmp[1]);
           ptArr.push(pt);
         }
+        // 闭合边界环（首尾点不同时补首点），保证轮廓线首尾相接
+        const first = ptArr[0];
+        const last = ptArr[ptArr.length - 1];
+        if (
+          ptArr.length > 1 &&
+          (first.lng !== last.lng || first.lat !== last.lat)
+        ) {
+          ptArr.push(first);
+        }
+
+        // 边界描边：橙色轮廓线，浅色底图上清晰且与蓝色轨迹线区分
+        const borderLine = new BMapGL.Polyline(ptArr, {
+          strokeColor: '#fa8c16',
+          strokeOpacity: 0.9,
+          strokeWeight: 2,
+        });
+        map.addOverlay(borderLine);
 
         const mapMask = new BMapGL.MapMask(ptArr, {
           isBuildingMask: true,

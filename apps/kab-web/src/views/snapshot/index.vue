@@ -97,7 +97,7 @@ const [Grid] = useVaticVxeGrid({
   gridOptions: {
     columns: [
       {
-        field: 'name',
+        field: 'videoDevicesName',
         title: '视频设备',
       },
       {
@@ -137,7 +137,7 @@ const [Grid] = useVaticVxeGrid({
             renderChart(res, formValues.dimension),
           );
           return await getSnapshotListApi({
-            page: page.currentPage,
+            pageNo: page.currentPage,
             pageSize: page.pageSize,
             ...formValues,
           });
