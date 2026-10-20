@@ -5,7 +5,16 @@ import { computed, h, onMounted, reactive, ref, watch } from 'vue';
 
 import { useVaticModal } from '@vatic/common-ui';
 
-import { Button, Image, Input, message, Select, Space, Table, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Image,
+  Input,
+  message,
+  Select,
+  Space,
+  Table,
+  Tag,
+} from 'ant-design-vue';
 import { RangePicker } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
@@ -99,7 +108,14 @@ const eventColumns: TableColumnsType<any> = [
     width: 90,
     customRender: ({ record }) => {
       const url = (record.imageUrl ?? '').replaceAll(/^`|`$/g, '');
-      return url ? h(Image, { src: url, width: 70, height: 50, style: { objectFit: 'cover' } }) : '-';
+      return url
+        ? h(Image, {
+            src: url,
+            width: 70,
+            height: 50,
+            style: { objectFit: 'cover' },
+          })
+        : '-';
     },
   },
   { title: '事件类型', dataIndex: 'eventType', width: 140 },
@@ -109,20 +125,37 @@ const eventColumns: TableColumnsType<any> = [
     dataIndex: 'level',
     width: 80,
     customRender: ({ record }) =>
-      record.level ? h(Tag, { color: levelColorMap[record.level] ?? 'default' }, () => record.level) : '-',
+      record.level
+        ? h(
+            Tag,
+            { color: levelColorMap[record.level] ?? 'default' },
+            () => record.level,
+          )
+        : '-',
   },
   {
     title: '状态',
     dataIndex: 'status',
     width: 100,
     customRender: ({ record }) =>
-      record.status ? h(Tag, { color: statusColorMap[record.status] ?? 'default' }, () => record.status) : '-',
+      record.status
+        ? h(
+            Tag,
+            { color: statusColorMap[record.status] ?? 'default' },
+            () => record.status,
+          )
+        : '-',
   },
-  { title: '处理人', dataIndex: 'assignedTo', width: 100, customRender: ({ record }) => {
-    if (!record.assignedTo || record.assignedTo === -1) return '-';
-    const staff = staffList.value.find((s) => s.value === record.assignedTo);
-    return staff?.label ?? record.assignedTo;
-  }},
+  {
+    title: '处理人',
+    dataIndex: 'assignedTo',
+    width: 100,
+    customRender: ({ record }) => {
+      if (!record.assignedTo || record.assignedTo === -1) return '-';
+      const staff = staffList.value.find((s) => s.value === record.assignedTo);
+      return staff?.label ?? record.assignedTo;
+    },
+  },
   { title: '备注', dataIndex: 'remark', ellipsis: true },
   {
     title: '发现时间',
@@ -182,7 +215,10 @@ async function loadEventList() {
     });
     eventRecords.value = (data?.records ?? []).map((r) => ({
       ...r,
-      imageUrl: typeof r.imageUrl === 'string' ? r.imageUrl.replaceAll(/^`|`$/g, '') : r.imageUrl,
+      imageUrl:
+        typeof r.imageUrl === 'string'
+          ? r.imageUrl.replaceAll(/^`|`$/g, '')
+          : r.imageUrl,
     }));
     eventTotal.value = data?.total ?? 0;
     selectedRowKeys.value = [];
@@ -232,18 +268,28 @@ watch(
     if (options && options.length > 0) {
       [DispatchForm, DispatchFormApi] = useVaticForm({
         handleSubmit: (formData: Record<string, any>) => {
-          message.loading({ content: '派发中...', duration: 0, key: 'is-form-submitting' });
+          message.loading({
+            content: '派发中...',
+            duration: 0,
+            key: 'is-form-submitting',
+          });
           DispatchModalApi.lock();
           const { taskType, assignedTo } = formData;
+          // 要派发的事件在打开弹窗时已确定（行内单行 or 勾选批量），从弹窗 data 取
           const data = {
             taskType,
             assignedTo,
-            riskEventsEntityList: selectedEvents.value,
+            riskEventsEntityList:
+              DispatchModalApi.getData()?.riskEventsEntityList ?? [],
           };
           dispatchApi(data).then(() => {
             DispatchModalApi.close();
             loadEventList();
-            message.success({ content: '派发成功', duration: 2, key: 'is-form-submitting' });
+            message.success({
+              content: '派发成功',
+              duration: 2,
+              key: 'is-form-submitting',
+            });
           });
         },
         schema: [
@@ -270,7 +316,11 @@ watch(
           },
           {
             component: 'Select',
-            componentProps: { options: staffList.value, class: 'w-full', placeholder: '请选择处理人' },
+            componentProps: {
+              options: staffList.value,
+              class: 'w-full',
+              placeholder: '请选择处理人',
+            },
             fieldName: 'assignedTo',
             label: '处理人',
             labelWidth: 70,
@@ -282,14 +332,20 @@ watch(
 
       [DisposeForm, DisposeFormApi] = useVaticForm({
         handleSubmit: (formData: Record<string, any>) => {
-          message.loading({ content: '保存中...', duration: 0, key: 'is-form-submitting' });
+          message.loading({
+            content: '保存中...',
+            duration: 0,
+            key: 'is-form-submitting',
+          });
           DisposeModalApi.lock();
           const { disposeMethod, pauseTo, remark } = formData;
+          // 要处置的事件在打开弹窗时已确定（行内单行 or 勾选批量），从弹窗 data 取
           const data: any = {
             status: '未派发',
             remark: '',
             pauseTo: Date.now() - 10 * 60 * 1000,
-            riskEventsEntityList: selectedEvents.value,
+            riskEventsEntityList:
+              DisposeModalApi.getData()?.riskEventsEntityList ?? [],
           };
           if (disposeMethod === '误报') {
             data.status = '已完成';
@@ -300,7 +356,11 @@ watch(
           disposeApi(data).then(() => {
             DisposeModalApi.close();
             loadEventList();
-            message.success({ content: '保存成功', duration: 2, key: 'is-form-submitting' });
+            message.success({
+              content: '保存成功',
+              duration: 2,
+              key: 'is-form-submitting',
+            });
           });
         },
         schema: [
@@ -342,7 +402,12 @@ watch(
             label: '暂停时长',
             labelWidth: 70,
             rules: 'required',
-            componentProps: { class: 'w-full', min: 1, step: 1, addonAfter: '分钟' },
+            componentProps: {
+              class: 'w-full',
+              min: 1,
+              step: 1,
+              addonAfter: '分钟',
+            },
             dependencies: {
               if: (formData: any) => formData.disposeMethod === '暂停',
               triggerFields: ['disposeMethod'],
@@ -403,7 +468,10 @@ function openDispatchModal(row?: any) {
     return;
   }
   DispatchModalApi.setData({
-    eventNameList: events.map((d) => `【${d.eventType}】${d.location}`).join('\n'),
+    eventNameList: events
+      .map((d) => `【${d.eventType}】${d.location}`)
+      .join('\n'),
+    riskEventsEntityList: events,
   }).open();
 }
 
@@ -421,7 +489,10 @@ function openDisposeModal(row?: any) {
     return;
   }
   DisposeModalApi.setData({
-    eventNameList: events.map((d) => `【${d.eventType}】${d.location}`).join('\n'),
+    eventNameList: events
+      .map((d) => `【${d.eventType}】${d.location}`)
+      .join('\n'),
+    riskEventsEntityList: events,
   }).open();
 }
 // endregion
@@ -434,7 +505,9 @@ onMounted(() => {
 <template>
   <div class="p-5">
     <!-- 搜索栏 -->
-    <div class="mb-4 flex flex-wrap items-center gap-3 rounded border border-gray-200 bg-white p-4">
+    <div
+      class="mb-4 flex flex-wrap items-center gap-3 rounded border border-gray-200 bg-white p-4"
+    >
       <span class="text-sm text-gray-600">事件类型：</span>
       <Select
         v-model:value="searchForm.eventType"
@@ -516,7 +589,7 @@ onMounted(() => {
       }"
       :row-selection="rowSelection"
       row-key="id"
-      scroll={{ x: 1200 }}
+      :scroll="{ x: 1200 }"
       size="middle"
       @change="handleTableChange"
     />

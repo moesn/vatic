@@ -169,21 +169,40 @@ function onActionClick(e: OnActionClickParams) {
   }
 }
 
+/**
+ * 计算 schema 中配置的禁用条件是否命中
+ * 条件格式：`field=value1|value2`（字段值等于任一值则禁用）、
+ *           `field!=value1|value2`（字段值不等于全部值则禁用）
+ */
 function computeDisabled(condition: string, row: any) {
-  if (condition) {
-    if (condition.includes('!=')) {
-      const keyVal: any = condition.split('!=');
-      const rowValue = row[keyVal[0]].toString();
-      const disableValues = keyVal[1].split('|');
-      return !disableValues.includes(rowValue);
-    } else if (condition.includes('=')) {
-      const keyVal: any = condition.split('=');
-      const rowValue = row[keyVal[0]].toString();
-      const disableValues = keyVal[1].split('|');
-      return disableValues.includes(rowValue);
-    }
+  if (!condition) {
+    return false;
   }
-  return false;
+
+  const isNotEqual = condition.includes('!=');
+  const separator = isNotEqual ? '!=' : '=';
+  const index = condition.indexOf(separator);
+  if (index === -1) {
+    return false;
+  }
+
+  // 宽容处理条件两侧的空白（如 "account = admin"）
+  const field = condition.slice(0, index).trim();
+  const disableValues = condition
+    .slice(index + separator.length)
+    .split('|')
+    .map((v) => v.trim());
+
+  const rowValue = row?.[field];
+  // 行数据缺失该字段或字段值为空：视为不满足具体值比较，
+  // 仅 != 条件命中（与 JS 中 undefined !== value 的比较语义一致）
+  if (rowValue === null || rowValue === undefined) {
+    return isNotEqual;
+  }
+
+  const rowValueStr = String(rowValue);
+  const matched = disableValues.includes(rowValueStr);
+  return isNotEqual ? !matched : matched;
 }
 
 function operationDisabled(row: any, condition: string) {
@@ -449,12 +468,12 @@ const resetPasswordVisible = ref(false);
 const resetPasswordSubmitting = ref(false);
 const resetPasswordValue = ref('');
 const resetPasswordConfirmValue = ref('');
-const resetPasswordRow = ref<null | Recordable>(null);
+const resetPasswordRow = ref<null | Recordable<any>>(null);
 /** 密码是否明文显示 */
 const resetPasswordShow = ref(false);
 
 /** 打开重置密码弹窗 */
-function openResetPassword(row: Recordable) {
+function openResetPassword(row: Recordable<any>) {
   resetPasswordRow.value = row;
   resetPasswordValue.value = '';
   resetPasswordConfirmValue.value = '';
