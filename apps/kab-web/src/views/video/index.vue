@@ -46,6 +46,7 @@ import {
   getDeviceTreeApi,
   getVehiclePassListApi,
   getVehiclePassStatisticsApi,
+  getWeatherHistoryApi,
   getWeatherListApi,
   loadEquipConfig,
   resolveEquipUrl,
@@ -551,6 +552,86 @@ const vehicleTypeOptions = [
 
 const weatherRecord = ref<null | WeatherStationRecord>(null);
 
+/** 气象历史数据 */
+const weatherHistory = ref<WeatherStationRecord[]>([]);
+const weatherHistoryTotal = ref(0);
+const weatherHistoryLoading = ref(false);
+const weatherHistoryPage = reactive({ pageNo: 1, pageSize: 10 });
+/** 气象历史数据搜索条件 */
+const weatherRange = ref<any>(null);
+
+/**
+ * 气象历史数据列（时间字段取 detected_time，兼容实时快照的 snapshot_time）
+ * 指标值由后端原样透传，可能为字符串，统一 Number() 兜底
+ */
+const weatherHistoryColumns = [
+  {
+    title: '检测时间',
+    key: 'detected_time',
+    width: 180,
+    customRender: ({ record }: any) =>
+      formatTime(record.detected_time ?? record.snapshot_time),
+  },
+  {
+    title: '温度(℃)',
+    dataIndex: 'temperature',
+    width: 110,
+    customRender: ({ text }: any) => formatMetric(text),
+  },
+  {
+    title: '湿度(%RH)',
+    dataIndex: 'humidity',
+    width: 110,
+    customRender: ({ text }: any) => formatMetric(text),
+  },
+  {
+    title: '风速(m/s)',
+    dataIndex: 'wind_speed',
+    width: 110,
+    customRender: ({ text }: any) => formatMetric(text),
+  },
+  {
+    title: '风向',
+    key: 'wind_direction',
+    width: 150,
+    customRender: ({ record }: any) => windDirectionText(record.wind_direction),
+  },
+  {
+    title: '气压(hPa)',
+    dataIndex: 'pressure',
+    width: 110,
+    customRender: ({ text }: any) => formatMetric(text),
+  },
+  { title: '天气', dataIndex: 'weather', width: 100 },
+];
+
+/** 指标值格式化：字符串/数值统一转数字，无法转换时原样展示 */
+function formatMetric(value: any): string {
+  if (value === null || value === undefined || value === '') return '-';
+  const num = Number(value);
+  return Number.isNaN(num) ? String(value) : String(num);
+}
+
+/** 气象历史数据仅保留 90 天（api.md），禁用更早日期 */
+const WEATHER_HISTORY_DAYS = 90;
+function disabledWeatherHistoryDate(current: any): boolean {
+  if (!current) return false;
+  const today = dayjs().endOf('day');
+  const earliest = dayjs()
+    .subtract(WEATHER_HISTORY_DAYS - 1, 'day')
+    .startOf('day');
+  return current.isAfter(today) || current.isBefore(earliest);
+}
+
+const weatherHistoryPagination = computed(() => ({
+  current: weatherHistoryPage.pageNo,
+  pageSize: weatherHistoryPage.pageSize,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total: number) => `共 ${total} 条`,
+  total: weatherHistoryTotal.value,
+}));
+
 const detailKind = computed<'none' | 'vehicle' | 'weather'>(() => {
   const purpose = selectedDevice.value?.purpose ?? '';
   if (purpose.includes('弯道')) {
@@ -696,15 +777,19 @@ const weatherItems = computed(() => {
     { label: '湿度', value: formatValue(record.humidity, '%RH') },
     { label: '风速', value: formatValue(record.wind_speed, 'm/s') },
     { label: '风向', value: windDirectionText(record.wind_direction) },
-    { label: '气压', value: formatValue(record.pressure, 'Pa') },
+    { label: '气压', value: formatValue(record.pressure, 'hPa') },
     { label: '天气', value: record.weather || '-' },
     { label: '快照时间', value: formatTime(record.snapshot_time) },
   ];
 });
 
-function formatValue(value: null | number | undefined, unit: string): string {
+function formatValue(
+  value: null | number | string | undefined,
+  unit: string,
+): string {
   if (value === null || value === undefined || value === '') return '-';
-  return `${value} ${unit}`;
+  const num = Number(value);
+  return Number.isNaN(num) ? String(value) : `${num} ${unit}`;
 }
 
 async function loadDataDetails(pageNo = 1) {
@@ -746,6 +831,48 @@ async function loadDataDetails(pageNo = 1) {
 
 function handleVehicleTableChange(pagination: any) {
   loadDataDetails(pagination.current);
+}
+
+/** 气象历史数据查询 */
+async function loadWeatherHistory(pageNo = 1) {
+  const device = selectedDevice.value;
+  if (!device || detailKind.value !== 'weather') return;
+
+  weatherHistoryLoading.value = true;
+  try {
+    weatherHistoryPage.pageNo = pageNo;
+    const [startTime, endTime] = weatherRange.value ?? [];
+    const data = await getWeatherHistoryApi({
+      clientId: device.simNo,
+      endTime: endTime || undefined,
+      pageNo,
+      pageSize: weatherHistoryPage.pageSize,
+      startTime: startTime || undefined,
+    });
+    weatherHistory.value = data.records ?? [];
+    weatherHistoryTotal.value = data.total ?? 0;
+  } catch (error: any) {
+    handleEquipError(error);
+    weatherHistory.value = [];
+    weatherHistoryTotal.value = 0;
+  } finally {
+    weatherHistoryLoading.value = false;
+  }
+}
+
+/** 气象历史数据：重置到第 1 页 */
+function handleWeatherHistorySearch() {
+  loadWeatherHistory(1);
+}
+
+/** 重置气象历史数据搜索条件 */
+function resetWeatherHistorySearch() {
+  weatherRange.value = null;
+  loadWeatherHistory(1);
+}
+
+function handleWeatherHistoryTableChange(pagination: any) {
+  loadWeatherHistory(pagination.current);
 }
 
 /** 车辆号查询：重置到第 1 页 */
@@ -1193,6 +1320,11 @@ function selectDevice(device: DeviceTreeItem) {
   vehicleRange.value = null;
   trendDimension.value = 1;
   weatherRecord.value = null;
+  // 气象历史数据：重置搜索条件
+  weatherHistory.value = [];
+  weatherHistoryTotal.value = 0;
+  weatherHistoryPage.pageNo = 1;
+  weatherRange.value = null;
   // 预警记录：重置搜索条件，设备默认选中当前设备
   alertRecords.value = [];
   alertTotal.value = 0;
@@ -1205,8 +1337,9 @@ function selectDevice(device: DeviceTreeItem) {
   alertTrendDimension.value = 1;
 
   if (detailKind.value === 'weather') {
-    // 气象设备不显示页签，直接加载数据详情
+    // 气象设备不显示页签，直接加载数据详情与历史数据
     loadDataDetails(1);
+    loadWeatherHistory(1);
   } else {
     // 海康设备不显示页签且只有实时视频；若当前停留在不存在的页签，回退到实时
     if (
@@ -1508,6 +1641,43 @@ window.addEventListener('pagehide', handlePageUnload);
                   <p>暂无气象监测数据</p>
                 </div>
               </Spin>
+
+              <!-- 历史气象数据 -->
+              <div class="mt-4 rounded border border-gray-200 bg-white p-4">
+                <div class="mb-3 flex flex-wrap items-center gap-3">
+                  <span class="text-sm font-medium text-gray-700">
+                    历史气象数据
+                  </span>
+                  <span class="text-sm text-gray-600">时间段：</span>
+                  <RangePicker
+                    v-model:value="weatherRange"
+                    allow-clear
+                    :disabled-date="disabledWeatherHistoryDate"
+                    show-time
+                    value-format="YYYY-MM-DD HH:mm:ss"
+                    :placeholder="['开始时间', '结束时间']"
+                  />
+                  <Button
+                    :loading="weatherHistoryLoading"
+                    type="primary"
+                    @click="handleWeatherHistorySearch"
+                  >
+                    <IconifyIcon class="mr-1" icon="mdi:magnify" />
+                    查询
+                  </Button>
+                  <Button @click="resetWeatherHistorySearch">重置</Button>
+                </div>
+                <Table
+                  :columns="weatherHistoryColumns"
+                  :data-source="weatherHistory"
+                  :loading="weatherHistoryLoading"
+                  :pagination="weatherHistoryPagination"
+                  :scroll="{ x: 960 }"
+                  row-key="id"
+                  size="middle"
+                  @change="handleWeatherHistoryTableChange"
+                />
+              </div>
             </div>
 
             <!-- 实时视频：海康设备无页签直接展示；其它厂商跟随 real 页签 -->

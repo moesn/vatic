@@ -227,7 +227,7 @@ export function getVehiclePassListApi(params: {
 /** 过车记录统计趋势接口响应 */
 export interface VehiclePassStatistics {
   total: number;
-  trend: Array<{ time: string; count: number }>;
+  trend: Array<{ count: number; time: string }>;
 }
 
 /** 过车记录统计趋势 */
@@ -290,7 +290,7 @@ export function getAlertListApi(params: {
 /** 预警记录统计趋势：按告警类型分组，key 为告警类型（超速/压线/逆行） */
 export type AlertStatistics = Record<
   string,
-  Array<{ aramType: string; total: number; captureTime: string }>
+  Array<{ aramType: string; captureTime: string; total: number }>
 >;
 
 /** 预警记录统计趋势 */
@@ -311,16 +311,26 @@ export function getAlertStatisticsApi(params: {
   );
 }
 
-/** 气象站监测数据（字段以后端实际推送为准） */
+/**
+ * 气象数据记录
+ *
+ * - 实时快照接口（/api/weather/list）字段为 snapshot_time 等
+ * - 历史数据接口（/api/weather/history/list，见 api.md）字段为 detected_time 等，
+ *   且指标值由后端原样透传厂商报文，可能为字符串，缺指标时补 0
+ */
 export interface WeatherStationRecord {
+  id?: number;
   station_id?: string;
   station_name?: string;
-  temperature?: number;
-  humidity?: number;
-  wind_speed?: number;
+  temperature?: number | string;
+  humidity?: number | string;
+  wind_speed?: number | string;
   weather?: string;
-  pressure?: number;
+  pressure?: number | string;
   wind_direction?: number | string;
+  /** 历史数据检测时间（ISO，逐笔） */
+  detected_time?: string;
+  /** 实时快照时间（ISO） */
   snapshot_time?: string;
 }
 
@@ -335,6 +345,37 @@ export function getWeatherListApi(params: {
   return equipRequest<WeatherStationRecord[]>(
     `/api/weather/list?${toQuery(params)}`,
   );
+}
+
+/** 气象历史数据分页结果（对应 api.md 的 Paged<WeatherHistoryRecord>） */
+export interface WeatherHistoryResult {
+  current?: number;
+  pages?: number;
+  records: WeatherStationRecord[];
+  size?: number;
+  total: number;
+}
+
+/**
+ * 气象历史数据（分页，/api/weather/history/list）
+ *
+ * 兼容两种返回结构：data 直接为数组（早期联调结构），
+ * 或 data 为 { records, total }（标准分页信封）
+ */
+export async function getWeatherHistoryApi(params: {
+  clientId?: string;
+  endTime?: string;
+  pageNo?: number;
+  pageSize?: number;
+  startTime?: string;
+}): Promise<WeatherHistoryResult> {
+  const data = await equipRequest<
+    WeatherHistoryResult | WeatherStationRecord[]
+  >(`/api/weather/history/list?${toQuery(params)}`);
+  if (Array.isArray(data)) {
+    return { records: data, total: data.length };
+  }
+  return { records: data?.records ?? [], total: data?.total ?? 0 };
 }
 
 /** 播放地址处理：相对地址补全中台联调地址前缀 */
