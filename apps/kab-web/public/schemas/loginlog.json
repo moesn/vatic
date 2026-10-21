@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/vatic/schema.json",
   "table": {
     "api": "/monitor/logininfor/list",
-    "title": "系统日志",
+    "title": "登录日志",
     "keyField": "id",
     "nameField": "operName",
     "export": true,
@@ -41,6 +41,11 @@
         "title": "操作系统",
         "field": "os",
         "minWidth": 200
+      },
+      {
+        "title": "操作",
+        "field": "msg",
+        "minWidth": 90
       },
       {
         "title": "操作结果",

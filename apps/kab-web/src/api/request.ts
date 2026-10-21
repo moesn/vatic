@@ -98,6 +98,9 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       // 当前mock接口返回的错误字段是 error 或者 message
       const responseData = error?.response?.data ?? {};
       const errorMessage = responseData?.error ?? responseData?.message ?? '';
+      // 兜底：请求报错时清掉全局 key 的 loading 提示，避免 loading 卡死只能刷新页面
+      message.destroy('is-form-submitting');
+      message.destroy('action_process_msg');
       // 如果没有错误信息，则会根据状态码进行提示
       message.error(errorMessage || msg);
     }),

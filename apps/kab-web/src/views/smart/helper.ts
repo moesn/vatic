@@ -42,6 +42,7 @@ export const parseTableColumns = (columns: any[]) => {
 
     switch (type) {
       case 'Image': {
+        item.width = 150;
         item.cellRender = {
           name: 'CellImage',
         };

@@ -10,12 +10,12 @@ import {
   Image,
   Input,
   message,
+  RangePicker,
   Select,
   Space,
   Table,
   Tag,
 } from 'ant-design-vue';
-import { RangePicker } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
 import {
@@ -32,7 +32,7 @@ const searchForm = reactive({
   location: '',
   level: undefined as string | undefined,
   status: undefined as string | undefined,
-  timeRange: null as null | [string, string],
+  timeRange: null as [string, string] | null,
 });
 
 const eventTypeOptions = ref<{ label: string; value: string }[]>([]);
@@ -105,14 +105,14 @@ const eventColumns: TableColumnsType<any> = [
   {
     title: '图片',
     dataIndex: 'imageUrl',
-    width: 90,
+    width: 150,
     customRender: ({ record }) => {
       const url = (record.imageUrl ?? '').replaceAll(/^`|`$/g, '');
       return url
         ? h(Image, {
             src: url,
-            width: 70,
-            height: 50,
+            width: 138,
+            height: 78,
             style: { objectFit: 'cover' },
           })
         : '-';
@@ -282,15 +282,21 @@ watch(
             riskEventsEntityList:
               DispatchModalApi.getData()?.riskEventsEntityList ?? [],
           };
-          dispatchApi(data).then(() => {
-            DispatchModalApi.close();
-            loadEventList();
-            message.success({
-              content: '派发成功',
-              duration: 2,
-              key: 'is-form-submitting',
+          dispatchApi(data)
+            .then(() => {
+              DispatchModalApi.close();
+              loadEventList();
+              message.success({
+                content: '派发成功',
+                duration: 2,
+                key: 'is-form-submitting',
+              });
+            })
+            .catch(() => {
+              // 报错时解锁弹窗并清掉 loading（错误提示由全局拦截器弹出），可修改后重试
+              DispatchModalApi.unlock();
+              message.destroy('is-form-submitting');
             });
-          });
         },
         schema: [
           {
@@ -353,15 +359,21 @@ watch(
           } else {
             data.pauseTo = Date.now() + pauseTo * 60 * 1000;
           }
-          disposeApi(data).then(() => {
-            DisposeModalApi.close();
-            loadEventList();
-            message.success({
-              content: '保存成功',
-              duration: 2,
-              key: 'is-form-submitting',
+          disposeApi(data)
+            .then(() => {
+              DisposeModalApi.close();
+              loadEventList();
+              message.success({
+                content: '保存成功',
+                duration: 2,
+                key: 'is-form-submitting',
+              });
+            })
+            .catch(() => {
+              // 报错时解锁弹窗并清掉 loading（错误提示由全局拦截器弹出），可修改后重试
+              DisposeModalApi.unlock();
+              message.destroy('is-form-submitting');
             });
-          });
         },
         schema: [
           {
@@ -545,6 +557,7 @@ onMounted(() => {
       <span class="text-sm text-gray-600">时间：</span>
       <RangePicker
         v-model:value="searchForm.timeRange"
+        allow-clear
         show-time
         value-format="YYYY-MM-DD HH:mm:ss"
         :placeholder="['开始时间', '结束时间']"

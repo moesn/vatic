@@ -10,7 +10,7 @@ import {
 } from '@vatic/common-ui';
 import { MapPin, Plus, SquarePen, Trash2 } from '@vatic/icons';
 
-import { Button, message } from 'ant-design-vue';
+import { Button } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
 
@@ -98,12 +98,13 @@ const [DisposeModal, DisposeModalApi] = useVaticModal({
 
 const [DisposeForm, DisposeFormApi] = useVaticForm({
   handleSubmit: (formData: Record<string, any>) => {
-    message.loading({
-      content: '保存中...',
-      duration: 0,
-      key: 'is-form-submitting',
-    });
-    DisposeModalApi.lock();
+    // 接口未接入（提交代码暂时注释），loading/lock 一并注释，否则点确定后必卡死
+    // message.loading({
+    //   content: '保存中...',
+    //   duration: 0,
+    //   key: 'is-form-submitting',
+    // });
+    // DisposeModalApi.lock();
     const { disposeMethod, pauseTo, remark } = formData;
     const data = {
       status: '未派发',
