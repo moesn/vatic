@@ -120,6 +120,9 @@ const eventColumns: TableColumnsType<any> = [
   },
   { title: '事件类型', dataIndex: 'eventType', width: 140 },
   { title: '事件位置', dataIndex: 'location', width: 160 },
+  { title: '首次发现时间', dataIndex: 'firstCaptureTime', width: 160 },
+  { title: '最后发现时间', dataIndex: 'lastCaptureTime', width: 160 },
+  { title: '发现次数', dataIndex: 'eventCount', width: 80 },
   {
     title: '级别',
     dataIndex: 'level',
@@ -155,13 +158,6 @@ const eventColumns: TableColumnsType<any> = [
       const staff = staffList.value.find((s) => s.value === record.assignedTo);
       return staff?.label ?? record.assignedTo;
     },
-  },
-  { title: '备注', dataIndex: 'remark', ellipsis: true },
-  {
-    title: '发现时间',
-    dataIndex: 'captureTime',
-    width: 170,
-    customRender: ({ record }) => formatTime(record.captureTime),
   },
   {
     title: '操作',
