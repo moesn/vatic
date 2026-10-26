@@ -705,7 +705,7 @@ const alertColumns = [
     align: 'center',
   },
   { title: '告警信息', key: 'alarmInfo', align: 'center' },
-  { title: '告警级别', key: 'alarmLevel', width: 90, align: 'center' },
+  // { title: '告警级别', key: 'alarmLevel', width: 90, align: 'center' },
   { title: '告警时间', key: 'createdTime', width: 170, align: 'center' },
   {
     title: '图片',
@@ -2107,14 +2107,14 @@ window.addEventListener('pagehide', handlePageUnload);
                   :options="alertTypeOptions"
                   placeholder="全部告警类型"
                 />
-                <span class="text-sm text-gray-600">告警级别：</span>
-                <Select
-                  v-model:value="alertLevel"
-                  allow-clear
-                  class="w-28"
-                  :options="alertLevelOptions"
-                  placeholder="全部级别"
-                />
+<!--                <span class="text-sm text-gray-600">告警级别：</span>-->
+<!--                <Select-->
+<!--                  v-model:value="alertLevel"-->
+<!--                  allow-clear-->
+<!--                  class="w-28"-->
+<!--                  :options="alertLevelOptions"-->
+<!--                  placeholder="全部级别"-->
+<!--                />-->
                 <span class="text-sm text-gray-600">时间段：</span>
                 <RangePicker
                   v-model:value="alertRange"

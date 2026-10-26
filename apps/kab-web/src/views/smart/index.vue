@@ -419,7 +419,7 @@ watch(
         custom: true,
         refresh: { code: 'query' },
         search: true,
-        zoom: true,
+        // zoom: true,
         export: table.export,
         import: table.import,
       },

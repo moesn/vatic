@@ -558,8 +558,8 @@ onMounted(() => {
         value-format="YYYY-MM-DD HH:mm:ss"
         :placeholder="['开始时间', '结束时间']"
       />
-      <Button type="primary" @click="handleEventSearch">查询</Button>
       <Button @click="resetEventSearch">重置</Button>
+      <Button type="primary" @click="handleEventSearch">查询</Button>
     </div>
 
     <!-- 表格操作栏 -->

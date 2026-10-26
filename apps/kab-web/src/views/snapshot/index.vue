@@ -2,7 +2,12 @@
 import type { VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { SystemRoleApi } from '#/api';
 
+import { nextTick, ref } from 'vue';
+
 import { Page } from '@vatic/common-ui';
+import { IconifyIcon } from '@vatic/icons';
+
+import { VaticButton } from '@vatic-core/shadcn-ui';
 
 import dayjs from 'dayjs';
 
@@ -10,7 +15,7 @@ import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import { getDictListApi } from '#/views/data';
 import { getSnapshotListApi, getSnapshotStatsApi } from '#/views/snapshot/data';
 
-const [Grid] = useVaticVxeGrid({
+const [Grid, GridApi] = useVaticVxeGrid({
   formOptions: {
     showCollapseButton: false,
     compact: true,
@@ -133,9 +138,10 @@ const [Grid] = useVaticVxeGrid({
     proxyConfig: {
       ajax: {
         query: async ({ page }, formValues) => {
-          getSnapshotStatsApi(formValues).then((res) =>
-            renderChart(res, formValues.dimension),
-          );
+          // 统计图默认折叠，展开时才拉取图表数据（避免隐藏容器初始化 echarts）
+          if (chartExpanded.value) {
+            loadSnapshotStats();
+          }
           return await getSnapshotListApi({
             pageNo: page.currentPage,
             pageSize: page.pageSize,
@@ -155,16 +161,52 @@ const [Grid] = useVaticVxeGrid({
       custom: true,
       export: true,
       search: true,
-      zoom: true,
+      // zoom: true,
     },
   } as VxeTableGridOptions<SystemRoleApi.SystemRole>,
 });
 
 let snapshotChart: any;
 
+/** 统计图展开状态：默认折叠 */
+const chartExpanded = ref(false);
+const chartLoading = ref(false);
+
+/** 当前列表搜索条件（图表与列表保持同一筛选） */
+function currentFormValues(): any {
+  return GridApi.formApi?.getLatestSubmissionValues?.() ?? {};
+}
+
+/** 加载统计图数据（仅在展开状态下调用） */
+async function loadSnapshotStats() {
+  if (!chartExpanded.value) return;
+  chartLoading.value = true;
+  try {
+    const formValues = currentFormValues();
+    const res = await getSnapshotStatsApi(formValues);
+    renderChart(res, formValues.dimension);
+  } catch {
+    // 错误提示由全局响应拦截器统一处理
+  } finally {
+    chartLoading.value = false;
+  }
+}
+
+/** 展开 / 折叠统计图 */
+async function toggleChart() {
+  chartExpanded.value = !chartExpanded.value;
+  if (chartExpanded.value) {
+    await nextTick();
+    loadSnapshotStats();
+    snapshotChart?.resize();
+  }
+}
+
 function renderChart(data: any, dimension: number) {
+  const el = document.querySelector('#snapshot-chart');
+  if (!el) return;
   snapshotChart?.dispose();
-  snapshotChart = echarts.init(document.querySelector('#snapshot-chart'));
+  snapshotChart = echarts.init(el);
   const legendData: any = Object.keys(data);
   const xData = [];
   if (legendData && legendData.length > 0) {
@@ -206,16 +248,43 @@ function renderChart(data: any, dimension: number) {
 }
 </script>
 <template>
-  <Page auto-content-height footer-class="footer">
-    <template #footer>
-      <div id="snapshot-chart" class="h-full w-full"></div>
-    </template>
-    <Grid table-title="车辆识别列表" class="h-2/3" />
+  <Page auto-content-height>
+    <div class="flex h-full flex-col">
+      <!-- 统计图（默认折叠） -->
+      <div class="mb-4 flex-none rounded-md bg-white shadow-sm">
+        <div
+          class="flex items-center justify-between border-b border-gray-100 px-4 py-2"
+        >
+          <span class="flex items-center text-sm font-medium text-gray-700">
+            <IconifyIcon class="text-primary mr-2" icon="mdi:chart-line" />
+            识别统计
+          </span>
+          <VaticButton size="sm" type="text" @click="toggleChart">
+            <IconifyIcon
+              :icon="chartExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'"
+            />
+            {{ chartExpanded ? '收起' : '展开' }}
+          </VaticButton>
+        </div>
+        <div v-if="chartExpanded" class="p-2">
+          <div
+            v-show="!chartLoading"
+            id="snapshot-chart"
+            class="h-56 w-full"
+          ></div>
+          <div
+            v-if="chartLoading"
+            class="flex h-56 w-full items-center justify-center text-gray-400"
+          >
+            加载中...
+          </div>
+        </div>
+      </div>
+
+      <!-- 车辆识别列表 -->
+      <div class="min-h-0 flex-1">
+        <Grid table-title="车辆识别列表" />
+      </div>
+    </div>
   </Page>
 </template>
-<style scoped lang="scss">
-:deep .footer {
-  height: calc(34% - 32px);
-  margin: 16px;
-}
-</style>
