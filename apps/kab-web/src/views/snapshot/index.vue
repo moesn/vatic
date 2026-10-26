@@ -197,6 +197,15 @@ const currentDimensionLabel = computed(
     dimensionOptions.find((d) => d.value === chartDimension.value)?.label ?? '',
 );
 
+/** 多系列配色（与 video 页统计图保持一致） */
+const chartSeriesColors = [
+  '#1890ff',
+  '#ff4d4f',
+  '#faad14',
+  '#52c41a',
+  '#722ed1',
+];
+
 function initChart() {
   const echarts = (window as any).echarts;
   if (!echarts || !chartRef.value) return;
@@ -239,7 +248,7 @@ function renderChart(data: any) {
       baseType = type;
     }
   });
-  const xData = (grouped[baseType] ?? []).map((d: any) =>
+  const times = (grouped[baseType] ?? []).map((d: any) =>
     formatStatTime(d.time ?? d.captureTime),
   );
 
@@ -252,33 +261,67 @@ function renderChart(data: any) {
   });
   chartTotal.value = total;
 
-  const option = {
+  // 构建多系列数据（样式参数与 video 页预警统计图保持一致）
+  const series = legendData.map((type, idx) => {
+    const color = chartSeriesColors[idx % chartSeriesColors.length];
+    const dataMap = new Map(
+      (grouped[type] ?? []).map((d: any) => [
+        formatStatTime(d.time ?? d.captureTime),
+        Number(d.total ?? 0),
+      ]),
+    );
+    return {
+      name: type,
+      type: 'line',
+      data: times.map((t) => dataMap.get(t) ?? 0),
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 6,
+      lineStyle: { width: 2, color },
+      itemStyle: { color },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            {
+              offset: 0,
+              color: color.replace(')', ',0.25)').replace('rgb', 'rgba'),
+            },
+            { offset: 1, color: 'rgba(255,255,255,0.01)' },
+          ],
+        },
+      },
+    };
+  });
+
+  snapshotChart.setOption({
+    tooltip: { trigger: 'axis' },
     legend: {
       data: legendData,
       top: 0,
+      textStyle: { color: '#666' },
     },
-    grid: {
-      left: 40,
-      right: 20,
-      top: 30,
-      bottom: 20,
-    },
+    grid: { left: 40, right: 20, top: 40, bottom: 30 },
     xAxis: {
       type: 'category',
-      data: xData,
-      axisLabel: { color: '#999', fontSize: 11, hideOverlap: true },
+      data: times,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#999', fontSize: 11 },
     },
     yAxis: {
       type: 'value',
-      interval: 1,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#999', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f0f0f0' } },
     },
-    series: legendData.map((type) => ({
-      name: type,
-      type: 'line',
-      data: (grouped[type] ?? []).map((d: any) => Number(d.total ?? 0)),
-    })),
-  };
-  snapshotChart.setOption(option, true);
+    series,
+  });
 }
 
 /** 当前列表搜索条件（图表与列表保持同一筛选） */
