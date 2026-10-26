@@ -2,13 +2,12 @@
 import type { VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { SystemRoleApi } from '#/api';
 
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { Page } from '@vatic/common-ui';
 import { IconifyIcon } from '@vatic/icons';
 
-import { VaticButton } from '@vatic-core/shadcn-ui';
-
+import { Spin } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
@@ -166,48 +165,28 @@ const [Grid, GridApi] = useVaticVxeGrid({
   } as VxeTableGridOptions<SystemRoleApi.SystemRole>,
 });
 
-let snapshotChart: any;
-
-/** 统计图展开状态：默认折叠 */
-const chartExpanded = ref(false);
+// region 识别统计图
+const chartRef = ref<HTMLElement | null>(null);
+let snapshotChart: any = null;
 const chartLoading = ref(false);
+/** 统计图展开状态：默认收起，展开后才加载数据 */
+const chartExpanded = ref(false);
+/** 统计图总条数（各车辆类型合计） */
+const chartTotal = ref(0);
+/** 是否无统计数据 */
+const chartEmpty = computed(() => chartTotal.value === 0);
 
-/** 当前列表搜索条件（图表与列表保持同一筛选） */
-function currentFormValues(): any {
-  return GridApi.formApi?.getLatestSubmissionValues?.() ?? {};
-}
-
-/** 加载统计图数据（仅在展开状态下调用） */
-async function loadSnapshotStats() {
-  if (!chartExpanded.value) return;
-  chartLoading.value = true;
-  try {
-    const formValues = currentFormValues();
-    const res = await getSnapshotStatsApi(formValues);
-    renderChart(res, formValues.dimension);
-  } catch {
-    // 错误提示由全局响应拦截器统一处理
-  } finally {
-    chartLoading.value = false;
-  }
-}
-
-/** 展开 / 折叠统计图 */
-async function toggleChart() {
-  chartExpanded.value = !chartExpanded.value;
-  if (chartExpanded.value) {
-    await nextTick();
-    loadSnapshotStats();
-    snapshotChart?.resize();
-  }
+function initChart() {
+  const echarts = (window as any).echarts;
+  if (!echarts || !chartRef.value) return;
+  snapshotChart = echarts.init(chartRef.value);
 }
 
 function renderChart(data: any, dimension: number) {
-  const el = document.querySelector('#snapshot-chart');
-  if (!el) return;
-  snapshotChart?.dispose();
-  snapshotChart = echarts.init(el);
-  const legendData: any = Object.keys(data);
+  if (!snapshotChart) initChart();
+  if (!snapshotChart) return;
+
+  const legendData: any = Object.keys(data ?? {});
   const xData = [];
   if (legendData && legendData.length > 0) {
     xData.push(
@@ -216,6 +195,14 @@ function renderChart(data: any, dimension: number) {
       ),
     );
   }
+
+  // 各类型合计，用于标题栏展示与空数据判断
+  chartTotal.value = legendData.reduce(
+    (sum: number, lgd: string) =>
+      sum +
+      (data[lgd] ?? []).reduce((s: number, d: any) => s + (d.total ?? 0), 0),
+    0,
+  );
 
   const option = {
     legend: {
@@ -246,39 +233,91 @@ function renderChart(data: any, dimension: number) {
   };
   snapshotChart.setOption(option, true);
 }
+
+/** 当前列表搜索条件（图表与列表保持同一筛选） */
+function currentFormValues(): any {
+  return GridApi.formApi?.getLatestSubmissionValues?.() ?? {};
+}
+
+/** 加载统计图数据（仅在展开状态下调用） */
+async function loadSnapshotStats() {
+  // 图表收起时不请求，展开时再加载
+  if (!chartExpanded.value) return;
+
+  chartLoading.value = true;
+  try {
+    const formValues = currentFormValues();
+    const data = await getSnapshotStatsApi(formValues);
+    renderChart(data, formValues.dimension);
+  } catch {
+    // 错误提示由全局响应拦截器统一处理
+  } finally {
+    chartLoading.value = false;
+  }
+}
+
+/** 展开/收起统计图，展开后重算图表尺寸并加载数据 */
+async function toggleChart() {
+  chartExpanded.value = !chartExpanded.value;
+  if (chartExpanded.value) {
+    await nextTick();
+    snapshotChart?.resize();
+    loadSnapshotStats();
+  }
+}
+
+function handleChartResize() {
+  snapshotChart?.resize();
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleChartResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleChartResize);
+  snapshotChart?.dispose();
+});
+// endregion
 </script>
 <template>
   <Page auto-content-height>
     <div class="flex h-full flex-col">
-      <!-- 统计图（默认折叠） -->
-      <div class="mb-4 flex-none rounded-md bg-white shadow-sm">
+      <!-- 识别统计图：默认收起，点击标题展开 -->
+      <div class="mb-4 flex-none rounded border border-gray-200 bg-white p-4">
         <div
-          class="flex items-center justify-between border-b border-gray-100 px-4 py-2"
+          class="flex cursor-pointer select-none items-center justify-between"
+          @click="toggleChart"
         >
-          <span class="flex items-center text-sm font-medium text-gray-700">
-            <IconifyIcon class="text-primary mr-2" icon="mdi:chart-line" />
-            识别统计
-          </span>
-          <VaticButton size="sm" type="text" @click="toggleChart">
-            <IconifyIcon
-              :icon="chartExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'"
-            />
-            {{ chartExpanded ? '收起' : '展开' }}
-          </VaticButton>
-        </div>
-        <div v-if="chartExpanded" class="p-2">
-          <div
-            v-show="!chartLoading"
-            id="snapshot-chart"
-            class="h-56 w-full"
-          ></div>
-          <div
-            v-if="chartLoading"
-            class="flex h-56 w-full items-center justify-center text-gray-400"
+          <span
+            class="flex items-center gap-2 text-sm font-medium text-gray-700"
           >
-            加载中...
+            <IconifyIcon
+              class="text-primary"
+              icon="mdi:chart-timeline-variant"
+            />
+            识别统计
+            <IconifyIcon
+              class="text-gray-400 transition-transform"
+              :class="chartExpanded ? 'rotate-180' : ''"
+              icon="mdi:chevron-down"
+            />
+          </span>
+          <div class="flex items-center gap-3" @click.stop>
+            <span class="text-sm text-gray-500">
+              共 {{ chartTotal }} 条识别记录
+            </span>
           </div>
         </div>
+        <Spin v-show="chartExpanded" :spinning="chartLoading">
+          <div ref="chartRef" class="h-[250px] w-full"></div>
+          <div
+            v-if="!chartLoading && chartEmpty"
+            class="py-8 text-center text-sm text-gray-400"
+          >
+            暂无统计数据
+          </div>
+        </Spin>
       </div>
 
       <!-- 车辆识别列表 -->
