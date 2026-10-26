@@ -2,12 +2,19 @@
 import type { VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { SystemRoleApi } from '#/api';
 
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
 
 import { Page } from '@vatic/common-ui';
 import { IconifyIcon } from '@vatic/icons';
 
-import { Spin } from 'ant-design-vue';
+import { Button, Spin } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
@@ -176,33 +183,74 @@ const chartTotal = ref(0);
 /** 是否无统计数据 */
 const chartEmpty = computed(() => chartTotal.value === 0);
 
+/** 统计维度：当天 / 近一周 / 近一月 */
+const chartDimension = ref<number>(1);
+const dimensionOptions = [
+  { label: '当天', value: 1 },
+  { label: '近一周', value: 2 },
+  { label: '近一月', value: 3 },
+];
+
+/** 当前维度文案，用于标题展示 */
+const currentDimensionLabel = computed(
+  () =>
+    dimensionOptions.find((d) => d.value === chartDimension.value)?.label ?? '',
+);
+
 function initChart() {
   const echarts = (window as any).echarts;
   if (!echarts || !chartRef.value) return;
   snapshotChart = echarts.init(chartRef.value);
 }
 
-function renderChart(data: any, dimension: number) {
+/**
+ * 统计时间格式化（后端 time 字段随维度变化）：
+ * - 当天维度：纯时间 "00:00" / "00:00:00"
+ * - 近一周 / 近一月：日期 "2026-10-20"
+ * - 按小时维度：日期时间 "2026-10-20 14:00:00"（或 T 分隔）
+ * 统一压缩为 "00:00" / "10-20" / "10-20 14:00"，避免 x 轴标签过长
+ */
+function formatStatTime(value?: null | string): string {
+  if (!value) return '';
+  const s = String(value).replace('T', ' ').trim();
+  // 纯时间（不含日期）：当天维度，去掉秒
+  if (!s.includes('-')) {
+    return s.length > 5 ? s.slice(0, 5) : s;
+  }
+  // 含日期：取月日，带时分秒的补上时分
+  return s.length > 10 ? s.slice(5, 16) : s.slice(5);
+}
+
+function renderChart(data: any) {
   if (!snapshotChart) initChart();
   if (!snapshotChart) return;
 
-  const legendData: any = Object.keys(data ?? {});
-  const xData = [];
-  if (legendData && legendData.length > 0) {
-    xData.push(
-      ...data[legendData[0]].map((d: any) =>
-        dimension === 1 ? d.captureTime.slice(5) : d.captureTime.slice(0, 7),
-      ),
-    );
-  }
+  const grouped: Record<string, any[]> = data ?? {};
+
+  // 只剔除完全没有数据的类型，其余按后端返回原样绘制
+  const legendData = Object.keys(grouped).filter(
+    (type) => (grouped[type] ?? []).length > 0,
+  );
+
+  // 以数据条数最多的系列作为 x 轴基准（各车型统计网格一致）
+  let baseType = legendData[0] ?? '';
+  legendData.forEach((type) => {
+    if ((grouped[type] ?? []).length > (grouped[baseType] ?? []).length) {
+      baseType = type;
+    }
+  });
+  const xData = (grouped[baseType] ?? []).map((d: any) =>
+    formatStatTime(d.time ?? d.captureTime),
+  );
 
   // 各类型合计，用于标题栏展示与空数据判断
-  chartTotal.value = legendData.reduce(
-    (sum: number, lgd: string) =>
-      sum +
-      (data[lgd] ?? []).reduce((s: number, d: any) => s + (d.total ?? 0), 0),
-    0,
-  );
+  let total = 0;
+  legendData.forEach((type) => {
+    (grouped[type] ?? []).forEach((d: any) => {
+      total += Number(d.total ?? 0);
+    });
+  });
+  chartTotal.value = total;
 
   const option = {
     legend: {
@@ -218,18 +266,17 @@ function renderChart(data: any, dimension: number) {
     xAxis: {
       type: 'category',
       data: xData,
+      axisLabel: { color: '#999', fontSize: 11, hideOverlap: true },
     },
     yAxis: {
       type: 'value',
       interval: 1,
     },
-    series: legendData.map((lgd: string) => {
-      return {
-        name: lgd,
-        type: 'line',
-        data: data[lgd].map((d: any) => d.total),
-      };
-    }),
+    series: legendData.map((type) => ({
+      name: type,
+      type: 'line',
+      data: (grouped[type] ?? []).map((d: any) => Number(d.total ?? 0)),
+    })),
   };
   snapshotChart.setOption(option, true);
 }
@@ -247,14 +294,22 @@ async function loadSnapshotStats() {
   chartLoading.value = true;
   try {
     const formValues = currentFormValues();
-    const data = await getSnapshotStatsApi(formValues);
-    renderChart(data, formValues.dimension);
+    // 维度以图表头部的切换按钮为准，覆盖搜索表单中的维度
+    const data = await getSnapshotStatsApi({
+      ...formValues,
+      dimension: chartDimension.value,
+    });
+    renderChart(data);
   } catch {
     // 错误提示由全局响应拦截器统一处理
   } finally {
     chartLoading.value = false;
   }
 }
+
+watch(chartDimension, () => {
+  loadSnapshotStats();
+});
 
 /** 展开/收起统计图，展开后重算图表尺寸并加载数据 */
 async function toggleChart() {
@@ -296,7 +351,7 @@ onBeforeUnmount(() => {
               class="text-primary"
               icon="mdi:chart-timeline-variant"
             />
-            识别统计
+            识别统计（{{ currentDimensionLabel }}）
             <IconifyIcon
               class="text-gray-400 transition-transform"
               :class="chartExpanded ? 'rotate-180' : ''"
@@ -307,6 +362,17 @@ onBeforeUnmount(() => {
             <span class="text-sm text-gray-500">
               共 {{ chartTotal }} 条识别记录
             </span>
+            <div class="flex items-center gap-1">
+              <Button
+                v-for="opt in dimensionOptions"
+                :key="opt.value"
+                size="small"
+                :type="chartDimension === opt.value ? 'primary' : 'default'"
+                @click="chartDimension = opt.value"
+              >
+                {{ opt.label }}
+              </Button>
+            </div>
           </div>
         </div>
         <Spin v-show="chartExpanded" :spinning="chartLoading">
