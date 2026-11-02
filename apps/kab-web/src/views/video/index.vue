@@ -951,25 +951,18 @@ function handleWeatherHistoryTableChange(pagination: any) {
   loadWeatherHistory(pagination.current);
 }
 
-/** 车辆号查询：重置到第 1 页 */
+/** 车辆号/条件查询：仅查询表格，不触发上方趋势图查询 */
 function handleVehicleSearch() {
   loadDataDetails(1);
-  loadVehiclePassStatistics();
 }
 
-/** 重置数据详情搜索条件（保留设备 equipmentNo，时间段恢复默认近一周） */
+/** 重置数据详情搜索条件（保留设备 equipmentNo，时间段恢复当前维度默认区间；不影响趋势图） */
 function resetVehicleSearch() {
   vehicleCarNumber.value = '';
   vehicleType.value = undefined;
   vehiclePlateColor.value = undefined;
-  vehicleRange.value = rangeByDimension(2);
-  if (trendDimension.value !== 2) {
-    // 维度恢复默认近一周，watch 中由 suppress 标记避免重复查询
-    suppressTrendSync = true;
-    trendDimension.value = 2;
-  }
+  vehicleRange.value = rangeByDimension(trendDimension.value);
   loadDataDetails(1);
-  loadVehiclePassStatistics();
 }
 
 // region 数据详情统计趋势
@@ -1095,7 +1088,7 @@ function handleTrendResize() {
 /**
  * 切换趋势图时间维度：表格时间段联动为对应默认区间并触发表格查询
  * （反向：手动修改表格时间段不联动趋势图维度）
- * suppressTrendSync：重置/切设备时恢复默认维度，避免 watch 重复查询
+ * suppressTrendSync：切设备时恢复默认维度，避免 watch 重复查询
  */
 let suppressTrendSync = false;
 
@@ -1196,24 +1189,18 @@ async function loadAlertRecords(pageNo = 1) {
   }
 }
 
+/** 条件查询：仅查询表格，不触发上方趋势图查询 */
 function handleAlertSearch() {
   loadAlertRecords(1);
-  loadAlertStatistics();
 }
 
-/** 重置搜索条件（保留设备 equipmentNo，时间段恢复默认近一周） */
+/** 重置搜索条件（保留设备 equipmentNo，时间段恢复当前维度默认区间；不影响趋势图） */
 function resetAlertSearch() {
   alertCarNumber.value = '';
   alertParamType.value = undefined;
   alertLevel.value = undefined;
-  alertRange.value = rangeByDimension(2);
-  if (alertTrendDimension.value !== 2) {
-    // 维度恢复默认近一周，watch 中由 suppress 标记避免重复查询
-    suppressAlertTrendSync = true;
-    alertTrendDimension.value = 2;
-  }
+  alertRange.value = rangeByDimension(alertTrendDimension.value);
   loadAlertRecords(1);
-  loadAlertStatistics();
 }
 
 function handleAlertTableChange(pagination: any) {
@@ -1377,7 +1364,7 @@ async function loadAlertStatistics() {
 /**
  * 切换预警趋势图时间维度：表格时间段联动为对应默认区间并触发表格查询
  * （反向：手动修改表格时间段不联动趋势图维度）
- * suppressAlertTrendSync：重置/切设备时恢复默认维度，避免 watch 重复查询
+ * suppressAlertTrendSync：切设备时恢复默认维度，避免 watch 重复查询
  */
 let suppressAlertTrendSync = false;
 

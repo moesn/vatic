@@ -481,14 +481,37 @@ function openResetPassword(row: Recordable<any>) {
   resetPasswordVisible.value = true;
 }
 
+/**
+ * 密码复杂度校验：至少 6 位，且必须包含大写字母、小写字母、数字、特殊符号
+ */
+function validatePassword(password: string): string | null {
+  if (!password || password.length < 6) {
+    return '请输入至少 6 位的新密码';
+  }
+  if (!/[A-Z]/.test(password)) {
+    return '密码必须包含大写字母';
+  }
+  if (!/[a-z]/.test(password)) {
+    return '密码必须包含小写字母';
+  }
+  if (!/[0-9]/.test(password)) {
+    return '密码必须包含数字';
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return '密码必须包含特殊符号';
+  }
+  return null;
+}
+
 /** 提交重置密码：PATCH /api/user/resetPassword */
 async function submitResetPassword() {
   const row = resetPasswordRow.value;
   const password = resetPasswordValue.value;
   const confirmPassword = resetPasswordConfirmValue.value;
   if (!row) return;
-  if (!password || password.length < 6) {
-    message.warning('请输入至少 6 位的新密码');
+  const error = validatePassword(password);
+  if (error) {
+    message.warning(error);
     return;
   }
   if (password !== confirmPassword) {
@@ -570,7 +593,7 @@ async function submitResetPassword() {
           v-model:value="resetPasswordValue"
           :type="resetPasswordShow ? 'text' : 'password'"
           class="mb-3"
-          placeholder="请输入新密码（至少 6 位）"
+          placeholder="请输入新密码（至少 6 位，含大小写字母、数字、特殊符号）"
         >
           <template #suffix>
             <Button
