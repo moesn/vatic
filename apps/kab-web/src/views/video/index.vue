@@ -72,15 +72,15 @@ type TabKey = 'alert' | 'data' | 'playback' | 'real';
 const visibleTabs = computed<Array<{ key: TabKey; label: string }>>(() => {
   if (detailKind.value === 'vehicle') {
     return [
-      { key: 'real', label: '实时视频' },
-      { key: 'playback', label: '回放视频' },
       { key: 'data', label: '数据详情' },
       { key: 'alert', label: '预警记录' },
+      { key: 'real', label: '实时视频' },
+      { key: 'playback', label: '回放视频' },
     ];
   }
   return [{ key: 'real', label: '实时视频' }];
 });
-const activeTab = ref<TabKey>('real');
+const activeTab = ref<TabKey>('data');
 // endregion
 
 // region 左侧设备查看
@@ -281,6 +281,7 @@ function destroyLivePlayer() {
 
 async function playLive() {
   destroyLivePlayer();
+  needManualPlay.value = false;
   liveTip.value = '';
   const device = selectedDevice.value;
   if (!device) return;
@@ -301,6 +302,7 @@ async function playLive() {
     const video = liveVideoRef.value;
     if (!video) return;
     liveCleanup = await attachStream(video, resolveStreamUrl(streamUrl));
+    startMaxPlayTimer();
   } catch (error: any) {
     handleEquipError(error);
     liveTip.value = `【${device.deviceName}】实时视频加载失败`;
@@ -383,6 +385,8 @@ function resetVideoIdleTimer() {
   window.clearTimeout(idleTimer);
   idleTimer = window.setTimeout(() => {
     if (!isAnyVideoPlaying()) return;
+    needManualPlay.value = true;
+    stopMaxPlayTimer();
     if (playbackCleanup) {
       destroyPlaybackPlayer();
       playbackStatus.value = '长时间无操作，回放已自动断开';
@@ -418,9 +422,64 @@ function clearVideoIdleWatch() {
     window.removeEventListener(event, resetVideoIdleTimer);
   });
   window.clearTimeout(idleTimer);
+  // 页面失活即停止播放，连续播放计时一并清理
+  stopMaxPlayTimer();
 }
 
 startVideoIdleWatch();
+// endregion
+
+// region 连续播放超时（5 分钟）：与操作无关，播满时长自动断开，需手动点击播放继续
+const MAX_PLAY_MS = 5 * 60 * 1000;
+let maxPlayTimer: number | undefined;
+
+/** 播放开始时启动连续播放计时 */
+function startMaxPlayTimer() {
+  stopMaxPlayTimer();
+  maxPlayTimer = window.setTimeout(() => {
+    maxPlayTimer = undefined;
+    if (!isAnyVideoPlaying()) return;
+    needManualPlay.value = true;
+    stopMaxPlayTimer();
+    if (playbackCleanup && playbackStreamReady.value) {
+      destroyPlaybackPlayer();
+      playbackStatus.value =
+        '连续播放已达 5 分钟，已自动断开，请点击回放片段继续播放';
+    }
+    if (liveCleanup || hikLive.ready.value) {
+      destroyLivePlayer();
+      liveTip.value = '连续播放已达 5 分钟，已自动断开，请点击播放继续';
+    }
+  }, MAX_PLAY_MS);
+}
+
+function stopMaxPlayTimer() {
+  window.clearTimeout(maxPlayTimer);
+  maxPlayTimer = undefined;
+}
+
+/** 自动断开后需手动点击播放才能继续（显示播放按钮） */
+const needManualPlay = ref(false);
+
+/** 手动播放：实况继续播放（海康走插件预览，其它厂商重拉流） */
+function manualPlayLive() {
+  needManualPlay.value = false;
+  liveTip.value = '';
+  if (isHikvision.value) {
+    const serial = hikiotDeviceSerial.value;
+    if (serial) hikLive.playPreview(serial);
+  } else {
+    playLive();
+  }
+}
+
+// 海康画面就绪：开始连续播放计时，并清除手动播放标记
+watch(hikLive.ready, (ready) => {
+  if (ready) {
+    needManualPlay.value = false;
+    startMaxPlayTimer();
+  }
+});
 // endregion
 
 async function queryPlayback() {
@@ -490,6 +549,7 @@ async function playRecording(recording: RecordingSegment) {
     playbackStatus.value = '';
     playbackCleanup = await attachStream(video, resolveStreamUrl(streamUrl));
     playbackStreamReady.value = true;
+    startMaxPlayTimer();
   } catch (error: any) {
     handleEquipError(error);
     playbackStatus.value = '回放播放失败';
@@ -502,12 +562,28 @@ const detailLoading = ref(false);
 const vehicleRecords = ref<VehiclePassRecord[]>([]);
 const vehicleTotal = ref(0);
 const vehiclePage = reactive({ pageNo: 1, pageSize: 10 });
-/** 数据详情搜索条件 */
+/**
+ * 按趋势图维度生成表格时间段默认区间：
+ * 1 当天 / 2 近一周 / 3 近一个月（均含今天，精确到秒）
+ */
+function rangeByDimension(dimension: number): [string, string] {
+  const fmt = 'YYYY-MM-DD HH:mm:ss';
+  const end = dayjs().endOf('day').format(fmt);
+  if (dimension === 2) {
+    return [dayjs().subtract(6, 'day').startOf('day').format(fmt), end];
+  }
+  if (dimension === 3) {
+    return [dayjs().subtract(1, 'month').startOf('day').format(fmt), end];
+  }
+  return [dayjs().startOf('day').format(fmt), end];
+}
+
+/** 数据详情搜索条件（时间段默认近一周，与趋势图默认维度一致） */
 const vehicleEquipmentNo = ref<string | undefined>(undefined);
 const vehicleCarNumber = ref('');
 const vehicleType = ref<number | undefined>(undefined);
 const vehiclePlateColor = ref<number | undefined>(undefined);
-const vehicleRange = ref<any>(null);
+const vehicleRange = ref<any>(rangeByDimension(2));
 
 /** 车辆类型选项（与后端设备识别字典对齐） */
 const vehicleTypeOptions = [
@@ -881,15 +957,17 @@ function handleVehicleSearch() {
   loadVehiclePassStatistics();
 }
 
-/** 重置数据详情搜索条件（设备恢复为当前选中设备） */
+/** 重置数据详情搜索条件（保留设备 equipmentNo，时间段恢复默认近一周） */
 function resetVehicleSearch() {
-  const device = selectedDevice.value;
-  vehicleEquipmentNo.value = device?.simNo;
   vehicleCarNumber.value = '';
   vehicleType.value = undefined;
   vehiclePlateColor.value = undefined;
-  vehicleRange.value = null;
-  trendDimension.value = 1;
+  vehicleRange.value = rangeByDimension(2);
+  if (trendDimension.value !== 2) {
+    // 维度恢复默认近一周，watch 中由 suppress 标记避免重复查询
+    suppressTrendSync = true;
+    trendDimension.value = 2;
+  }
   loadDataDetails(1);
   loadVehiclePassStatistics();
 }
@@ -898,7 +976,7 @@ function resetVehicleSearch() {
 const trendChartRef = ref<HTMLElement | null>(null);
 let trendChart: any = null;
 const trendLoading = ref(false);
-const trendDimension = ref<number>(1);
+const trendDimension = ref<number>(2);
 const trendData = ref<{
   total: number;
   trend: Array<{ count: number; time: string }>;
@@ -971,8 +1049,8 @@ function renderTrendChart() {
   });
 }
 
-/** 过车统计图表是否展开（默认收起，展开时才加载数据） */
-const trendExpanded = ref(false);
+/** 过车统计图表是否展开（默认展开，收起时不加载数据） */
+const trendExpanded = ref(true);
 
 /** 展开/收起过车统计图表，展开后重算图表尺寸并加载数据 */
 async function toggleTrendExpanded() {
@@ -1014,7 +1092,20 @@ function handleTrendResize() {
   alertTrendChart?.resize();
 }
 
-watch(trendDimension, () => {
+/**
+ * 切换趋势图时间维度：表格时间段联动为对应默认区间并触发表格查询
+ * （反向：手动修改表格时间段不联动趋势图维度）
+ * suppressTrendSync：重置/切设备时恢复默认维度，避免 watch 重复查询
+ */
+let suppressTrendSync = false;
+
+watch(trendDimension, (dimension) => {
+  if (suppressTrendSync) {
+    suppressTrendSync = false;
+    return;
+  }
+  vehicleRange.value = rangeByDimension(dimension);
+  loadDataDetails(1);
   loadVehiclePassStatistics();
 });
 // endregion
@@ -1024,12 +1115,12 @@ const alertLoading = ref(false);
 const alertRecords = ref<AlertRecord[]>([]);
 const alertTotal = ref(0);
 const alertPage = reactive({ pageNo: 1, pageSize: 10 });
-/** 搜索条件：设备（弯道设备下拉）、车牌、告警类型、告警级别、时间范围 */
+/** 搜索条件：设备（弯道设备下拉）、车牌、告警类型、告警级别、时间范围（默认近一周） */
 const alertEquipmentNo = ref<string | undefined>();
 const alertCarNumber = ref('');
 const alertParamType = ref<string | undefined>();
 const alertLevel = ref<string | undefined>();
-const alertRange = ref<[string, string] | null>(null);
+const alertRange = ref<[string, string] | null>(rangeByDimension(2));
 
 /** 设备名称搜索下拉选项：来自弯道监控分组下的设备 */
 const curveDeviceOptions = computed(() => {
@@ -1110,14 +1201,17 @@ function handleAlertSearch() {
   loadAlertStatistics();
 }
 
-/** 重置搜索条件（设备恢复为当前选中设备） */
+/** 重置搜索条件（保留设备 equipmentNo，时间段恢复默认近一周） */
 function resetAlertSearch() {
-  alertEquipmentNo.value = '';
   alertCarNumber.value = '';
   alertParamType.value = undefined;
   alertLevel.value = undefined;
-  alertRange.value = null;
-  alertTrendDimension.value = 1;
+  alertRange.value = rangeByDimension(2);
+  if (alertTrendDimension.value !== 2) {
+    // 维度恢复默认近一周，watch 中由 suppress 标记避免重复查询
+    suppressAlertTrendSync = true;
+    alertTrendDimension.value = 2;
+  }
   loadAlertRecords(1);
   loadAlertStatistics();
 }
@@ -1131,7 +1225,7 @@ function handleAlertTableChange(pagination: any) {
 const alertTrendChartRef = ref<HTMLElement | null>(null);
 let alertTrendChart: any = null;
 const alertTrendLoading = ref(false);
-const alertTrendDimension = ref<number>(1);
+const alertTrendDimension = ref<number>(2);
 /** 按告警类型分组的趋势数据：{ "超速": [{ aramType, total, captureTime }], ... } */
 const alertTrendData = ref<
   Record<
@@ -1245,8 +1339,8 @@ function renderAlertTrendChart() {
   });
 }
 
-/** 预警统计图表是否展开（默认收起，展开时才加载数据） */
-const alertTrendExpanded = ref(false);
+/** 预警统计图表是否展开（默认展开，收起时不加载数据） */
+const alertTrendExpanded = ref(true);
 
 /** 展开/收起预警统计图表，展开后重算图表尺寸并加载数据 */
 async function toggleAlertTrendExpanded() {
@@ -1280,7 +1374,20 @@ async function loadAlertStatistics() {
   }
 }
 
-watch(alertTrendDimension, () => {
+/**
+ * 切换预警趋势图时间维度：表格时间段联动为对应默认区间并触发表格查询
+ * （反向：手动修改表格时间段不联动趋势图维度）
+ * suppressAlertTrendSync：重置/切设备时恢复默认维度，避免 watch 重复查询
+ */
+let suppressAlertTrendSync = false;
+
+watch(alertTrendDimension, (dimension) => {
+  if (suppressAlertTrendSync) {
+    suppressAlertTrendSync = false;
+    return;
+  }
+  alertRange.value = rangeByDimension(dimension);
+  loadAlertRecords(1);
   loadAlertStatistics();
 });
 // endregion
@@ -1317,8 +1424,11 @@ function selectDevice(device: DeviceTreeItem) {
   vehicleCarNumber.value = '';
   vehicleType.value = undefined;
   vehiclePlateColor.value = undefined;
-  vehicleRange.value = null;
-  trendDimension.value = 1;
+  vehicleRange.value = rangeByDimension(2);
+  if (trendDimension.value !== 2) {
+    suppressTrendSync = true;
+    trendDimension.value = 2;
+  }
   weatherRecord.value = null;
   // 气象历史数据：重置搜索条件
   weatherHistory.value = [];
@@ -1333,8 +1443,11 @@ function selectDevice(device: DeviceTreeItem) {
   alertCarNumber.value = '';
   alertParamType.value = undefined;
   alertLevel.value = undefined;
-  alertRange.value = null;
-  alertTrendDimension.value = 1;
+  alertRange.value = rangeByDimension(2);
+  if (alertTrendDimension.value !== 2) {
+    suppressAlertTrendSync = true;
+    alertTrendDimension.value = 2;
+  }
 
   if (detailKind.value === 'weather') {
     // 气象设备不显示页签，直接加载数据详情与历史数据
@@ -1697,6 +1810,17 @@ window.addEventListener('pagehide', handlePageUnload);
                   正在加载海康实时视频...
                 </div>
                 <div
+                  v-else-if="needManualPlay"
+                  class="relative z-10 flex flex-col items-center gap-3"
+                >
+                  <span v-if="liveTip" class="text-orange-400">
+                    {{ liveTip }}
+                  </span>
+                  <Button type="primary" @click="manualPlayLive">
+                    点击播放
+                  </Button>
+                </div>
+                <div
                   v-else-if="hikLive.error"
                   class="relative z-10 text-orange-400"
                 >
@@ -1806,6 +1930,17 @@ window.addEventListener('pagehide', handlePageUnload);
                 ></video>
                 <div v-if="!selectedDevice">请选择左侧设备查看实时视频</div>
                 <div v-else-if="liveLoading">正在加载实时视频...</div>
+                <div
+                  v-else-if="needManualPlay"
+                  class="flex flex-col items-center gap-3"
+                >
+                  <div v-if="liveTip" class="text-orange-400">
+                    {{ liveTip }}
+                  </div>
+                  <Button type="primary" @click="manualPlayLive">
+                    点击播放
+                  </Button>
+                </div>
                 <div v-else-if="liveTip">{{ liveTip }}</div>
               </div>
             </div>
@@ -2107,14 +2242,14 @@ window.addEventListener('pagehide', handlePageUnload);
                   :options="alertTypeOptions"
                   placeholder="全部告警类型"
                 />
-<!--                <span class="text-sm text-gray-600">告警级别：</span>-->
-<!--                <Select-->
-<!--                  v-model:value="alertLevel"-->
-<!--                  allow-clear-->
-<!--                  class="w-28"-->
-<!--                  :options="alertLevelOptions"-->
-<!--                  placeholder="全部级别"-->
-<!--                />-->
+                <!--                <span class="text-sm text-gray-600">告警级别：</span>-->
+                <!--                <Select-->
+                <!--                  v-model:value="alertLevel"-->
+                <!--                  allow-clear-->
+                <!--                  class="w-28"-->
+                <!--                  :options="alertLevelOptions"-->
+                <!--                  placeholder="全部级别"-->
+                <!--                />-->
                 <span class="text-sm text-gray-600">时间段：</span>
                 <RangePicker
                   v-model:value="alertRange"
