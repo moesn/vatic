@@ -61,11 +61,11 @@ const [QueryForm] = useVaticForm({
 
 let map: any;
 
-function loadHuaXi() {
+function loadGuiyang() {
   const boundary = new BMapGL.Boundary();
-  boundary.get('花溪区', (rs: any) => {
+  boundary.get('贵阳市', (rs: any) => {
     if (rs.boundaries.length === 0) {
-      setTimeout(() => loadHuaXi(), 500);
+      setTimeout(() => loadGuiyang(), 500);
     } else {
       const allPts: any[] = [];
       for (let i = 0; i < rs.boundaries.length; i++) {
@@ -112,10 +112,10 @@ function loadHuaXi() {
         map.enableScrollWheelZoom();
       }
 
-      // 视野适配到花溪区边界，并限制拖动/缩放不能超出边界（与首页地图一致）
+      // 初始视野固定在花溪区中心（centerAndZoom），不整体适配到贵阳市；
+      // 拖动限制放宽到贵阳市边界外包矩形，可在市域范围内拖动查看
       if (allPts.length > 0) {
-        map.setViewport(allPts);
-
+        // 拖动限制：以贵阳市边界外包矩形为限，拖动/缩放不能超出市域
         const lngs = allPts.map((p: any) => p.lng);
         const lats = allPts.map((p: any) => p.lat);
         const limitBounds = new BMapGL.Bounds(
@@ -164,7 +164,7 @@ function loadMap() {
 
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
 
-  loadHuaXi();
+  loadGuiyang();
 }
 
 async function renderTrack(values: any) {

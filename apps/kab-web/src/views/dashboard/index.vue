@@ -226,13 +226,13 @@ let mapEpoch = 0;
 const mapVisible = ref(false);
 let tilesLoadedFlag = false;
 
-function loadHuaXi(epoch: number) {
+function loadGuiyang(epoch: number) {
   const boundary = new BMapGL.Boundary();
-  boundary.get('花溪区', (rs: any) => {
+  boundary.get('贵阳市', (rs: any) => {
     // 刷新后本次回调已过期，丢弃（否则会往新地图重复添加掩膜与标注）
     if (epoch !== mapEpoch) return;
     if (rs.boundaries.length === 0) {
-      setTimeout(() => loadHuaXi(epoch), 100);
+      setTimeout(() => loadGuiyang(epoch), 100);
     } else {
       const allPts: any[] = [];
       for (let i = 0; i < rs.boundaries.length; i++) {
@@ -279,11 +279,10 @@ function loadHuaXi(epoch: number) {
         map.enableScrollWheelZoom();
       }
 
-      // 视野自动适配到花溪区边界，保证区域完整落在中间地图容器内
+      // 初始视野固定在花溪区中心（centerAndZoom），不整体适配到贵阳市；
+      // 拖动限制放宽到贵阳市边界外包矩形，可在市域范围内拖动查看
       if (allPts.length > 0) {
-        map.setViewport(allPts);
-
-        // 拖动限制：以花溪区边界外包矩形为限，拖动/缩放不能超出边界
+        // 拖动限制：以贵阳市边界外包矩形为限，拖动/缩放不能超出市域
         const lngs = allPts.map((p: any) => p.lng);
         const lats = allPts.map((p: any) => p.lat);
         const limitBounds = new BMapGL.Bounds(
@@ -345,10 +344,10 @@ function loadMap() {
     enableAutoResize: true,
   });
   map.disableDragging();
-  // 缩放限制：初始 11 级正好容纳花溪区，可放大到 18 级查看细节，不可缩小到区外
+  // 缩放限制：掩膜为贵阳市，中心保持在花溪区，可放大到 18 级查看细节
   map.setMinZoom(11);
   map.setMaxZoom(18);
-  // zoom 12 保证花溪区掩膜完整落在中间地图区域内，掩膜蓝色与四周陆地色有明显区分
+  // 中心固定在花溪区，zoom 12 保证花溪区完整落在中间地图区域内
   map.centerAndZoom(
     new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
     12,
@@ -367,7 +366,7 @@ function loadMap() {
 
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
 
-  setTimeout(() => loadHuaXi(epoch), 100);
+  setTimeout(() => loadGuiyang(epoch), 100);
 }
 
 /** 手动刷新地图：销毁后更换容器 DOM 再重建，用于地图偶发未渲染/瓦片异常时恢复 */
