@@ -24,7 +24,7 @@ const [QueryForm] = useVaticForm({
   schema: [
     {
       component: 'ApiSelect',
-      fieldName: 'busNo',
+      fieldName: 'plateNo',
       hideLabel: true,
       componentProps: {
         api: getCarListApi,
@@ -131,7 +131,10 @@ function loadGuiyang() {
         // 不用 setLimitBounds：视口大于边界矩形时它会禁用拖动/缩放导致地图卡死；
         // 改为在每次移动结束后把越界的中心点拉回边界内
         map.addEventListener('moveend', () => {
-          const { lat, lng } = map.getCenter();
+          // 防御：地图销毁后 getCenter() 可能返回 null
+          const center = map?.getCenter?.();
+          if (!center) return;
+          const { lat, lng } = center;
           const clampedLng = Math.min(Math.max(lng, sw.lng), ne.lng);
           const clampedLat = Math.min(Math.max(lat, sw.lat), ne.lat);
           // 与边界比较留出误差容忍，避免浮点误差导致反复 panTo 卡住
@@ -154,8 +157,8 @@ function loadMap() {
     enableAutoResize: true,
   });
   map.disableDragging();
-  // 缩放限制：默认 12 级，可放大到 18 级查看细节，不可缩小到 11 级以下
-  map.setMinZoom(11);
+  // 缩放限制：默认 12 级，可放大到 18 级查看细节，最小缩小到 10 级
+  map.setMinZoom(10);
   map.setMaxZoom(18);
   map.centerAndZoom(
     new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
@@ -171,7 +174,7 @@ async function renderTrack(values: any) {
   const data = await getTrackList(values);
   if (data && data.length > 0) {
     const polyline = new BMapGL.Polyline(
-      data.map((p: any) => new BMapGL.Point(p[0], p[1])),
+      data.map((p) => new BMapGL.Point(p.longitude, p.latitude)),
       { strokeColor: '#3388ff', strokeWeight: 3 },
     );
 
