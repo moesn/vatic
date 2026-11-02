@@ -67,7 +67,7 @@ const [Grid, GridApi] = useVaticVxeGrid({
         fieldName: 'searchTime',
         label: '起止日期',
         formItemClass: 'col-span-2',
-        defaultValue: [dayjs().add(-30, 'd'), dayjs()],
+        defaultValue: [dayjs().add(-6, 'd'), dayjs()],
         componentProps: {
           presets: [
             { label: '最近7天', value: [dayjs().add(-7, 'd'), dayjs()] },
@@ -144,10 +144,7 @@ const [Grid, GridApi] = useVaticVxeGrid({
     proxyConfig: {
       ajax: {
         query: async ({ page }, formValues) => {
-          // 统计图默认折叠，展开时才拉取图表数据（避免隐藏容器初始化 echarts）
-          if (chartExpanded.value) {
-            loadSnapshotStats();
-          }
+          // 表格查询不联动统计图：趋势图仅在维度切换、展开及首次加载时请求
           return await getSnapshotListApi({
             pageNo: page.currentPage,
             pageSize: page.pageSize,
@@ -176,20 +173,36 @@ const [Grid, GridApi] = useVaticVxeGrid({
 const chartRef = ref<HTMLElement | null>(null);
 let snapshotChart: any = null;
 const chartLoading = ref(false);
-/** 统计图展开状态：默认收起，展开后才加载数据 */
-const chartExpanded = ref(false);
+/** 统计图展开状态：默认展开 */
+const chartExpanded = ref(true);
 /** 统计图总条数（各车辆类型合计） */
 const chartTotal = ref(0);
 /** 是否无统计数据 */
 const chartEmpty = computed(() => chartTotal.value === 0);
 
-/** 统计维度：当天 / 近一周 / 近一月 */
-const chartDimension = ref<number>(1);
+/** 统计维度：当天 / 近一周 / 近一月（默认近一周） */
+const chartDimension = ref<number>(2);
 const dimensionOptions = [
   { label: '当天', value: 1 },
   { label: '近一周', value: 2 },
   { label: '近一月', value: 3 },
 ];
+
+/** 维度对应的查询时间范围（用于联动下方搜索表单） */
+function rangeByDimension(dim: number): [any, any] {
+  const today = dayjs();
+  switch (dim) {
+    case 1: {
+      return [today, today];
+    }
+    case 3: {
+      return [today.add(-1, 'month'), today];
+    }
+    default: {
+      return [today.add(-6, 'd'), today];
+    }
+  }
+}
 
 /** 当前维度文案，用于标题展示 */
 const currentDimensionLabel = computed(
@@ -261,6 +274,12 @@ function renderChart(data: any) {
   });
   chartTotal.value = total;
 
+  // 无数据时清空旧图，避免切换维度后仍显示上一次的数据
+  if (legendData.length === 0 || total === 0) {
+    snapshotChart.clear();
+    return;
+  }
+
   // 构建多系列数据（样式参数与 video 页预警统计图保持一致）
   const series = legendData.map((type, idx) => {
     const color = chartSeriesColors[idx % chartSeriesColors.length];
@@ -324,9 +343,9 @@ function renderChart(data: any) {
   });
 }
 
-/** 当前列表搜索条件（图表与列表保持同一筛选） */
-function currentFormValues(): any {
-  return GridApi.formApi?.getLatestSubmissionValues?.() ?? {};
+/** 当前列表搜索条件（图表与列表保持同一筛选；取实时值，兼容程序化 setValues 联动） */
+async function currentFormValues(): Promise<any> {
+  return (await GridApi.formApi?.getValues?.()) ?? {};
 }
 
 /** 加载统计图数据（仅在展开状态下调用） */
@@ -336,7 +355,7 @@ async function loadSnapshotStats() {
 
   chartLoading.value = true;
   try {
-    const formValues = currentFormValues();
+    const formValues = await currentFormValues();
     // 维度以图表头部的切换按钮为准，覆盖搜索表单中的维度
     const data = await getSnapshotStatsApi({
       ...formValues,
@@ -350,7 +369,15 @@ async function loadSnapshotStats() {
   }
 }
 
-watch(chartDimension, () => {
+// 切换统计维度：联动下方搜索表单的时间范围并触发表格查询，
+// 同时单独刷新趋势图（表格查询不再联动统计图）
+watch(chartDimension, async (dim) => {
+  const searchTime = rangeByDimension(dim);
+  await GridApi.formApi?.setValues({ searchTime });
+  // query 使用的是最近一次提交值，setValues 后需手动同步，否则接口仍传旧时间段
+  const formValues = await GridApi.formApi?.getValues?.();
+  GridApi.formApi?.setLatestSubmissionValues?.(formValues ?? {});
+  GridApi.query();
   loadSnapshotStats();
 });
 
@@ -370,6 +397,8 @@ function handleChartResize() {
 
 onMounted(() => {
   window.addEventListener('resize', handleChartResize);
+  // 统计图默认展开：首次加载趋势图数据（表格查询已不联动统计图）
+  loadSnapshotStats();
 });
 
 onBeforeUnmount(() => {
@@ -419,12 +448,15 @@ onBeforeUnmount(() => {
           </div>
         </div>
         <Spin v-show="chartExpanded" :spinning="chartLoading">
-          <div ref="chartRef" class="h-[250px] w-full"></div>
-          <div
-            v-if="!chartLoading && chartEmpty"
-            class="py-8 text-center text-sm text-gray-400"
-          >
-            暂无统计数据
+          <!-- 图表容器固定高度，空状态覆盖其上，避免无数据时区域变高 -->
+          <div class="relative h-[250px] w-full">
+            <div ref="chartRef" class="absolute inset-0"></div>
+            <div
+              v-if="!chartLoading && chartEmpty"
+              class="absolute inset-0 flex items-center justify-center text-sm text-gray-400"
+            >
+              暂无统计数据
+            </div>
           </div>
         </Spin>
       </div>

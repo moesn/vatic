@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { message } from 'ant-design-vue';
@@ -218,15 +218,21 @@ const deviceTypes = [
 ];
 
 let map: any;
+/** 地图容器 key：刷新时更换容器 DOM，避免 BMapGL destroy 后原容器不可复用 */
+const mapKey = ref(0);
+/** 地图代数：防止刷新后旧的边界异步回调往新地图重复添加覆盖物 */
+let mapEpoch = 0;
 /** 地图是否已加载完成（tilesloaded 后延迟显示，避免中间区域空白/闪烁） */
 const mapVisible = ref(false);
 let tilesLoadedFlag = false;
 
-function loadHuaXi() {
+function loadHuaXi(epoch: number) {
   const boundary = new BMapGL.Boundary();
   boundary.get('花溪区', (rs: any) => {
+    // 刷新后本次回调已过期，丢弃（否则会往新地图重复添加掩膜与标注）
+    if (epoch !== mapEpoch) return;
     if (rs.boundaries.length === 0) {
-      setTimeout(() => loadHuaXi(), 100);
+      setTimeout(() => loadHuaXi(epoch), 100);
     } else {
       const allPts: any[] = [];
       for (let i = 0; i < rs.boundaries.length; i++) {
@@ -328,6 +334,11 @@ function loadMap() {
     refreshMarkers();
     return;
   }
+
+  // 开启新代数：本次加载期间的边界回调有效，刷新后旧回调作废
+  mapEpoch += 1;
+  const epoch = mapEpoch;
+
   map = new BMapGL.Map(mapContainer.value, {
     enableMapClick: false,
     enableScrollWheelZoom: false,
@@ -356,15 +367,24 @@ function loadMap() {
 
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
 
-  setTimeout(() => loadHuaXi(), 100);
+  setTimeout(() => loadHuaXi(epoch), 100);
 }
 
-/** 手动刷新地图：销毁重建整张地图，用于地图偶发未渲染/瓦片异常时恢复 */
-function refreshMap() {
-  map?.destroy?.();
+/** 手动刷新地图：销毁后更换容器 DOM 再重建，用于地图偶发未渲染/瓦片异常时恢复 */
+async function refreshMap() {
+  try {
+    map?.destroy?.();
+  } catch {
+    // 销毁失败不阻塞重建
+  }
   map = null;
   tilesLoadedFlag = false;
   mapVisible.value = false;
+  // BMapGL destroy 后原容器内部状态已失效，直接重建会报
+  // "Cannot read properties of null (reading 'addEventListener')"，
+  // 因此更换容器 DOM（:key）拿到全新节点后再初始化
+  mapKey.value += 1;
+  await nextTick();
   loadMap();
 }
 
@@ -551,6 +571,7 @@ onMounted(() => {
   >
     <!-- 地图只渲染在两侧面板之间的中间区域，四周背景与地图底图陆地色一致 -->
     <div
+      :key="mapKey"
       ref="mapContainer"
       class="map-center"
       :class="{ 'map-visible': mapVisible }"

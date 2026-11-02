@@ -1010,11 +1010,21 @@ const dimensionOptions = [
 function initTrendChart() {
   const echarts = (window as any).echarts;
   if (!echarts || !trendChartRef.value) return;
+  // 卡片随 detailKind 的 v-if 重建 DOM，旧实例绑定的容器可能已被移除，需销毁重建
+  if (trendChart && trendChart.getDom() !== trendChartRef.value) {
+    try {
+      trendChart.dispose();
+    } catch {
+      // 忽略销毁异常
+    }
+    trendChart = null;
+  }
+  if (trendChart) return;
   trendChart = echarts.init(trendChartRef.value);
 }
 
 function renderTrendChart() {
-  if (!trendChart) initTrendChart();
+  initTrendChart();
   if (!trendChart) return;
 
   const data = trendData.value.trend ?? [];
@@ -1264,11 +1274,24 @@ const alertSeriesColors = [
 function initAlertTrendChart() {
   const echarts = (window as any).echarts;
   if (!echarts || !alertTrendChartRef.value) return;
+  // 容器被 v-if 重建时旧实例绑定的 DOM 已失效，需销毁重建
+  if (
+    alertTrendChart &&
+    alertTrendChart.getDom() !== alertTrendChartRef.value
+  ) {
+    try {
+      alertTrendChart.dispose();
+    } catch {
+      // 忽略销毁异常
+    }
+    alertTrendChart = null;
+  }
+  if (alertTrendChart) return;
   alertTrendChart = echarts.init(alertTrendChartRef.value);
 }
 
 function renderAlertTrendChart() {
-  if (!alertTrendChart) initAlertTrendChart();
+  initAlertTrendChart();
   if (!alertTrendChart) return;
 
   const grouped = alertTrendData.value;
@@ -1419,6 +1442,8 @@ function handleTabClick(key: TabKey) {
 function selectDevice(device: DeviceTreeItem) {
   if (selectedDevice.value?.id === device.id) return;
   selectedDevice.value = device;
+  // 弯道设备切换时页签被重置到数据详情的标记，避免与 activeTab watch 重复加载
+  let curveTabReset = false;
 
   // 切换设备时清理播放与数据状态
   destroyLivePlayer();
@@ -1464,11 +1489,17 @@ function selectDevice(device: DeviceTreeItem) {
     loadDataDetails(1);
     loadWeatherHistory(1);
   } else {
-    // 海康设备不显示页签且只有实时视频；若当前停留在不存在的页签，回退到实时
-    if (
+    if (device.purpose?.includes('弯道')) {
+      // 弯道监控设备：切换后直接显示数据详情页签（数据由 activeTab 的 watch 加载）
+      if (activeTab.value !== 'data') {
+        activeTab.value = 'data';
+        curveTabReset = true;
+      }
+    } else if (
       isHikvision.value ||
       !visibleTabs.value.some((tab) => tab.key === activeTab.value)
     ) {
+      // 海康设备不显示页签且只有实时视频；若当前停留在不存在的页签，回退到实时
       activeTab.value = 'real';
     }
     switch (activeTab.value) {
@@ -1479,8 +1510,12 @@ function selectDevice(device: DeviceTreeItem) {
         break;
       }
       case 'data': {
-        loadDataDetails(1);
-        loadVehiclePassStatistics();
+        // 页签刚被重置到数据详情时，由 activeTab 的 watch 统一加载，避免重复请求
+        if (!curveTabReset) {
+          loadDataDetails(1);
+          loadVehiclePassStatistics();
+        }
+        curveTabReset = false;
 
         break;
       }
@@ -2070,12 +2105,15 @@ window.addEventListener('pagehide', handlePageUnload);
                     </div>
                   </div>
                   <Spin v-show="trendExpanded" :spinning="trendLoading">
-                    <div ref="trendChartRef" class="h-[250px] w-full"></div>
-                    <div
-                      v-if="!trendLoading && trendData.trend.length === 0"
-                      class="py-8 text-center text-sm text-gray-400"
-                    >
-                      暂无趋势数据
+                    <!-- 图表容器固定高度，空状态覆盖其上，避免无数据时区域变高 -->
+                    <div class="relative h-[250px] w-full">
+                      <div ref="trendChartRef" class="absolute inset-0"></div>
+                      <div
+                        v-if="!trendLoading && trendData.trend.length === 0"
+                        class="absolute inset-0 flex items-center justify-center text-sm text-gray-400"
+                      >
+                        暂无趋势数据
+                      </div>
                     </div>
                   </Spin>
                 </div>
@@ -2202,15 +2240,24 @@ window.addEventListener('pagehide', handlePageUnload);
                     </div>
                   </div>
                 </div>
-                <Spin v-show="alertTrendExpanded" :spinning="alertTrendLoading">
-                  <div ref="alertTrendChartRef" class="h-[250px] w-full"></div>
-                  <div
-                    v-if="
-                      !alertTrendLoading && alertTrendData.trend?.length === 0
-                    "
-                    class="py-8 text-center text-sm text-gray-400"
-                  >
-                    暂无趋势数据
+                <Spin
+                  v-show="alertTrendExpanded"
+                  :spinning="alertTrendLoading"
+                >
+                  <!-- 图表容器固定高度，空状态覆盖其上，避免无数据时区域变高 -->
+                  <div class="relative h-[250px] w-full">
+                    <div
+                      ref="alertTrendChartRef"
+                      class="absolute inset-0"
+                    ></div>
+                    <div
+                      v-if="
+                        !alertTrendLoading && alertTrendData.trend?.length === 0
+                      "
+                      class="absolute inset-0 flex items-center justify-center text-sm text-gray-400"
+                    >
+                      暂无趋势数据
+                    </div>
                   </div>
                 </Spin>
               </div>
