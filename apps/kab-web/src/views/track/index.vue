@@ -128,18 +128,18 @@ function loadHuaXi() {
         // 关闭惯性甩动：按住快速甩动时惯性位移会把视野冲出边界
         map.disableInertialDragging?.();
 
-        // 优先用 GL 原生边界限制；并在每次移动结束后兜底校验，
-        // 把仍在边界外的中心点拉回来（快速甩动等场景下视野不会停在界外）
-        map.setLimitBounds?.(limitBounds);
+        // 不用 setLimitBounds：视口大于边界矩形时它会禁用拖动/缩放导致地图卡死；
+        // 改为在每次移动结束后把越界的中心点拉回边界内
         map.addEventListener('moveend', () => {
           const { lat, lng } = map.getCenter();
-          if (lng < sw.lng || lng > ne.lng || lat < sw.lat || lat > ne.lat) {
-            map.panTo(
-              new BMapGL.Point(
-                Math.min(Math.max(lng, sw.lng), ne.lng),
-                Math.min(Math.max(lat, sw.lat), ne.lat),
-              ),
-            );
+          const clampedLng = Math.min(Math.max(lng, sw.lng), ne.lng);
+          const clampedLat = Math.min(Math.max(lat, sw.lat), ne.lat);
+          // 与边界比较留出误差容忍，避免浮点误差导致反复 panTo 卡住
+          if (
+            Math.abs(clampedLng - lng) > 1e-9 ||
+            Math.abs(clampedLat - lat) > 1e-9
+          ) {
+            map.panTo(new BMapGL.Point(clampedLng, clampedLat));
           }
         });
       }
