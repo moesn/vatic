@@ -257,7 +257,7 @@ function loadHuaXi() {
         });
         map.addOverlay(borderLine);
 
-        const mapMask = new BMapGL.MapMask(allPts, {
+        const mapMask = new BMapGL.MapMask(ringPts, {
           isBuildingMask: true,
           isPoiMask: true,
           isMapMask: true,
@@ -311,7 +311,23 @@ function loadHuaXi() {
   });
 }
 
+/** 清除旧设备标注后按类型重建（定时刷新设备在线状态时复用，避免整张地图重载） */
+function refreshMarkers() {
+  map.getOverlays().forEach((overlay: any) => {
+    if (overlay._config?.type) {
+      map.removeOverlay(overlay);
+    }
+  });
+  deviceTypes.forEach((item: any) => createMarkersByType(item.name));
+}
+
 function loadMap() {
+  // 地图只初始化一次：定时刷新数据时复用已有地图，仅刷新设备标注，
+  // 避免整张地图（瓦片/掩膜/边界）销毁重建导致的长时间重新加载
+  if (map) {
+    refreshMarkers();
+    return;
+  }
   map = new BMapGL.Map(mapContainer.value, {
     enableMapClick: false,
     enableScrollWheelZoom: false,
@@ -328,19 +344,28 @@ function loadMap() {
   );
   map.setMapStyleV2({ styleJson });
 
-  // 监听瓦片加载完成，延迟 300ms 后显示地图
+  // 监听瓦片加载完成，短延迟后显示地图（仅等首批瓦片，避免长时间空白）
   tilesLoadedFlag = false;
   map.addEventListener('tilesloaded', () => {
     if (tilesLoadedFlag) return;
     tilesLoadedFlag = true;
     setTimeout(() => {
       mapVisible.value = true;
-    }, 300);
+    }, 100);
   });
 
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
 
   setTimeout(() => loadHuaXi(), 100);
+}
+
+/** 手动刷新地图：销毁重建整张地图，用于地图偶发未渲染/瓦片异常时恢复 */
+function refreshMap() {
+  map?.destroy?.();
+  map = null;
+  tilesLoadedFlag = false;
+  mapVisible.value = false;
+  loadMap();
 }
 
 function createMarkersByType(type: string) {
@@ -530,6 +555,18 @@ onMounted(() => {
       class="map-center"
       :class="{ 'map-visible': mapVisible }"
     ></div>
+    <!-- 地图右上角：半透明刷新按钮，地图偶发未渲染时可手动重建 -->
+    <div
+      class="absolute right-[356px] top-[100px] z-50 flex size-8 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white/80 transition hover:bg-white/40"
+      title="刷新地图"
+      @click="refreshMap"
+    >
+      <svg class="size-4" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-1.76-4.24L13 11h7V4l-2.35 2.35z"
+        />
+      </svg>
+    </div>
     <div class="absolute top-0 flex h-full w-full justify-between">
       <div class="top-banner">
         <h1>农村公路安全监测预警系统</h1>
