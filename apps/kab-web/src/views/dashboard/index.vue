@@ -276,6 +276,34 @@ function loadHuaXi() {
       // 视野自动适配到花溪区边界，保证区域完整落在中间地图容器内
       if (allPts.length > 0) {
         map.setViewport(allPts);
+
+        // 拖动限制：以花溪区边界外包矩形为限，拖动/缩放不能超出边界
+        const lngs = allPts.map((p: any) => p.lng);
+        const lats = allPts.map((p: any) => p.lat);
+        const limitBounds = new BMapGL.Bounds(
+          new BMapGL.Point(Math.min(...lngs), Math.min(...lats)),
+          new BMapGL.Point(Math.max(...lngs), Math.max(...lats)),
+        );
+
+        if (typeof map.setLimitBounds === 'function') {
+          map.setLimitBounds(limitBounds);
+        } else {
+          // 兜底：GL 版本不支持 setLimitBounds 时，拖动越界后弹回边界内
+          map.addEventListener('dragging', () => {
+            const center = map.getCenter();
+            const { lat, lng } = center;
+            const sw = limitBounds.getSouthWest();
+            const ne = limitBounds.getNorthEast();
+            if (lng < sw.lng || lng > ne.lng || lat < sw.lat || lat > ne.lat) {
+              map.panTo(
+                new BMapGL.Point(
+                  Math.min(Math.max(lng, sw.lng), ne.lng),
+                  Math.min(Math.max(lat, sw.lat), ne.lat),
+                ),
+              );
+            }
+          });
+        }
       }
 
       deviceTypes.forEach((item: any) => createMarkersByType(item.name));
@@ -290,6 +318,9 @@ function loadMap() {
     enableAutoResize: true,
   });
   map.disableDragging();
+  // 缩放限制：初始 11 级正好容纳花溪区，可放大到 18 级查看细节，不可缩小到区外
+  map.setMinZoom(11);
+  map.setMaxZoom(18);
   // zoom 12 保证花溪区掩膜完整落在中间地图区域内，掩膜蓝色与四周陆地色有明显区分
   map.centerAndZoom(
     new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
