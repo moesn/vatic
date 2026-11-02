@@ -284,26 +284,26 @@ function loadHuaXi() {
           new BMapGL.Point(Math.min(...lngs), Math.min(...lats)),
           new BMapGL.Point(Math.max(...lngs), Math.max(...lats)),
         );
+        const sw = limitBounds.getSouthWest();
+        const ne = limitBounds.getNorthEast();
 
-        if (typeof map.setLimitBounds === 'function') {
-          map.setLimitBounds(limitBounds);
-        } else {
-          // 兜底：GL 版本不支持 setLimitBounds 时，拖动越界后弹回边界内
-          map.addEventListener('dragging', () => {
-            const center = map.getCenter();
-            const { lat, lng } = center;
-            const sw = limitBounds.getSouthWest();
-            const ne = limitBounds.getNorthEast();
-            if (lng < sw.lng || lng > ne.lng || lat < sw.lat || lat > ne.lat) {
-              map.panTo(
-                new BMapGL.Point(
-                  Math.min(Math.max(lng, sw.lng), ne.lng),
-                  Math.min(Math.max(lat, sw.lat), ne.lat),
-                ),
-              );
-            }
-          });
-        }
+        // 关闭惯性甩动：按住快速甩动时惯性位移会把视野冲出边界
+        map.disableInertialDragging?.();
+
+        // 优先用 GL 原生边界限制；并在每次移动结束后兜底校验，
+        // 把仍在边界外的中心点拉回来（快速甩动等场景下视野不会停在界外）
+        map.setLimitBounds?.(limitBounds);
+        map.addEventListener('moveend', () => {
+          const { lat, lng } = map.getCenter();
+          if (lng < sw.lng || lng > ne.lng || lat < sw.lat || lat > ne.lat) {
+            map.panTo(
+              new BMapGL.Point(
+                Math.min(Math.max(lng, sw.lng), ne.lng),
+                Math.min(Math.max(lat, sw.lat), ne.lat),
+              ),
+            );
+          }
+        });
       }
 
       deviceTypes.forEach((item: any) => createMarkersByType(item.name));

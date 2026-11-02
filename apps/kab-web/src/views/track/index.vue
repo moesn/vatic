@@ -67,6 +67,7 @@ function loadHuaXi() {
     if (rs.boundaries.length === 0) {
       setTimeout(() => loadHuaXi(), 500);
     } else {
+      const allPts: any[] = [];
       for (let i = 0; i < rs.boundaries.length; i++) {
         const xyArr = rs.boundaries[i].split(';');
         const ptArr = [];
@@ -75,6 +76,7 @@ function loadHuaXi() {
           const tmp = element.split(',');
           const pt = new BMapGL.Point(tmp[0], tmp[1]);
           ptArr.push(pt);
+          allPts.push(pt);
         }
         // 闭合边界环（首尾点不同时补首点），保证轮廓线首尾相接
         const first = ptArr[0];
@@ -109,6 +111,38 @@ function loadHuaXi() {
         map.enableDragging();
         map.enableScrollWheelZoom();
       }
+
+      // 视野适配到花溪区边界，并限制拖动/缩放不能超出边界（与首页地图一致）
+      if (allPts.length > 0) {
+        map.setViewport(allPts);
+
+        const lngs = allPts.map((p: any) => p.lng);
+        const lats = allPts.map((p: any) => p.lat);
+        const limitBounds = new BMapGL.Bounds(
+          new BMapGL.Point(Math.min(...lngs), Math.min(...lats)),
+          new BMapGL.Point(Math.max(...lngs), Math.max(...lats)),
+        );
+        const sw = limitBounds.getSouthWest();
+        const ne = limitBounds.getNorthEast();
+
+        // 关闭惯性甩动：按住快速甩动时惯性位移会把视野冲出边界
+        map.disableInertialDragging?.();
+
+        // 优先用 GL 原生边界限制；并在每次移动结束后兜底校验，
+        // 把仍在边界外的中心点拉回来（快速甩动等场景下视野不会停在界外）
+        map.setLimitBounds?.(limitBounds);
+        map.addEventListener('moveend', () => {
+          const { lat, lng } = map.getCenter();
+          if (lng < sw.lng || lng > ne.lng || lat < sw.lat || lat > ne.lat) {
+            map.panTo(
+              new BMapGL.Point(
+                Math.min(Math.max(lng, sw.lng), ne.lng),
+                Math.min(Math.max(lat, sw.lat), ne.lat),
+              ),
+            );
+          }
+        });
+      }
     }
   });
 }
@@ -120,9 +154,12 @@ function loadMap() {
     enableAutoResize: true,
   });
   map.disableDragging();
+  // 缩放限制：默认 12 级，可放大到 18 级查看细节，不可缩小到 11 级以下
+  map.setMinZoom(11);
+  map.setMaxZoom(18);
   map.centerAndZoom(
     new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
-    13,
+    12,
   );
 
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
