@@ -246,9 +246,11 @@ const liveLoading = ref(false);
 let liveCleanup: (() => void) | null = null;
 let liveCameraParams: CameraKeyParams | null = null;
 
-/** 海康实况播放器（仅在海康设备下启用，且仅在实时页签自动预览） */
+/** 海康实况播放器（仅在海康设备下启用，且仅在实时页签自动预览；离线设备不预览） */
 const hikLive = useHikiotPlayer({
-  autoPreview: computed(() => activeTab.value === 'real'),
+  autoPreview: computed(
+    () => activeTab.value === 'real' && selectedDeviceOnline.value,
+  ),
   containerRef: liveContainerRef,
   deviceSerial: computed(() =>
     isHikvision.value ? hikiotDeviceSerial.value : undefined,
@@ -285,6 +287,11 @@ async function playLive() {
   liveTip.value = '';
   const device = selectedDevice.value;
   if (!device) return;
+  // 设备离线：不请求视频流
+  if (!selectedDeviceOnline.value) {
+    liveTip.value = `【${device.deviceName}】设备离线，无法播放实时视频`;
+    return;
+  }
   // 海康威视走 hikiot 插件，不调用 /api/video-platform/cameras
   if (isHikvision.value) return;
 
@@ -461,8 +468,14 @@ function stopMaxPlayTimer() {
 /** 自动断开后需手动点击播放才能继续（显示播放按钮） */
 const needManualPlay = ref(false);
 
-/** 手动播放：实况继续播放（海康走插件预览，其它厂商重拉流） */
+/** 手动播放：实况继续播放（海康走插件预览，其它厂商重拉流）；离线设备不请求 */
 function manualPlayLive() {
+  const device = selectedDevice.value;
+  if (device && !selectedDeviceOnline.value) {
+    needManualPlay.value = false;
+    liveTip.value = `【${device.deviceName}】设备离线，无法播放实时视频`;
+    return;
+  }
   needManualPlay.value = false;
   liveTip.value = '';
   if (isHikvision.value) {
@@ -491,6 +504,11 @@ async function queryPlayback() {
   }
   if (!playbackRange.value?.[0] || !playbackRange.value?.[1]) {
     playbackTip.value = '请填写回放开始时间与结束时间';
+    return;
+  }
+  // 设备离线：不请求视频平台
+  if (!selectedDeviceOnline.value) {
+    playbackTip.value = `【${device.deviceName}】设备离线，无法查询回放录像`;
     return;
   }
   const [startTime, endTime] = playbackRange.value;
@@ -527,6 +545,11 @@ async function queryPlayback() {
 async function playRecording(recording: RecordingSegment) {
   const device = selectedDevice.value;
   if (!device) return;
+  // 设备离线：不请求视频流
+  if (!selectedDeviceOnline.value) {
+    playbackStatus.value = `【${device.deviceName}】设备离线，无法播放回放视频`;
+    return;
+  }
   activeRecording.value = recording;
   destroyPlaybackPlayer();
   playbackStatus.value = `正在加载回放：${formatTime(recording.start_time)} ~ ${formatTime(
