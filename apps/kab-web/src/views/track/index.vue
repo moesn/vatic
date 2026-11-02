@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { message } from 'ant-design-vue';
 import dayjs from 'dayjs';
@@ -170,28 +170,125 @@ function loadMap() {
   loadGuiyang();
 }
 
-async function renderTrack(values: any) {
-  const data = await getTrackList(values);
-  if (data && data.length > 0) {
-    const polyline = new BMapGL.Polyline(
-      data.map((p) => new BMapGL.Point(p.longitude, p.latitude)),
-      { strokeColor: '#3388ff', strokeWeight: 3 },
-    );
+/**
+ * 轨迹动画自实现（rAF 驱动），不依赖 BMapGLLib.TrackAnimation：
+ * 该库不支持小车图标（icon/Marker），且清理方法不完整，二次查询易残留
+ */
+let trackPolyline: any = null;
+let trackMarker: any = null;
+let trackRaf = 0;
 
-    const trackAni = new BMapGLLib.TrackAnimation(map, polyline, {
-      icon: new BMapGL.Icon(
-        '/assets/image/marker/car.png',
-        new BMapGL.Size(32, 32),
-      ),
-      speed: 1000,
-      autoView: true,
-    });
-
-    trackAni.start();
-  } else {
-    message.error('没有查询到轨迹数据！');
+/** 清理上一次的轨迹动画帧、小车与轨迹线，避免二次查询时残留 */
+function clearTrack() {
+  if (trackRaf) {
+    cancelAnimationFrame(trackRaf);
+    trackRaf = 0;
+  }
+  if (trackMarker) {
+    try {
+      map.removeOverlay(trackMarker);
+    } catch {
+      /* 忽略 */
+    }
+    trackMarker = null;
+  }
+  if (trackPolyline) {
+    try {
+      map.removeOverlay(trackPolyline);
+    } catch {
+      /* 忽略 */
+    }
+    trackPolyline = null;
   }
 }
+
+/** 预加载图片后再创建 Icon，避免图片未就绪导致小车空白 */
+function loadIcon(src: string, size: number): Promise<any> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () =>
+      resolve(
+        new BMapGL.Icon(src, new BMapGL.Size(size, size), {
+          // 锚点设为图片中心，保证小车中心对准轨迹点
+          anchor: new BMapGL.Size(size / 2, size / 2),
+        }),
+      );
+    img.onerror = () => resolve(undefined);
+    img.src = src;
+  });
+}
+
+/** 相邻轨迹点之间线性插值，生成平滑密集路径（每段 40 个点），跳过重复点 */
+function buildDensePath(points: any[]): any[] {
+  const dense: any[] = [points[0]];
+  const steps = 40;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1];
+    const cur = points[i];
+    if (prev.lng === cur.lng && prev.lat === cur.lat) continue;
+    for (let s = 1; s <= steps; s++) {
+      dense.push(
+        new BMapGL.Point(
+          prev.lng + ((cur.lng - prev.lng) / steps) * s,
+          prev.lat + ((cur.lat - prev.lat) / steps) * s,
+        ),
+      );
+    }
+  }
+  return dense;
+}
+
+async function renderTrack(values: any) {
+  let data: any[] = [];
+  try {
+    data = await getTrackList(values);
+  } catch {
+    // 请求失败（401/网络错误等）：全局拦截器已提示，这里兜底避免静默无反应
+    message.error('轨迹查询失败，请重新登录或稍后重试！');
+    return;
+  }
+  const raw = (Array.isArray(data) ? data : [])
+    .filter((p: any) => p.longitude != null && p.latitude != null)
+    .map((p: any) => new BMapGL.Point(p.longitude, p.latitude));
+  if (raw.length === 0) {
+    message.error('没有查询到轨迹数据！');
+    return;
+  }
+
+  // 先清理上一次的轨迹，再绘制本次
+  clearTrack();
+
+  const dense = buildDensePath(raw);
+
+  trackPolyline = new BMapGL.Polyline([dense[0]], {
+    strokeColor: '#3388ff',
+    strokeWeight: 3,
+  });
+  map.addOverlay(trackPolyline);
+
+  const icon = await loadIcon('/assets/image/marker/car.png', 32);
+  trackMarker = new BMapGL.Marker(dense[0], icon ? { icon } : {});
+  map.addOverlay(trackMarker);
+
+  // 动画总时长 20 秒：轨迹线生长 + 小车移动 + 镜头跟随
+  const duration = 20_000;
+  const start = performance.now();
+  const step = (now: number) => {
+    const progress = Math.min((now - start) / duration, 1);
+    const idx = Math.max(1, Math.round(progress * (dense.length - 1)));
+    trackPolyline?.setPath(dense.slice(0, idx + 1));
+    trackMarker?.setPosition(dense[idx]);
+    map?.setCenter(dense[idx]);
+    if (progress < 1) {
+      trackRaf = requestAnimationFrame(step);
+    }
+  };
+  trackRaf = requestAnimationFrame(step);
+}
+
+onBeforeUnmount(() => {
+  clearTrack();
+});
 
 onMounted(() => {
   loadMap();
