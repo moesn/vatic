@@ -482,11 +482,11 @@ function openResetPassword(row: Recordable<any>) {
 }
 
 /**
- * 密码复杂度校验：至少 6 位，且必须包含大写字母、小写字母、数字、特殊符号
+ * 密码复杂度校验：至少 8 位，且必须包含大写字母、小写字母、数字、特殊符号
  */
 function validatePassword(password: string): string | null {
-  if (!password || password.length < 6) {
-    return '请输入至少 6 位的新密码';
+  if (!password || password.length < 8) {
+    return '请输入至少 8 位的新密码';
   }
   if (!/[A-Z]/.test(password)) {
     return '密码必须包含大写字母';
@@ -593,7 +593,7 @@ async function submitResetPassword() {
           v-model:value="resetPasswordValue"
           :type="resetPasswordShow ? 'text' : 'password'"
           class="mb-3"
-          placeholder="请输入新密码（至少 6 位，含大小写字母、数字、特殊符号）"
+          placeholder="请输入新密码（至少 8 位，含大小写字母、数字、特殊符号）"
         >
           <template #suffix>
             <Button
