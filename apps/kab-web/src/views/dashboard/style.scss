@@ -14,6 +14,12 @@ table {
 .box-card {
   position: relative;
 
+  // 地图左右面板卡片：背景加透明度 0.9，色调与地图陆地色（页面背景）一致
+  .left &,
+  .right & {
+    background-color: rgb(9 18 32 / 90%) !important;
+  }
+
   &::before,
   &::after {
     display: none;
@@ -54,8 +60,11 @@ table {
 
 .top-banner {
   position: absolute;
+  z-index: 10;
   width: 100%;
   height: 70px;
+  // 悬浮在地图上，横幅两侧透出底图
+  pointer-events: none;
   background-image: url('/assets/image/top-banner.png');
   background-repeat: no-repeat;
   background-position: center;
@@ -89,10 +98,10 @@ table {
 // 初始透明占位（保持尺寸让地图正常初始化），tilesloaded 后延迟 300ms 淡入
 .map-center {
   position: absolute;
-  top: 90px;
-  right: 340px;
-  bottom: 40px;
-  left: 440px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow: hidden;
   opacity: 0;
   transition: opacity 0.4s;
@@ -102,20 +111,25 @@ table {
   }
 }
 
-.left {
+.left,
+.right {
+  position: relative;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   width: 400px;
   height: calc(100% - 120px);
   margin: 80px 20px;
+  // 悬浮在地图上：空白区域不拦截鼠标，保证底部地图可拖动/缩放
+  pointer-events: none;
+
+  .box-card {
+    pointer-events: auto;
+  }
 }
 
 .right {
-  display: flex;
-  flex-direction: column;
   width: 300px;
-  height: calc(100% - 120px);
-  margin: 80px 20px;
 }
 
 .left-top {
