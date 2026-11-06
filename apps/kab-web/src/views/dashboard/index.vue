@@ -1,8 +1,14 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, watch } from 'vue';
+import {
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
 import { useRouter } from 'vue-router';
 
-import { Image, message } from 'ant-design-vue';
+import { message } from 'ant-design-vue';
 
 import {
   getDataStatsApi,
@@ -19,9 +25,10 @@ const router = useRouter();
 
 /** 页面四周背景色：默认取地图底图陆地色，与地图无缝衔接 */
 const landColor: string =
-  (
-    styleJson.find((s: any) => s.featureType === 'land') as any
-  )?.stylers?.color?.slice(0, 7) || '#091220';
+  (styleJson.find((s: any) => s.featureType === 'land') as any)?.stylers?.color?.slice(
+    0,
+    7,
+  ) || '#091220';
 
 let timer;
 const time = ref();
@@ -171,11 +178,18 @@ getDeviceList();
 
 // region 气候
 const weatherList = ref([]);
+const weatherIndex = ref(0);
+let weatherTimer: null | ReturnType<typeof setInterval> = null;
 
 function getWeatherList() {
   getWeatherListApi().then((res: any) => {
-    // 各气象站同屏上下展示，不再轮播
     weatherList.value = res;
+    if (weatherTimer) clearInterval(weatherTimer);
+    weatherTimer = setInterval(() => {
+      if (weatherList.value.length > 1) {
+        weatherIndex.value = (weatherIndex.value + 1) % weatherList.value.length;
+      }
+    }, 3000);
   });
 }
 
@@ -218,13 +232,13 @@ let mapEpoch = 0;
 const mapVisible = ref(false);
 let tilesLoadedFlag = false;
 
-function loadHuaXi(epoch: number) {
+function loadGuiyang(epoch: number) {
   const boundary = new BMapGL.Boundary();
-  boundary.get('花溪区', (rs: any) => {
+  boundary.get('贵阳市', (rs: any) => {
     // 刷新后本次回调已过期，丢弃（否则会往新地图重复添加掩膜与标注）
     if (epoch !== mapEpoch) return;
     if (rs.boundaries.length === 0) {
-      setTimeout(() => loadHuaXi(epoch), 100);
+      setTimeout(() => loadGuiyang(epoch), 100);
     } else {
       const allPts: any[] = [];
       for (let i = 0; i < rs.boundaries.length; i++) {
@@ -271,11 +285,10 @@ function loadHuaXi(epoch: number) {
         map.enableScrollWheelZoom();
       }
 
-      // 视野自动适配到花溪区边界，保证区域完整落在中间地图容器内
+      // 初始视野固定在花溪区中心（centerAndZoom），不整体适配到贵阳市；
+      // 拖动限制放宽到贵阳市边界外包矩形，可在市域范围内拖动查看
       if (allPts.length > 0) {
-        map.setViewport(allPts);
-
-        // 拖动限制：以花溪区边界外包矩形为限，拖动/缩放不能超出边界
+        // 拖动限制：以贵阳市边界外包矩形为限，拖动/缩放不能超出市域
         const lngs = allPts.map((p: any) => p.lng);
         const lats = allPts.map((p: any) => p.lat);
         const limitBounds = new BMapGL.Bounds(
@@ -291,7 +304,12 @@ function loadHuaXi(epoch: number) {
         // 不用 setLimitBounds：视口大于边界矩形时它会禁用拖动/缩放导致地图卡死；
         // 改为在每次移动结束后把越界的中心点拉回边界内
         map.addEventListener('moveend', () => {
-          const { lat, lng } = map.getCenter();
+          // 刷新地图后旧实例已销毁：epoch 不匹配直接跳过，
+          // 且销毁后的地图 getCenter() 内部读 null 会报 "reading 'lng'"
+          if (epoch !== mapEpoch) return;
+          const center = map.getCenter?.();
+          if (!center) return;
+          const { lat, lng } = center;
           const clampedLng = Math.min(Math.max(lng, sw.lng), ne.lng);
           const clampedLat = Math.min(Math.max(lat, sw.lat), ne.lat);
           // 与边界比较留出误差容忍，避免浮点误差导致反复 panTo 卡住
@@ -337,10 +355,10 @@ function loadMap() {
     enableAutoResize: true,
   });
   map.disableDragging();
-  // 缩放限制：初始 11 级正好容纳花溪区，可放大到 18 级查看细节，不可缩小到区外
-  map.setMinZoom(11);
+  // 缩放限制：掩膜为贵阳市，中心保持在花溪区，可放大到 18 级查看细节
+  map.setMinZoom(10);
   map.setMaxZoom(18);
-  // zoom 12 保证花溪区掩膜完整落在中间地图区域内，掩膜蓝色与四周陆地色有明显区分
+  // 中心固定在花溪区，zoom 12 保证花溪区完整落在中间地图区域内
   map.centerAndZoom(
     new BMapGL.Point(106.623_548_548_890_23, 26.396_209_157_438_058),
     12,
@@ -355,29 +373,66 @@ function loadMap() {
     setTimeout(() => {
       mapVisible.value = true;
     }, 100);
+    // 新地图渲染完成后（图标均已加载完毕），延迟销毁刷新前的旧实例，
+    // 此时销毁不会再触发"标注图标异步加载回调打到已销毁状态"的库内部崩溃
+    setTimeout(destroyStaleMap, 1000);
   });
 
   document.querySelectorAll('.anchorBL').forEach((el) => el.remove());
 
-  setTimeout(() => loadHuaXi(epoch), 100);
+  setTimeout(() => loadGuiyang(epoch), 100);
 }
 
-/** 手动刷新地图：销毁后更换容器 DOM 再重建，用于地图偶发未渲染/瓦片异常时恢复 */
-async function refreshMap() {
+/**
+ * 刷新前的旧地图实例：刷新时不立即销毁，挂起到新地图渲染完成后再销毁。
+ * 直接 destroy 会触发库内部缺陷——标注图标图片若仍在异步加载，加载完成的
+ * 回调会在已销毁的 WebGL 状态上重算顶点，报
+ * "Cannot read properties of null (reading 'lng')"；
+ * 旧实例挂起期间图标早已加载完成，延迟销毁是安全的
+ */
+let staleMap: any = null;
+
+/** 销毁挂起的旧地图实例（幂等） */
+function destroyStaleMap() {
+  if (!staleMap) return;
+  const target = staleMap;
+  staleMap = null;
   try {
-    map?.destroy?.();
+    target.clearOverlays?.();
   } catch {
-    // 销毁失败不阻塞重建
+    // 清理失败不阻塞销毁
   }
+  // 清空覆盖物会触发标注画布的异步重绘，立即销毁会让重绘回调
+  // 打到已销毁的 WebGL 状态上（库内部缺陷，报 "reading 'lng'"）；
+  // 间隔留待异步回调在地图存活期间执行完毕后再销毁
+  window.setTimeout(() => {
+    try {
+      target.destroy?.();
+    } catch {
+      // 销毁失败不影响新地图
+    }
+  }, 1000);
+}
+
+/** 手动刷新地图：旧实例挂起，更换容器 DOM 重建新地图，用于地图偶发未渲染/瓦片异常时恢复 */
+async function refreshMap() {
+  // 先作废当前 epoch：旧地图（含挂起实例）不会再触发回弹处理
+  mapEpoch += 1;
+  // 连续刷新时先把上一个挂起实例清掉（其图标早已加载完毕，销毁安全）
+  destroyStaleMap();
+  // 旧地图不立即销毁，挂起等待新地图渲染完成后延迟销毁（见 destroyStaleMap 注释）
+  staleMap = map;
   map = null;
   tilesLoadedFlag = false;
   mapVisible.value = false;
-  // BMapGL destroy 后原容器内部状态已失效，直接重建会报
+  // BMapGL 销毁后原容器内部状态已失效，直接重建会报
   // "Cannot read properties of null (reading 'addEventListener')"，
   // 因此更换容器 DOM（:key）拿到全新节点后再初始化
   mapKey.value += 1;
   await nextTick();
   loadMap();
+  // 兜底：若新地图一直未 tilesloaded，5 秒后仍清理挂起实例
+  window.setTimeout(destroyStaleMap, 5000);
 }
 
 function createMarkersByType(type: string) {
@@ -555,6 +610,11 @@ setInterval(() => reloadData(), 60 * 60 * 1000);
 onMounted(() => {
   reloadData();
 });
+
+onBeforeUnmount(() => {
+  // 清理刷新后挂起的旧地图实例，避免离开页面后仍占用 WebGL 上下文
+  destroyStaleMap();
+});
 </script>
 <template>
   <div
@@ -638,7 +698,7 @@ onMounted(() => {
           </div>
           <div class="risk">
             <div v-for="event in eventList" :key="event.id">
-              <Image :src="event.imageUrl" alt="" />
+              <img :src="event.imageUrl" alt="" />
               <div>
                 <h4>{{ event.eventType }}</h4>
                 <h5>{{ event.location }}</h5>
@@ -651,31 +711,36 @@ onMounted(() => {
       <div class="right">
         <div class="box-card right-bottom">
           <div class="weather">
-            <div v-for="station in weatherList" :key="station.station_name">
-              <h3>{{ station.station_name }}</h3>
+            <template v-if="weatherList[weatherIndex]">
               <div>
-                <div>
-                  <img src="/assets/image/weather/temperature.png" alt="" />
-                  <h3>{{ station.temperature }}℃</h3>
-                  <h3>温度</h3>
-                </div>
-                <div>
-                  <img src="/assets/image/weather/wet.png" alt="" />
-                  <h3>{{ station.humidity }}%RH</h3>
-                  <h3>湿度</h3>
-                </div>
-                <div>
-                  <img src="/assets/image/weather/speed.png" alt="" />
-                  <h3>{{ station.wind_speed }}m/s</h3>
-                  <h3>风速</h3>
-                </div>
-                <div>
-                  <img src="/assets/image/weather/pressure.png" alt="" />
-                  <h3>{{ station.pressure }}Pa</h3>
-                  <h3>气压</h3>
-                </div>
+                <h3>{{ weatherList[weatherIndex].station_name }}</h3>
               </div>
-            </div>
+              <div>
+                <img src="/assets/image/weather/temperature.png" alt="" />
+                <h3>{{ weatherList[weatherIndex].temperature }}℃</h3>
+                <h3>温度</h3>
+              </div>
+              <div>
+                <img src="/assets/image/weather/wet.png" alt="" />
+                <h3>{{ weatherList[weatherIndex].humidity }}%RH</h3>
+                <h3>湿度</h3>
+              </div>
+              <div>
+                <img src="/assets/image/weather/speed.png" alt="" />
+                <h3>{{ weatherList[weatherIndex].wind_speed }}m/s</h3>
+                <h3>风速</h3>
+              </div>
+              <div>
+                <img src="/assets/image/weather/direction.png" alt="" />
+                <h3>{{ weatherList[weatherIndex].wind_direction }}</h3>
+                <h3>风向</h3>
+              </div>
+              <div>
+                <img src="/assets/image/weather/pressure.png" alt="" />
+                <h3>{{ weatherList[weatherIndex].pressure }}Pa</h3>
+                <h3>气压</h3>
+              </div>
+            </template>
           </div>
         </div>
         <div class="box-card right-top">

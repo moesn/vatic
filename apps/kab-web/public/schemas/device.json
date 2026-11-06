@@ -133,8 +133,7 @@
       {
         "title": "视频播放URL",
         "field": "videoUrl",
-        "rules": "url",
-        "required": true
+        "rules": "url"
       },
       {
         "title": "设备型号",
