@@ -122,7 +122,12 @@
         "labelField": "location",
         "valueField": "location",
         "triggerField": "purpose",
-        "triggerValue": "边坡监控"
+        "triggerValue": "弯道监控"
+      },
+      {
+        "title": "顺序",
+        "field": "sort",
+        "required": true
       },
       {
         "title": "经纬度",
