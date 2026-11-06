@@ -12,7 +12,7 @@
     "elementType": "geometry",
     "stylers": {
       "visibility": "on",
-      "color": "#113549ff"
+      "color": "#0d3a5aff"
     }
   },
   {
@@ -20,7 +20,7 @@
     "elementType": "geometry",
     "stylers": {
       "visibility": "on",
-      "color": "#0e1b30ff"
+      "color": "#0c2b2eff"
     }
   },
   {
@@ -34,14 +34,14 @@
     "featureType": "building",
     "elementType": "geometry.topfill",
     "stylers": {
-      "color": "#113549ff"
+      "color": "#17456bff"
     }
   },
   {
     "featureType": "building",
     "elementType": "geometry.sidefill",
     "stylers": {
-      "color": "#143e56ff"
+      "color": "#123a58ff"
     }
   },
   {
@@ -56,7 +56,7 @@
     "elementType": "geometry",
     "stylers": {
       "visibility": "on",
-      "color": "#113549B2"
+      "color": "#17405fB2"
     }
   },
   {
@@ -64,7 +64,7 @@
     "elementType": "geometry",
     "stylers": {
       "visibility": "on",
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -72,7 +72,7 @@
     "elementType": "geometry",
     "stylers": {
       "visibility": "on",
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -80,7 +80,7 @@
     "elementType": "geometry",
     "stylers": {
       "visibility": "on",
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -95,7 +95,7 @@
     "featureType": "highway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#3e78b5ff"
     }
   },
   {
@@ -116,7 +116,7 @@
     "featureType": "highway",
     "elementType": "labels.text.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#8fc1ffff"
     }
   },
   {
@@ -145,7 +145,7 @@
     "featureType": "arterial",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#2c5688ff"
     }
   },
   {
@@ -188,7 +188,7 @@
     "featureType": "local",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -357,7 +357,7 @@
     "featureType": "road",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -427,7 +427,7 @@
     "featureType": "manmade",
     "elementType": "geometry",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -441,14 +441,14 @@
     "featureType": "entertainment",
     "elementType": "geometry",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
     "featureType": "shopping",
     "elementType": "geometry",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -833,7 +833,7 @@
     "featureType": "cityhighway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#2c5688ff"
     }
   },
   {
@@ -847,7 +847,7 @@
     "featureType": "tertiaryway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -861,7 +861,7 @@
     "featureType": "provincialway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#35649bff"
     }
   },
   {
@@ -875,7 +875,7 @@
     "featureType": "nationalway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#3e78b5ff"
     }
   },
   {
@@ -903,7 +903,7 @@
     "featureType": "nationalway",
     "elementType": "labels.text.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#8fc1ffff"
     }
   },
   {
@@ -917,7 +917,7 @@
     "featureType": "provincialway",
     "elementType": "labels.text.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#8fc1ffff"
     }
   },
   {
@@ -938,7 +938,7 @@
     "featureType": "cityhighway",
     "elementType": "labels.text.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#8fc1ffff"
     }
   },
   {
@@ -959,7 +959,7 @@
     "featureType": "estate",
     "elementType": "geometry",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -994,7 +994,7 @@
     "featureType": "scenicspotsway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -1008,7 +1008,7 @@
     "featureType": "universityway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -1022,7 +1022,7 @@
     "featureType": "vacationway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -1043,7 +1043,7 @@
     "featureType": "fourlevelway",
     "elementType": "geometry.fill",
     "stylers": {
-      "color": "#12223dff"
+      "color": "#1c3a5eff"
     }
   },
   {
@@ -1113,7 +1113,7 @@
     "featureType": "transportation",
     "elementType": "geometry",
     "stylers": {
-      "color": "#113549ff"
+      "color": "#17405fff"
     }
   },
   {
