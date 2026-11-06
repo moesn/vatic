@@ -27,6 +27,31 @@ table {
   display: none;
 }
 
+// 地图设备标注悬浮信息框：显示在标注上方居中
+.marker-tip {
+  position: absolute;
+  z-index: 1000;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #fff;
+  pointer-events: none;
+  background: rgb(9 18 32 / 85%);
+  border: 1px solid rgb(75 225 255 / 60%);
+  border-radius: 4px;
+  transform: translate(-50%, calc(-100% - 8px));
+
+  h4 {
+    margin: 0 0 2px;
+    font-size: 13px;
+    color: #4be1ff;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
 .top-banner {
   position: absolute;
   width: 100%;

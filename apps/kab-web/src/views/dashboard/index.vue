@@ -411,6 +411,8 @@ function destroyStaleMap() {
 async function refreshMap() {
   // 先作废当前 epoch：旧地图（含挂起实例）不会再触发回弹处理
   mapEpoch += 1;
+  // 隐藏设备信息提示框（旧坐标已失效）
+  hideMarkerTip();
   // 连续刷新时先把上一个挂起实例清掉（其图标早已加载完毕，销毁安全）
   destroyStaleMap();
   // 旧地图不立即销毁，挂起等待新地图渲染完成后延迟销毁（见 destroyStaleMap 注释）
@@ -442,6 +444,9 @@ function createMarkersByType(type: string) {
       );
       const pt = new BMapGL.Point(item.longitude, item.latitude);
       const marker = new BMapGL.Marker(pt, { icon, type });
+      // 悬浮显示设备信息
+      marker.addEventListener('mouseover', () => showMarkerTip(item, pt));
+      marker.addEventListener('mouseout', hideMarkerTip);
       marker.addEventListener('click', () => {
         if (item.simNo) {
           router.push({ path: '/video', query: { simNo: item.simNo } });
@@ -449,6 +454,25 @@ function createMarkersByType(type: string) {
       });
       map.addOverlay(marker);
     });
+}
+
+/** 地图标注悬浮提示 */
+const markerTip = ref<any>({ visible: false, x: 0, y: 0, device: null });
+
+function showMarkerTip(item: any, pt: any) {
+  const pixel = map.pointToOverlayPixel(pt);
+  const container = mapContainer.value;
+  if (!container || !pixel) return;
+  markerTip.value = {
+    visible: true,
+    x: container.offsetLeft + pixel.x,
+    y: container.offsetTop + pixel.y,
+    device: item,
+  };
+}
+
+function hideMarkerTip() {
+  markerTip.value.visible = false;
 }
 
 // function deleteMarkersByType(type: string) {
@@ -621,6 +645,21 @@ onBeforeUnmount(() => {
       class="map-center"
       :class="{ 'map-visible': mapVisible }"
     ></div>
+    <!-- 地图设备标注悬浮信息 -->
+    <div
+      v-if="markerTip.visible && markerTip.device"
+      class="marker-tip"
+      :style="{ left: `${markerTip.x}px`, top: `${markerTip.y}px` }"
+    >
+      <h4>{{ markerTip.device.deviceName }}（{{ markerTip.device.purpose }}）</h4>
+      <p>位置：{{ markerTip.device.location }}</p>
+      <p>
+        负责人：{{ markerTip.device.manager }}
+        {{ markerTip.device.managerPhone }}
+      </p>
+      <p>状态：{{ markerTip.device.status === '1' ? '在线' : '离线' }}</p>
+      <p style="text-align: right;">点击查看详情</p>
+    </div>
     <!-- 地图右上角：半透明刷新按钮，地图偶发未渲染时可手动重建 -->
     <div
       class="absolute right-[356px] top-[100px] z-50 flex size-8 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white/80 transition hover:bg-white/40"
