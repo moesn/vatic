@@ -190,13 +190,20 @@ table {
       height: 100px;
       padding: 8px 16px;
 
-      img {
+      // 事件快照图（antd Image 包装，点击可放大预览）
+      // Image 组件内部元素无本组件 data-v 属性，需 :deep 穿透才能命中
+      :deep(.ant-image) {
         width: 30%;
         height: 100%;
         margin-right: 10px;
+
+        img {
+          width: 100%;
+          height: 100%;
+        }
       }
 
-      > div {
+      > div:not(.ant-image) {
         position: relative;
 
         h4 {

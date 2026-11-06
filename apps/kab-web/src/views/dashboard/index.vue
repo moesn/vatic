@@ -2,7 +2,7 @@
 import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { message } from 'ant-design-vue';
+import { Image, message } from 'ant-design-vue';
 
 import {
   getDataStatsApi,
@@ -646,7 +646,7 @@ onMounted(() => {
           </div>
           <div class="risk">
             <div v-for="event in eventList" :key="event.id">
-              <img :src="event.imageUrl" alt="" />
+              <Image :src="event.imageUrl" alt="" />
               <div>
                 <h4>{{ event.eventType }}</h4>
                 <h5>{{ event.location }}</h5>
