@@ -171,19 +171,11 @@ getDeviceList();
 
 // region 气候
 const weatherList = ref([]);
-const weatherIndex = ref(0);
-let weatherTimer: null | ReturnType<typeof setInterval> = null;
 
 function getWeatherList() {
   getWeatherListApi().then((res: any) => {
+    // 各气象站同屏上下展示，不再轮播
     weatherList.value = res;
-    if (weatherTimer) clearInterval(weatherTimer);
-    weatherTimer = setInterval(() => {
-      if (weatherList.value.length > 1) {
-        weatherIndex.value =
-          (weatherIndex.value + 1) % weatherList.value.length;
-      }
-    }, 3000);
   });
 }
 
@@ -659,36 +651,31 @@ onMounted(() => {
       <div class="right">
         <div class="box-card right-bottom">
           <div class="weather">
-            <template v-if="weatherList[weatherIndex]">
+            <div v-for="station in weatherList" :key="station.station_name">
+              <h3>{{ station.station_name }}</h3>
               <div>
-                <h3>{{ weatherList[weatherIndex].station_name }}</h3>
+                <div>
+                  <img src="/assets/image/weather/temperature.png" alt="" />
+                  <h3>{{ station.temperature }}℃</h3>
+                  <h3>温度</h3>
+                </div>
+                <div>
+                  <img src="/assets/image/weather/wet.png" alt="" />
+                  <h3>{{ station.humidity }}%RH</h3>
+                  <h3>湿度</h3>
+                </div>
+                <div>
+                  <img src="/assets/image/weather/speed.png" alt="" />
+                  <h3>{{ station.wind_speed }}m/s</h3>
+                  <h3>风速</h3>
+                </div>
+                <div>
+                  <img src="/assets/image/weather/pressure.png" alt="" />
+                  <h3>{{ station.pressure }}Pa</h3>
+                  <h3>气压</h3>
+                </div>
               </div>
-              <div>
-                <img src="/assets/image/weather/temperature.png" alt="" />
-                <h3>{{ weatherList[weatherIndex].temperature }}℃</h3>
-                <h3>温度</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/wet.png" alt="" />
-                <h3>{{ weatherList[weatherIndex].humidity }}%RH</h3>
-                <h3>湿度</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/speed.png" alt="" />
-                <h3>{{ weatherList[weatherIndex].wind_speed }}m/s</h3>
-                <h3>风速</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/direction.png" alt="" />
-                <h3>{{ weatherList[weatherIndex].wind_direction }}</h3>
-                <h3>风向</h3>
-              </div>
-              <div>
-                <img src="/assets/image/weather/pressure.png" alt="" />
-                <h3>{{ weatherList[weatherIndex].pressure }}Pa</h3>
-                <h3>气压</h3>
-              </div>
-            </template>
+            </div>
           </div>
         </div>
         <div class="box-card right-top">

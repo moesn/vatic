@@ -246,41 +246,47 @@ table {
   flex: 1;
   width: 100%;
   min-height: 0;
+  padding-left: 20%;
 
-  // 两个气象设备上下布局
+  // 各气象站同屏上下展示：每站一块 = 站名行 + 4 个指标各占一行
   .weather {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: space-around;
+    gap: 12px;
 
-    // template 直接渲染 > div 指标行
     > div {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 36px;
-      padding: 0 25px;
-      line-height: 24px;
+      > h3 {
+        padding-left: 6px;
+        font-weight: bold;
+        line-height: 22px;
+      }
 
-      // 站名行
-      &:first-child {
-        height: 28px;
-        margin-bottom: 4px;
-        padding: 0 15px;
+      > div {
+        display: grid;
+        grid-template-columns: 1fr;
+        padding: 0 4px;
 
-        h3 {
-          font-weight: bold;
+        > div {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 4px;
+          line-height: 24px;
+          white-space: nowrap;
+
+          img {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+          }
+
+          h3 {
+            font-size: 12px;
+            line-height: 24px;
+            text-align: left;
+          }
         }
-      }
-
-      h3 {
-        line-height: 24px;
-        text-align: left;
-      }
-
-      img {
-        width: 24px;
-        height: 24px;
       }
     }
   }
