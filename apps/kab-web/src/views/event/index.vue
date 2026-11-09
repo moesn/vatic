@@ -572,13 +572,13 @@ onMounted(() => {
           :disabled="selectedRowKeys.length === 0"
           @click="openDispatchModal()"
         >
-          派发（{{ selectedRowKeys.length }}）
+          批量派发（{{ selectedRowKeys.length }}）
         </Button>
         <Button
           :disabled="selectedRowKeys.length === 0"
           @click="openDisposeModal()"
         >
-          处置（{{ selectedRowKeys.length }}）
+          批量处置（{{ selectedRowKeys.length }}）
         </Button>
       </Space>
     </div>

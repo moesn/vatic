@@ -36,7 +36,7 @@
       },
       {
         "title": "处理人",
-        "field": "processedBy"
+        "field": "processedByName"
       },
       {
         "title": "状态",
