@@ -5,7 +5,6 @@
     "title": "监控设备列表",
     "keyField": "id",
     "nameField": "deviceName",
-    "export": true,
     "columns": [
       {
         "field": "seq",

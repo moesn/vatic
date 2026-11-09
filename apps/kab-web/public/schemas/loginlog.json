@@ -5,7 +5,6 @@
     "title": "登录日志",
     "keyField": "id",
     "nameField": "operName",
-    "export": true,
     "columns": [
       {
         "field": "seq",

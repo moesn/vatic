@@ -5,7 +5,6 @@
     "title": "用户",
     "keyField": "id",
     "nameField": "name",
-    "export": true,
     "columns": [
       {
         "field": "seq",

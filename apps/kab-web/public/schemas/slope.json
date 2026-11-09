@@ -5,7 +5,6 @@
     "title": "边坡",
     "keyField": "id",
     "nameField": "slopeName",
-    "export": true,
     "columns": [
       {
         "field": "seq",

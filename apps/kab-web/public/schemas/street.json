@@ -5,7 +5,6 @@
     "title": "街道管理",
     "keyField": "id",
     "nameField": "name",
-    "export": true,
     "disableUpdate": "level=1|2|3",
     "disableDelete": "level=1|2|3",
     "transformTableData": true,
