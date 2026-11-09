@@ -57,7 +57,9 @@ table {
   z-index: 10;
   width: 100%;
   height: 70px;
-  // 悬浮在地图上，横幅两侧透出底图
+  // 背景图中间透明处透出 0.9 半透明底色，与左右面板一致
+  background-color: rgb(9 18 32 / 90%);
+  // 横幅无交互，不拦截鼠标，保证底部地图可拖动/缩放
   pointer-events: none;
   background-image: url('/assets/image/top-banner.png');
   background-repeat: no-repeat;
@@ -131,6 +133,7 @@ table {
 
 .right {
   width: 340px;
+  padding-bottom: 0;
 }
 
 .left-top {
