@@ -7,7 +7,7 @@ import type {
   VxeTableGridOptions,
 } from '#/adapter/vxe-table';
 
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { Page, useVaticDrawer } from '@vatic/common-ui';
 import { Plus } from '@vatic/icons';
@@ -40,6 +40,54 @@ getPageSchema().then(({ schema, name }) => {
 });
 
 let Grid: any, GridApi: any;
+
+// region 导出 Excel
+/** 由列表接口推导导出接口：/xxx/pageQueryList → /xxx/exportExcel（/monitor/operlog/list 同理） */
+const exportUrl = computed(() => {
+  const api: string = pageSchema.value?.table?.api ?? '';
+  const m = api.match(/^(.*\/)(pageQueryList|list)$/);
+  return m ? `${m[1]}exportExcel` : '';
+});
+
+const exporting = ref(false);
+
+/** 导出 Excel：查询参数与列表接口一致（筛选条件 + 排序 + 分页字段，导出范围由后端决定） */
+async function onExport() {
+  if (!exportUrl.value || exporting.value) return;
+  exporting.value = true;
+  try {
+    const proxyInfo = GridApi?.grid?.getProxyInfo?.() ?? {};
+    const search =
+      (await GridApi?.formApi?.getLatestSubmissionValues?.()) ?? {};
+    const blob: Blob = await requestClient.download(exportUrl.value, {
+      params: {
+        pageNo: proxyInfo?.page?.currentPage ?? 1,
+        pageSize: proxyInfo?.page?.pageSize ?? 10,
+        sortBy: proxyInfo?.sort?.field,
+        sortOrder: proxyInfo?.sort?.order,
+        ...search,
+      },
+    });
+    if (blob?.type?.includes('json')) {
+      // 接口异常时返回 JSON 而非文件流
+      message.error('导出失败，请稍后重试');
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${
+      pageSchema.value.table.title || pageName.value
+    }_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    // 请求错误提示由全局响应拦截器统一处理
+  } finally {
+    exporting.value = false;
+  }
+}
+// endregion
 
 const [FormDrawer, FormDrawerApi] = useVaticDrawer({
   connectedComponent: Form,
@@ -553,7 +601,10 @@ async function submitResetPassword() {
           </Button>
           <Button size="small" type="link" @click="collapseAll"> 折叠</Button>
         </div>
-        <Button type="primary" @click="onCreate" v-if="pageSchema.form?.create">
+        <Button v-if="exportUrl" :loading="exporting" @click="onExport">
+          导出
+        </Button>
+        <Button class="ml-2" type="primary" @click="onCreate" v-if="pageSchema.form?.create">
           <Plus class="size-5" />
           新增
         </Button>

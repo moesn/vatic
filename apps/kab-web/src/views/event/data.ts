@@ -51,6 +51,15 @@ export function getEventListApi(data: EventListParams) {
   );
 }
 
+/** 事件列表导出 Excel（请求体与 eventViewStatisticsList 完全一致） */
+export function exportEventViewListApi(data: EventListParams) {
+  return requestClient.post(
+    '/riskevents/exportEventViewStatisticsList',
+    data,
+    { responseReturn: 'body', responseType: 'blob' },
+  );
+}
+
 /** 事件类型选项 */
 export function getEventStatsApi() {
   return requestClient.get<any[]>('/riskevents/eventViewStatistics');

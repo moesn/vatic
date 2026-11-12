@@ -18,9 +18,11 @@ import {
 } from 'ant-design-vue';
 
 import { useVaticForm } from '#/adapter/form';
+import dayjs from 'dayjs';
 import {
   dispatchApi,
   disposeApi,
+  exportEventViewListApi,
   getEventListApi,
   getEventStatsApi,
   getStaffListApi,
@@ -229,6 +231,43 @@ function handleEventSearch() {
   eventPage.pageNo = 1;
   loadEventList();
 }
+
+// region 导出 Excel
+const exportEventLoading = ref(false);
+
+/** 导出事件列表：请求参数与列表接口完全一致（当前筛选条件 + 分页字段） */
+async function handleExportEvent() {
+  if (exportEventLoading.value) return;
+  exportEventLoading.value = true;
+  try {
+    const [startTime, endTime] = searchForm.timeRange ?? [];
+    const blob: Blob = await exportEventViewListApi({
+      eventType: searchForm.eventType,
+      location: searchForm.location || undefined,
+      level: searchForm.level,
+      status: searchForm.status,
+      startTime: startTime || undefined,
+      endTime: endTime || undefined,
+      pageNo: eventPage.pageNo,
+      pageSize: eventPage.pageSize,
+    });
+    if (blob?.type?.includes('json')) {
+      message.error('导出失败，请稍后重试');
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `事件列表_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (error: any) {
+    message.error(error?.message ?? '导出失败');
+  } finally {
+    exportEventLoading.value = false;
+  }
+}
+// endregion
 
 function resetEventSearch() {
   searchForm.eventType = undefined;
@@ -568,6 +607,12 @@ onMounted(() => {
         共 {{ eventTotal }} 条，已选 {{ selectedRowKeys.length }} 项
       </span>
       <Space>
+        <Button
+          :loading="exportEventLoading"
+          @click="handleExportEvent"
+        >
+          导出
+        </Button>
         <Button
           :disabled="selectedRowKeys.length === 0"
           @click="openDispatchModal()"

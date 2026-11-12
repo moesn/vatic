@@ -224,6 +224,20 @@ export function getVehiclePassListApi(params: {
   );
 }
 
+/** 过车记录导出 Excel（参数与 pageQueryList 一致） */
+export function exportVehiclePassApi(params: {
+  carNumber?: string;
+  endTime?: string;
+  equipmentNo?: string;
+  pageNo?: number;
+  pageSize?: number;
+  plateColor?: number | string;
+  startTime?: string;
+  vehicleType?: number | string;
+}) {
+  return requestClient.download('/vehiclePassRecord/exportExcel', { params });
+}
+
 /** 过车记录统计趋势接口响应 */
 export interface VehiclePassStatistics {
   total: number;
@@ -285,6 +299,23 @@ export function getAlertListApi(params: {
     `/vehicleBehaviorAbnormalRecord/pageQueryList`,
     { params },
   );
+}
+
+/** 预警记录导出 Excel（参数与 pageQueryList 一致） */
+export function exportAlertApi(params: {
+  alarmLevel?: string;
+  aramType?: string;
+  carNumber?: string;
+  endTime?: string;
+  equipmentNo?: string;
+  pageNo?: number;
+  pageSize?: number;
+  startTime?: string;
+  vehicleType?: string;
+}) {
+  return requestClient.download('/vehicleBehaviorAbnormalRecord/exportExcel', {
+    params,
+  });
 }
 
 /** 预警记录统计趋势：按告警类型分组，key 为告警类型（超速/压线/逆行） */

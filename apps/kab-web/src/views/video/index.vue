@@ -41,6 +41,8 @@ import dayjs from 'dayjs';
 import Hls from 'hls.js';
 
 import {
+  exportAlertApi,
+  exportVehiclePassApi,
   getAlertListApi,
   getAlertStatisticsApi,
   getDeviceTreeApi,
@@ -931,6 +933,78 @@ async function loadDataDetails(pageNo = 1) {
 function handleVehicleTableChange(pagination: any) {
   loadDataDetails(pagination.current);
 }
+
+// region 数据导出 Excel
+/** 下载导出文件：文件名 + 时间戳，避免浏览器重名覆盖 */
+function saveBlob(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${name}_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/** 过车记录导出：查询参数与列表接口完全一致 */
+const vehicleExporting = ref(false);
+async function handleExportVehiclePass() {
+  if (vehicleExporting.value) return;
+  vehicleExporting.value = true;
+  try {
+    const [startTime, endTime] = vehicleRange.value ?? [];
+    const blob: Blob = await exportVehiclePassApi({
+      carNumber: vehicleCarNumber.value || undefined,
+      endTime: endTime || undefined,
+      equipmentNo: vehicleEquipmentNo.value || undefined,
+      pageNo: vehiclePage.pageNo,
+      pageSize: vehiclePage.pageSize,
+      plateColor: vehiclePlateColor.value,
+      startTime: startTime || undefined,
+      vehicleType: vehicleType.value,
+    });
+    if (blob?.type?.includes('json')) {
+      message.error('导出失败，请稍后重试');
+      return;
+    }
+    saveBlob(blob, '过车记录');
+  } catch {
+    // 请求错误提示由全局响应拦截器统一处理
+  } finally {
+    vehicleExporting.value = false;
+  }
+}
+
+/** 预警记录导出：查询参数与列表接口完全一致 */
+const alertExporting = ref(false);
+async function handleExportAlert() {
+  if (alertExporting.value) return;
+  alertExporting.value = true;
+  try {
+    const [startTime, endTime] = alertRange.value ?? [];
+    const blob: Blob = await exportAlertApi({
+      alarmLevel: alertLevel.value || undefined,
+      aramType: alertParamType.value || undefined,
+      carNumber: alertCarNumber.value || undefined,
+      endTime: endTime || undefined,
+      equipmentNo: alertEquipmentNo.value || undefined,
+      pageNo: alertPage.pageNo,
+      pageSize: alertPage.pageSize,
+      startTime: startTime || undefined,
+      vehicleType: vehicleTypeOptions.find((o) => o.value === vehicleType.value)
+        ?.label,
+    });
+    if (blob?.type?.includes('json')) {
+      message.error('导出失败，请稍后重试');
+      return;
+    }
+    saveBlob(blob, '预警记录');
+  } catch {
+    // 请求错误提示由全局响应拦截器统一处理
+  } finally {
+    alertExporting.value = false;
+  }
+}
+// endregion
 
 /** 气象历史数据查询 */
 async function loadWeatherHistory(pageNo = 1) {
@@ -2163,6 +2237,12 @@ window.addEventListener('pagehide', handlePageUnload);
                     查询
                   </Button>
                   <Button @click="resetVehicleSearch">重置</Button>
+                  <Button
+                    :loading="vehicleExporting"
+                    @click="handleExportVehiclePass"
+                  >
+                    导出
+                  </Button>
                 </div>
                 <Table
                   :columns="vehicleColumns"
@@ -2323,6 +2403,12 @@ window.addEventListener('pagehide', handlePageUnload);
                   查询
                 </Button>
                 <Button @click="resetAlertSearch">重置</Button>
+                <Button
+                  :loading="alertExporting"
+                  @click="handleExportAlert"
+                >
+                  导出
+                </Button>
               </div>
               <Table
                 :columns="alertColumns"

@@ -14,12 +14,16 @@ import {
 import { Page } from '@vatic/common-ui';
 import { IconifyIcon } from '@vatic/icons';
 
-import { Button, Spin } from 'ant-design-vue';
+import { Button, message, Spin } from 'ant-design-vue';
 import dayjs from 'dayjs';
 
 import { useVaticVxeGrid } from '#/adapter/vxe-table';
 import { getDictListApi } from '#/views/data';
-import { getSnapshotListApi, getSnapshotStatsApi } from '#/views/snapshot/data';
+import {
+  exportSnapshotApi,
+  getSnapshotListApi,
+  getSnapshotStatsApi,
+} from '#/views/snapshot/data';
 
 const [Grid, GridApi] = useVaticVxeGrid({
   formOptions: {
@@ -162,7 +166,7 @@ const [Grid, GridApi] = useVaticVxeGrid({
     footerClass: 'h-1/2',
     toolbarConfig: {
       custom: true,
-      export: true,
+      // export: true,
       search: true,
       // zoom: true,
     },
@@ -381,6 +385,35 @@ watch(chartDimension, async (dim) => {
   loadSnapshotStats();
 });
 
+// region 导出 Excel
+const exporting = ref(false);
+
+/** 导出车辆识别记录：查询参数与列表接口一致（最近提交的筛选条件，已映射时间段字段） */
+async function handleExport() {
+  if (exporting.value) return;
+  exporting.value = true;
+  try {
+    const formValues =
+      (await GridApi.formApi?.getLatestSubmissionValues?.()) ?? {};
+    const blob: Blob = await exportSnapshotApi({ ...formValues });
+    if (blob?.type?.includes('json')) {
+      message.error('导出失败，请稍后重试');
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `车辆识别列表_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    // 请求错误提示由全局响应拦截器统一处理
+  } finally {
+    exporting.value = false;
+  }
+}
+// endregion
+
 /** 展开/收起统计图，展开后重算图表尺寸并加载数据 */
 async function toggleChart() {
   chartExpanded.value = !chartExpanded.value;
@@ -463,7 +496,11 @@ onBeforeUnmount(() => {
 
       <!-- 车辆识别列表 -->
       <div class="min-h-0 flex-1">
-        <Grid table-title="车辆识别列表" />
+        <Grid table-title="车辆识别列表">
+          <template #toolbar-tools>
+            <Button :loading="exporting" @click="handleExport">导出</Button>
+          </template>
+        </Grid>
       </div>
     </div>
   </Page>
